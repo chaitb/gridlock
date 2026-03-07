@@ -114,11 +114,12 @@ export const DriverCardFull: React.FC<DriverCardProps> = ({ driver, className = 
 };
 
 type DriverSelectProps = PropsWithChildren<{
-	onSelect: (driver: Driver | null) => void;
 	title: string;
 	selectedDriver: DriverTag | null;
+	onSelect: (driver: Driver | null) => void;
 	subtitle?: string;
 	drivers?: Driver[];
+	disabled?: boolean;
 }>;
 
 export const DriverSelect: React.FC<DriverSelectProps> = ({
@@ -128,6 +129,7 @@ export const DriverSelect: React.FC<DriverSelectProps> = ({
 	selectedDriver,
 	onSelect,
 	drivers = DRIVERS,
+	disabled = false,
 }) => {
 	const sDriver = DRIVERS.find((dr) => dr.acronym === selectedDriver);
 	return (
@@ -138,15 +140,20 @@ export const DriverSelect: React.FC<DriverSelectProps> = ({
 						className="flex-1 min-w-24 h-36"
 						type="button"
 						onClick={(e) => {
+							if (disabled) return;
 							onSelect?.(null);
 							e.preventDefault();
 							e.stopPropagation();
 						}}
+						disabled={disabled}
 					>
 						<DriverCardCompact driver={sDriver} className="h-full w-full rounded-lg" />
 					</button>
 				) : (
-					<BGButton className="flex-1 min-w-24 h-36 rounded-lg border border-accent-foreground/60">
+					<BGButton
+						className="flex-1 min-w-24 h-36 rounded-lg border border-accent-foreground/60"
+						disabled={disabled}
+					>
 						{children}
 					</BGButton>
 				)}

@@ -10,8 +10,8 @@ export async function getPredictions(c: Context) {
 	}
 
 	const userId = c.req.query("userId");
-	const raceCode = c.req.query("raceCode");
-	const parsed = getPredictionsSchema.safeParse({ userId, raceCode });
+	const circuitCode = c.req.query("circuitCode");
+	const parsed = getPredictionsSchema.safeParse({ userId, circuitCode });
 	if (!parsed.success) {
 		return c.json({ message: "Invalid request", errors: parsed.error.issues }, 400);
 	}
@@ -25,7 +25,7 @@ export async function getPredictions(c: Context) {
 		const result = await getPredictionsByUserAndRace(
 			env.F1_PREDICTIONS,
 			user.id,
-			parsed.data.raceCode
+			parsed.data.circuitCode
 		);
 
 		return c.json(result);
@@ -47,11 +47,11 @@ export async function savePredictions(c: Context) {
 		return c.json({ message: "Invalid request", errors: parsed.error.issues }, 400);
 	}
 
-	const { userId, raceCode, predictions, isComplete } = parsed.data;
+	const { userId, circuitCode, predictions, isComplete } = parsed.data;
 	const predictionJson = JSON.stringify({ ...predictions, isComplete });
 
 	try {
-		const result = await upsertPrediction(env.F1_PREDICTIONS, userId, raceCode, predictionJson);
+		const result = await upsertPrediction(env.F1_PREDICTIONS, userId, circuitCode, predictionJson);
 
 		if (!result.success) {
 			return c.json({ message: "Failed to save prediction" }, 500);

@@ -2,8 +2,8 @@ import { motion } from "framer-motion";
 import { Link } from "wouter";
 import { Flag } from "@/components/flags";
 import type { CountryCode } from "@/components/flags";
+import type { CircuitCode } from "@/model";
 import Countdown from "./Countdown";
-import type { RaceCode } from "./RaceWeekend";
 
 type RaceHeaderProps = {
 	poster: string;
@@ -12,7 +12,7 @@ type RaceHeaderProps = {
 	round: number;
 	venue: string;
 	date: Date;
-	raceCode: RaceCode;
+	circuitCode: CircuitCode;
 };
 
 export function RaceHeader({
@@ -22,7 +22,7 @@ export function RaceHeader({
 	round,
 	venue,
 	date,
-	raceCode,
+	circuitCode,
 }: RaceHeaderProps) {
 	const today = new Date();
 	const isUpcoming = date >= today;
@@ -52,7 +52,7 @@ export function RaceHeader({
 						Race Calendar
 					</Link>
 					{" / "}
-					<Link to={`/race/${raceCode}`} className="hover:underline">
+					<Link to={`/race/${circuitCode}`} className="hover:underline">
 						{name}
 					</Link>
 				</p>

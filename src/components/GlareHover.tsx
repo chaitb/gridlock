@@ -6,6 +6,7 @@ interface GlareHoverProps {
 	width?: string;
 	height?: string;
 	background?: string;
+	hoverBackground?: string;
 	borderRadius?: string;
 	borderColor?: string;
 	glareColor?: string;
@@ -21,6 +22,7 @@ const GlareHover: React.FC<PropsWithChildren<GlareHoverProps>> = ({
 	width = "500px",
 	height = "500px",
 	background = "#000",
+	hoverBackground,
 	borderRadius = "10px",
 	borderColor = "#333",
 	children,
@@ -51,6 +53,7 @@ const GlareHover: React.FC<PropsWithChildren<GlareHoverProps>> = ({
 		"--gh-width": width,
 		"--gh-height": height,
 		"--gh-bg": background,
+		...(hoverBackground ? { "--gh-bg-hover": hoverBackground } : {}),
 		"--gh-br": borderRadius,
 		"--gh-angle": `${glareAngle}deg`,
 		"--gh-duration": `${transitionDuration}ms`,

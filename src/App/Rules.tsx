@@ -23,28 +23,19 @@ const item = {
 export function Rules() {
 	return (
 		<AppLayout>
-			<motion.div
-				variants={container}
-				initial="hidden"
-				animate="show"
-				className="max-w-2xl"
-			>
+			<motion.div variants={container} initial="hidden" animate="show" className="max-w-2xl">
 				<motion.div variants={item} className="mb-8">
 					<H1>Rules</H1>
-					<p className="mt-4 text-muted-foreground">
-						How GridLock works
-					</p>
+					<p className="mt-4 text-muted-foreground">How GridLock works</p>
 				</motion.div>
 
 				<motion.div variants={item} className="mb-8">
 					<H2>Prediction Lock</H2>
 					<p className="text-muted-foreground leading-relaxed">
 						Your predictions for each race are locked{" "}
-						<span className="text-primary font-medium">
-							before qualifying starts
-						</span>
-						. Once the qualifying session begins, you cannot change your
-						predictions for that race. Make sure to submit your picks early!
+						<span className="text-primary font-medium">before qualifying starts</span>. Once the
+						qualifying session begins, you cannot change your predictions for that race. Make sure
+						to submit your picks early!
 					</p>
 				</motion.div>
 
@@ -57,29 +48,27 @@ export function Rules() {
 						<li className="flex items-start gap-3">
 							<span className="text-primary font-bold">•</span>
 							<span>
-								<span className="font-medium">Qualifying</span> — Top 5 grid
-								positions
+								<span className="font-medium">Qualifying</span> — Top 5 grid positions
 							</span>
 						</li>
 						<li className="flex items-start gap-3">
 							<span className="text-primary font-bold">•</span>
 							<span>
-								<span className="font-medium">Race</span> — Top 5 finishing
-								positions
+								<span className="font-medium">Race</span> — Top 5 finishing positions
 							</span>
 						</li>
 						<li className="flex items-start gap-3">
 							<span className="text-primary font-bold">•</span>
 							<span>
-								<span className="font-medium">Biggest Gainers</span> — 3 drivers
-								who gain the most positions from grid to finish
+								<span className="font-medium">Biggest Gainers</span> — 3 drivers who gain the most
+								positions from grid to finish
 							</span>
 						</li>
 						<li className="flex items-start gap-3">
 							<span className="text-primary font-bold">•</span>
 							<span>
-								<span className="font-medium">Biggest Losers</span> — 3 drivers
-								who lose the most positions from grid to finish
+								<span className="font-medium">Biggest Losers</span> — 3 drivers who lose the most
+								positions from grid to finish
 							</span>
 						</li>
 					</ul>
@@ -89,29 +78,29 @@ export function Rules() {
 				<motion.div variants={item} className="mb-8" id="scoring-qualifying">
 					<H2>Scoring — Qualifying & Race</H2>
 					<p className="text-muted-foreground leading-relaxed mb-4">
-						Points use a <span className="text-primary font-medium">proximity model</span> — close guesses
-						still earn partial credit.
+						Points use a <span className="text-primary font-medium">proximity model</span> — close
+						guesses still earn partial credit.
 					</p>
 					<ul className="space-y-3 text-muted-foreground">
 						<li className="flex items-start gap-3">
 							<span className="text-primary font-bold min-w-[2.5rem]">10 pts</span>
 							<span>
-								<span className="text-primary font-medium">Bullseye</span> — exact
-								position (you said P3, they finished P3)
+								<span className="text-primary font-medium">Bullseye</span> — exact position (you
+								said P3, they finished P3)
 							</span>
 						</li>
 						<li className="flex items-start gap-3">
 							<span className="text-primary font-bold min-w-[2.5rem]">5 pts</span>
 							<span>
-								<span className="font-medium">Near Miss ±1</span> — off by one slot
-								(you said P3, they finished P2 or P4)
+								<span className="font-medium">Near Miss ±1</span> — off by one slot (you said P3,
+								they finished P2 or P4)
 							</span>
 						</li>
 						<li className="flex items-start gap-3">
 							<span className="text-primary font-bold min-w-[2.5rem]">2 pts</span>
 							<span>
-								<span className="font-medium">Close ±2</span> — off by two slots
-								(you said P3, they finished P1 or P5)
+								<span className="font-medium">Close ±2</span> — off by two slots (you said P3, they
+								finished P1 or P5)
 							</span>
 						</li>
 						<li className="flex items-start gap-3">
@@ -130,22 +119,22 @@ export function Rules() {
 						<li className="flex items-start gap-3">
 							<span className="text-primary font-bold min-w-[2.5rem]">15 pts</span>
 							<span>
-								<span className="text-primary font-medium">Perfect Match</span> —
-								you picked the #1 gainer/loser exactly
+								<span className="text-primary font-medium">Perfect Match</span> — you picked the #1
+								gainer/loser exactly
 							</span>
 						</li>
 						<li className="flex items-start gap-3">
 							<span className="text-primary font-bold min-w-[2.5rem]">7 pts</span>
 							<span>
-								<span className="font-medium">Top 3 Accuracy</span> — driver was in
-								the Top 3 gainers/losers, but not at the rank you predicted
+								<span className="font-medium">Top 3 Accuracy</span> — driver was in the Top 3
+								gainers/losers, but not at the rank you predicted
 							</span>
 						</li>
 						<li className="flex items-start gap-3">
 							<span className="text-primary font-bold min-w-[2.5rem]">3 pts</span>
 							<span>
-								<span className="font-medium">Trend Bonus</span> — driver
-								gained/lost positions, but wasn't in the Top 3
+								<span className="font-medium">Trend Bonus</span> — driver gained/lost positions, but
+								wasn't in the Top 3
 							</span>
 						</li>
 						<li className="flex items-start gap-3">
@@ -198,25 +187,23 @@ export function Rules() {
 						<li className="flex items-start gap-3">
 							<span className="text-primary font-bold">•</span>
 							<span>
-								<span className="font-medium">DNF Rule</span> — If a driver you
-								predicted for the Top 5 fails to finish (crash, mechanical), they
-								are treated as finishing last for scoring purposes.
+								<span className="font-medium">DNF Rule</span> — If a driver you predicted for the
+								Top 5 fails to finish (crash, mechanical), they are treated as finishing last for
+								scoring purposes.
 							</span>
 						</li>
 						<li className="flex items-start gap-3">
 							<span className="text-primary font-bold">•</span>
 							<span>
-								<span className="font-medium">Tie-Breaker</span> — Equal points?
-								The player with more exact-match predictions wins. Still tied? The
-								earlier submission wins.
+								<span className="font-medium">Tie-Breaker</span> — Equal points? The player with
+								more exact-match predictions wins. Still tied? The earlier submission wins.
 							</span>
 						</li>
 						<li className="flex items-start gap-3">
 							<span className="text-primary font-bold">•</span>
 							<span>
-								<span className="font-medium">Hot Streak Bonus (+5 pts)</span> —
-								Get at least one exact match in three consecutive races and earn a
-								bonus 5 points.
+								<span className="font-medium">Hot Streak Bonus (+5 pts)</span> — Get at least one
+								exact match in three consecutive races and earn a bonus 5 points.
 							</span>
 						</li>
 					</ul>
@@ -226,9 +213,9 @@ export function Rules() {
 					<H2>Leaderboard Updates</H2>
 					<p className="text-muted-foreground leading-relaxed">
 						The leaderboard is updated{" "}
-						<span className="text-primary font-medium">after each race</span>.
-						Points accumulate throughout the season, so consistency is key. Check
-						back after race weekends to see how you stack up.
+						<span className="text-primary font-medium">after each race</span>. Points accumulate
+						throughout the season, so consistency is key. Check back after race weekends to see how
+						you stack up.
 					</p>
 				</motion.div>
 			</motion.div>

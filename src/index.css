@@ -196,7 +196,6 @@
 }
 
 @layer utilities {
-
 	.texture-bg {
 		@apply relative z-0;
 	}

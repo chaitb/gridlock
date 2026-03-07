@@ -1,7 +1,8 @@
 import { Route, Switch } from "wouter";
 import { UserHome } from "./App/Home";
 import { Leaderboard } from "./App/Leaderboard";
-import { MyPredictions } from "./App/MyPredictions";
+import { LeaguePredictions } from "./App/LeaguePredictions";
+import { UserPredictions } from "./App/MyPredictions";
 import { Profile } from "./App/Profile";
 import { Race } from "./App/Race";
 import { RacePrediction } from "./App/RacePrediction";
@@ -34,10 +35,13 @@ const App = () => (
 					<Route path="/race">
 						<RaceWeekend />
 					</Route>
-					<Route path="race/:code/prediction">
+					<Route path="race/:circuit_code/prediction">
 						<RacePrediction />
 					</Route>
-					<Route path="/race/:code">
+					<Route path="race/:circuit_code/league">
+						<LeaguePredictions />
+					</Route>
+					<Route path="/race/:circuit_code">
 						<Race />
 					</Route>
 					<Route path="/season">
@@ -61,8 +65,8 @@ const App = () => (
 					<Route path="/leaderboard">
 						<Leaderboard />
 					</Route>
-					<Route path="/my-predictions">
-						<MyPredictions />
+					<Route path="/:username/predictions">
+						<UserPredictions />
 					</Route>
 					<Route path="/profile">
 						<Profile />

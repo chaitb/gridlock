@@ -33,6 +33,8 @@
 
 .glare-hover:hover {
 	cursor: pointer;
+	background: var(--gh-bg-hover, var(--gh-bg));
+	transition: background var(--gh-duration) ease;
 }
 
 .glare-hover:hover::before {

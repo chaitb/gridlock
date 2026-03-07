@@ -39,9 +39,7 @@ export async function createAccount(c: Context) {
 			return c.json({ message: "Database error" }, 500);
 		}
 
-		const user = await env.F1_PREDICTIONS.prepare(
-			"SELECT * FROM players WHERE id = ? LIMIT 1"
-		)
+		const user = await env.F1_PREDICTIONS.prepare("SELECT * FROM players WHERE id = ? LIMIT 1")
 			.bind(result.meta.last_row_id)
 			.first();
 

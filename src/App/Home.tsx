@@ -4,34 +4,34 @@ import { AppLayout } from "./Layout";
 import { useUser } from "@/context/useUser";
 import { useMemo } from "react";
 
-const links = [
-	{
-		title: "Races",
-		path: "/race",
-	},
-	{
-		title: "2026 Season Predictions",
-		path: "/season",
-	},
-	{
-		title: "Rules",
-		path: "/rules",
-	},
-	{
-		title: "Leaderboard",
-		path: "/leaderboard",
-	},
-	{
-		title: "My Predictions",
-		path: "/my-predictions",
-	},
-];
-
 export function UserHome() {
 	const { user } = useUser();
 	const LINKS = useMemo(
 		() => [
-			...links,
+			{
+				title: "Races",
+				path: "/race",
+			},
+			{
+				title: "2026 Season Predictions",
+				path: "/season",
+			},
+			{
+				title: "Rules",
+				path: "/rules",
+			},
+			{
+				title: "Leaderboard",
+				path: "/leaderboard",
+			},
+			// {
+			// 	title: "League Predictions",
+			// 	path: "/league",
+			// },
+			{
+				title: "My Predictions",
+				path: user?.username ? `/${user.username}/predictions` : "/my-predictions",
+			},
 			{
 				title: user?.username ? (
 					<p className="text-primary group-hover:text-accent-foreground transition-colors duration-300">
@@ -46,7 +46,7 @@ export function UserHome() {
 				path: "/profile",
 			},
 		],
-		[user],
+		[user]
 	);
 	return (
 		<AppLayout headline="GridLock">

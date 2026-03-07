@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type { CountryCode } from "./components/flags";
 
 const driverTagSchema = z.enum([
 	"NOR",
@@ -78,14 +79,14 @@ export const storedPredictionSchema = predictionContentSchema.extend({
 
 export const savePredictionsSchema = z.object({
 	userId: z.number().int().positive(),
-	raceCode: z.string().trim().min(2),
+	circuitCode: z.string().trim().min(2),
 	predictions: predictionContentSchema,
 	isComplete: z.boolean().optional().default(false),
 });
 
 export const getPredictionsSchema = z.object({
 	userId: z.string().trim().min(3),
-	raceCode: z.string().trim().min(2),
+	circuitCode: z.string().trim().min(2),
 });
 
 export const userSchema = z.object({
@@ -105,13 +106,19 @@ export const leaderboardEntrySchema = z.object({
 	points: z.number(),
 });
 
+export const lockPredictionSchema = z.object({
+	userId: z.number().int().positive(),
+	circuitCode: z.string().trim().min(2),
+});
+
 export const predictionSchema = z.object({
 	id: z.number(),
 	user_id: z.number(),
-	race_code: z.string(),
+	circuit_code: z.string(),
 	created_at: z.string(),
 	updated_at: z.string(),
 	prediction: z.string().nullable(),
+	locked: z.number().default(0),
 });
 
 export type User = z.infer<typeof userSchema>;
@@ -146,3 +153,89 @@ export const initialPredictions: PredictionContent = {
 		l3: null,
 	},
 };
+
+export type RaceCode =
+	| "aus"
+	| "china"
+	| "jpn"
+	| "bahrain"
+	| "saudi"
+	| "miami"
+	| "canada"
+	| "monaco"
+	| "barcelona"
+	| "austria"
+	| "british"
+	| "belgian"
+	| "hungarian"
+	| "dutch"
+	| "italian"
+	| "spanish"
+	| "azerbaijan"
+	| "singapore"
+	| "us"
+	| "mexico"
+	| "brazil"
+	| "vegas"
+	| "qatar"
+	| "abu-dhabi";
+
+export type CircuitCode =
+	| "melbourne"
+	| "shanghai"
+	| "suzuka"
+	| "sakhir"
+	| "jeddah"
+	| "miami"
+	| "montreal"
+	| "monte-carlo"
+	| "catalunya"
+	| "spielberg"
+	| "silverstone"
+	| "spa"
+	| "hungaroring"
+	| "zandvoort"
+	| "monza"
+	| "madring"
+	| "baku"
+	| "singapore"
+	| "austin"
+	| "mexico-city"
+	| "interlagos"
+	| "las-vegas"
+	| "lusail"
+	| "yas-marina-circuit";
+
+export type Race = {
+	round: number;
+	code: RaceCode;
+	country: CountryCode;
+	name: string;
+	venue: string;
+	date: Date;
+	sprint: boolean;
+	circuit_key: number;
+	circuit_short_name: string;
+	circuit_code: CircuitCode;
+};
+
+export type Session = {
+	session_key: number;
+	session_type: string;
+	session_name: string;
+	date_start: string;
+	date_end: string;
+	meeting_key: number;
+	circuit_key: number;
+	circuit_code: CircuitCode;
+	country_key: number;
+	country_code: CountryCode;
+	country_name: string;
+	location: string;
+	gmt_offset: string;
+	year: number;
+};
+
+export const QUALIFYING_KEYS = ["p1", "p2", "p3", "p4", "p5"] as const;
+export const GAINER_KEYS = ["g1", "g2", "g3"] as const;
+export const LOSER_KEYS = ["l1", "l2", "l3"] as const;

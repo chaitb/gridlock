@@ -2,13 +2,7 @@ import { motion } from "framer-motion";
 import type { FormEvent } from "react";
 import { useState } from "react";
 import { useLocation } from "wouter";
-import {
-	Field,
-	FieldDescription,
-	FieldGroup,
-	FieldLabel,
-	FieldSet,
-} from "@/components/ui/field";
+import { Field, FieldDescription, FieldGroup, FieldLabel, FieldSet } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { useUser } from "@/context/useUser";
 import poster from "./assets/GridLock2026.webp";
@@ -32,8 +26,7 @@ type FormState = {
 
 const feedbackClass = (state: FormState) => {
 	if (state.status === "success") return "text-emerald-400";
-	if (state.status === "error" || state.status === "not_found")
-		return "text-rose-400";
+	if (state.status === "error" || state.status === "not_found") return "text-rose-400";
 	return "text-muted-foreground";
 };
 
@@ -134,9 +127,7 @@ export function Login() {
 			<p className="font-kh text-sm uppercase tracking-[0.3em] text-muted-foreground mb-6">
 				GridLock 2026 <BetaBadge />
 			</p>
-			<h1 className="text-4xl font-audiowide uppercase font-medium tracking-tight mb-8">
-				Log in
-			</h1>
+			<h1 className="text-4xl font-audiowide uppercase font-medium tracking-tight mb-8">Log in</h1>
 
 			<form onSubmit={handleLogin} autoComplete="email">
 				<FieldSet className="w-full">
@@ -155,23 +146,12 @@ export function Login() {
 						</Field>
 					</FieldGroup>
 				</FieldSet>
-				<SubmitButton
-					loading={state.status === "loading"}
-					label="Log in"
-				/>
+				<SubmitButton loading={state.status === "loading"} label="Log in" />
 			</form>
 
 			{state.message && (
-				<motion.div
-					initial={{ opacity: 0, y: 4 }}
-					animate={{ opacity: 1, y: 0 }}
-					className="mt-4"
-				>
-					<p
-						className={`text-sm leading-snug ${feedbackClass(state)}`}
-					>
-						{state.message}
-					</p>
+				<motion.div initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} className="mt-4">
+					<p className={`text-sm leading-snug ${feedbackClass(state)}`}>{state.message}</p>
 					{state.status === "not_found" && (
 						<button
 							type="button"
@@ -223,8 +203,7 @@ export function CreateAccount() {
 		} catch (error) {
 			setState({
 				status: "error",
-				message:
-					error instanceof Error ? error.message : "Unexpected error",
+				message: error instanceof Error ? error.message : "Unexpected error",
 			});
 		}
 	};
@@ -244,9 +223,7 @@ export function CreateAccount() {
 				<FieldSet className="w-full">
 					<FieldGroup>
 						<Field>
-							<FieldLabel htmlFor="create-username">
-								Username
-							</FieldLabel>
+							<FieldLabel htmlFor="create-username">Username</FieldLabel>
 							<Input
 								id="create-username"
 								type="text"
@@ -256,14 +233,10 @@ export function CreateAccount() {
 								disabled={disabled}
 								required
 							/>
-							<FieldDescription>
-								Pick a unique name for the leaderboard.
-							</FieldDescription>
+							<FieldDescription>Pick a unique name for the leaderboard.</FieldDescription>
 						</Field>
 						<Field>
-							<FieldLabel htmlFor="create-email">
-								Email
-							</FieldLabel>
+							<FieldLabel htmlFor="create-email">Email</FieldLabel>
 							<Input
 								id="create-email"
 								type="email"
@@ -273,29 +246,16 @@ export function CreateAccount() {
 								disabled={disabled}
 								required
 							/>
-							<FieldDescription>
-								Used to log in — never shared.
-							</FieldDescription>
+							<FieldDescription>Used to log in — never shared.</FieldDescription>
 						</Field>
 					</FieldGroup>
 				</FieldSet>
-				<SubmitButton
-					loading={state.status === "loading"}
-					label="Create account"
-				/>
+				<SubmitButton loading={state.status === "loading"} label="Create account" />
 			</form>
 
 			{state.message && (
-				<motion.div
-					initial={{ opacity: 0, y: 4 }}
-					animate={{ opacity: 1, y: 0 }}
-					className="mt-4"
-				>
-					<p
-						className={`text-sm leading-snug ${feedbackClass(state)}`}
-					>
-						{state.message}
-					</p>
+				<motion.div initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} className="mt-4">
+					<p className={`text-sm leading-snug ${feedbackClass(state)}`}>{state.message}</p>
 					{state.status === "success" && (
 						<button
 							type="button"

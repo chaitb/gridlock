@@ -6,14 +6,15 @@ interface BGButtonProps extends ComponentProps<"button"> {
 	className?: string;
 }
 
-export function BGButton({ children, onClick, className = "" }: BGButtonProps) {
+export function BGButton({ children, onClick, className = "", disabled }: BGButtonProps) {
 	return (
 		<motion.button
-			whileHover="hover"
-			whileTap="tap"
+			whileHover={disabled ? undefined : "hover"}
+			whileTap={disabled ? undefined : "tap"}
 			initial="initial"
-			className={`group relative h-20 rounded-lg flex items-center justify-center overflow-hidden bg-secondary/60 font-kh cursor-pointer ${className}`}
+			className={`group relative h-20 rounded-lg flex items-center justify-center overflow-hidden bg-secondary/60 font-kh cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${className}`}
 			onClick={onClick}
+			disabled={disabled}
 		>
 			<motion.div
 				variants={{

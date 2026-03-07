@@ -2,41 +2,22 @@ import { motion } from "framer-motion";
 import type React from "react";
 import { Link, useLocation, useParams } from "wouter";
 import { EnterButton } from "@/components/EnterButton";
-import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
-import type { Prediction } from "@/model";
+import type { Prediction, CircuitCode, Session } from "@/model";
 import { H2 } from "./Text";
 import { RaceHeader } from "./RaceHeader";
 import { POSTERS } from "./images/posters";
 import { AppLayout } from "./Layout";
-import { RACES_2026, type RaceCode } from "./RaceWeekend";
-import { type ApiError, useApi } from "@/helpers/useApi";
-import { BGButton } from "@/components/BGButton";
-import { PencilLineIcon } from "lucide-react";
-import { useCallback } from "react";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-
-type Session = {
-	session_key: number;
-	session_type: string;
-	session_name: string;
-	date_start: string;
-	date_end: string;
-	meeting_key: number;
-	circuit_key: number;
-	circuit_short_name: string;
-	country_key: number;
-	country_code: string;
-	country_name: string;
-	location: string;
-	gmt_offset: string;
-	year: number;
-};
+import { RACES_2026 } from "@/data";
+import { useApi } from "@/helpers/useApi";
+import GlareHover from "@/components/GlareHover";
+import { ListIcon, LockIcon, PencilLineIcon } from "lucide-react";
+import { SESSIONS } from "@/data";
 
 export function Race() {
 	const params = useParams();
-	const code = params.code;
-	const race = RACES_2026.find((r) => r.code === code);
+	const circuitCode = params.circuit_code;
+	const race = RACES_2026.find((r) => r.circuit_code === circuitCode);
 
 	if (!race) {
 		return (
@@ -57,33 +38,36 @@ export function Race() {
 	return (
 		<>
 			<RaceHeader
-				poster={POSTERS[race.code]}
+				poster={POSTERS[race.circuit_code]}
 				name={race.name}
 				country={race.country}
 				round={race.round}
 				venue={race.venue}
 				date={race.date}
-				raceCode={race.code}
+				circuitCode={race.circuit_code}
 			/>
 
 			<div className="mt-8 px-4 md:px-10">
-				<Schedule />
+				<Schedule circuitCode={race.circuit_code} />
 			</div>
 			<div className="mt-8 px-4 md:px-10 mb-20">
-				<Predictions raceCode={race.code} />
+				<Predictions circuitCode={race.circuit_code} />
 			</div>
 		</>
 	);
 }
 
-const Predictions: React.FC<{ raceCode: RaceCode }> = ({ raceCode }) => {
+const Predictions: React.FC<{ circuitCode: CircuitCode }> = ({
+	circuitCode,
+}) => {
 	const [, navigate] = useLocation();
-	const { data: pred, error } = useApi<{ prediction: Prediction }>(
-		`/api/predictions`,
-		{
-			params: { raceCode },
-		},
-	);
+	const { data: pred, error } = useApi<Prediction>(`/api/predictions`, {
+		params: { circuitCode },
+	});
+
+	const hasPrediction = !!pred?.prediction;
+	const isLocked = pred?.locked === 1;
+
 	return (
 		<motion.div
 			initial={{ opacity: 0, y: 14 }}
@@ -93,46 +77,77 @@ const Predictions: React.FC<{ raceCode: RaceCode }> = ({ raceCode }) => {
 		>
 			<H2>Predictions</H2>
 			{error ? JSON.stringify(error) : null}
-			{pred?.prediction ? (
-				<BGButton
-					onClick={() => navigate(`/race/${raceCode}/prediction`)}
+			{hasPrediction ? (
+				<button
+					type="button"
 					className="w-full"
+					onClick={() => navigate(`/race/${circuitCode}/prediction`)}
 				>
-					<PencilLineIcon className="w-4 h-4 inline-block mr-2" />
-					Edit Prediction
-				</BGButton>
+					<GlareHover
+						height="48px"
+						width="100%"
+						background="transparent"
+						hoverBackground="rgba(255,255,255,0.06)"
+						borderRadius="12px"
+						className="bg-secondary/20"
+						glareColor="#d71414"
+						glareOpacity={0.5}
+						glareAngle={-70}
+						glareSize={400}
+						transitionDuration={2000}
+						playOnce={false}
+					>
+						<span className="flex items-center gap-2">
+							<PencilLineIcon className="w-4 h-4" />
+							{isLocked ? "View Prediction" : "Edit Prediction"}
+						</span>
+					</GlareHover>
+				</button>
 			) : (
 				<EnterButton />
+			)}
+			{hasPrediction && (
+				<button
+					type="button"
+					className="w-full mt-3"
+					onClick={() =>
+						isLocked && navigate(`/race/${circuitCode}/league`)
+					}
+				>
+					<GlareHover
+						height="48px"
+						width="100%"
+						background="transparent"
+						hoverBackground="rgba(255,255,255,0.06)"
+						borderRadius="12px"
+						className="bg-secondary/20"
+						glareColor={isLocked ? "#6366f1" : "#f43f5e"}
+						glareOpacity={0.5}
+						glareAngle={-70}
+						glareSize={400}
+						transitionDuration={2000}
+						playOnce={false}
+					>
+						{isLocked ? (
+							<span className="flex items-center gap-2">
+								<ListIcon className="w-4 h-4" />
+								View League Predictions
+							</span>
+						) : (
+							<span className="flex items-center gap-2 text-rose-400">
+								<LockIcon className="w-3 h-3" />
+								Lock prediction to view league
+							</span>
+						)}
+					</GlareHover>
+				</button>
 			)}
 		</motion.div>
 	);
 };
 
-function Schedule() {
-	const {
-		data: sessions,
-		isLoading,
-		error,
-	} = useApi<Session[]>("https://api.openf1.org/v1/sessions", {
-		params: {
-			country_name: "Australia",
-			year: 2026,
-		},
-	});
-
-	const isLiveError = useCallback((error: ApiError) => {
-		const body = error.getBody() as unknown as any;
-		if (error.status === 401) {
-			try {
-				if (body?.detail?.includes("Live")) {
-					return true;
-				}
-			} catch {
-				return false;
-			}
-		}
-		return false;
-	}, []);
+function Schedule({ circuitCode }: { circuitCode: CircuitCode }) {
+	const sessions = SESSIONS.filter((s) => s.circuit_code === circuitCode);
 
 	return (
 		<motion.div
@@ -142,35 +157,9 @@ function Schedule() {
 			className="mt-4"
 		>
 			<H2>Schedule</H2>
-			{isLoading && (
-				<>
-					<Skeleton className="h-13 w-full my-2" />
-					<Skeleton className="h-13 w-full my-2" />
-					<Skeleton className="h-13 w-full my-2" />
-					<Skeleton className="h-13 w-full my-2" />
-					<Skeleton className="h-13 w-full my-2" />
-				</>
-			)}
-			{error ? (
-				isLiveError(error) ? (
-					<Alert variant="default">
-						<AlertTitle className="flex items-center text-xl">
-							Live event in progress
-							<span className="bg-accent-foreground animate-pulse rounded-full size-4 inline-block ml-2"></span>
-						</AlertTitle>
-						<AlertDescription>
-							Check back later for the latest updates.
-						</AlertDescription>
-					</Alert>
-				) : (
-					error.message
-				)
-			) : null}
-			{!error &&
-				sessions &&
-				sessions.length > 0 &&
+			{sessions.length &&
 				sessions.map((session) => (
-					<Session session={session} key={session.session_key} />
+					<SessionRow session={session} key={session.session_key} />
 				))}
 		</motion.div>
 	);
@@ -181,7 +170,7 @@ function dayOfWeek(date: Date): string {
 	return days[date.getDay()];
 }
 
-const Session: React.FC<{ session: Session }> = ({ session }) => {
+const SessionRow: React.FC<{ session: Session }> = ({ session }) => {
 	const start = new Date(session.date_start);
 	const isPast = new Date(session.date_end) < new Date();
 	const isOngoing =

@@ -25,10 +25,7 @@ export async function login(c: Context) {
 
 		const user = result.results[0];
 		if (!user) {
-			return c.json(
-				{ message: "No account found for that email. Create an account first." },
-				404,
-			);
+			return c.json({ message: "No account found for that email. Create an account first." }, 404);
 		}
 
 		return c.json({ message: "Success", user });

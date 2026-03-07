@@ -1,32 +1,34 @@
 import { motion } from "framer-motion";
 import { useCallback, useEffect, useState } from "react";
 import { useLocation, useParams } from "wouter";
-import { DriverSelect, type Driver } from "./Drivers";
+import { LockIcon } from "lucide-react";
+import { PredictionForm } from "./PredictionForm";
 import { POSTERS } from "./images/posters";
 import { RaceHeader } from "./RaceHeader";
-import { RACES_2026 } from "./RaceWeekend";
-import { H2 } from "./Text";
-import { DRIVERS } from "./driver";
+import { RACES_2026 } from "@/data";
 import { useUser } from "@/context/useUser";
 import { useApi } from "@/helpers/useApi";
 import type { Prediction, PredictionContent } from "@/model";
 import { initialPredictions } from "@/model";
-import GlareHover from "@/components/GlareHover";
-import { Spinner } from "@/components/ui/spinner";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { CheckCircle2Icon } from "lucide-react";
+import GlareHover from "@/components/GlareHover";
+import { Spinner } from "@/components/ui/spinner";
 
-const QUALIFYING_KEYS = ["p1", "p2", "p3", "p4", "p5"] as const;
-const GAINER_KEYS = ["g1", "g2", "g3"] as const;
-const LOSER_KEYS = ["l1", "l2", "l3"] as const;
+function getRelativeTime(date: Date): string {
+	const minsAgo = Math.floor((Date.now() - date.getTime()) / 60_000);
+	if (!Number.isFinite(minsAgo) || minsAgo < 1) return "just now";
+	return `${minsAgo} min${minsAgo === 1 ? "" : "s"} ago`;
+}
 
 export function RacePrediction() {
 	const params = useParams();
 	const { user } = useUser();
-	const code = params.code;
-	const race = RACES_2026.find((r) => r.code === code);
+	const circuitCode = params.circuit_code;
+	const race = RACES_2026.find((r) => r.circuit_code === circuitCode);
 	const [, navigate] = useLocation();
 	const [saving, setSaving] = useState(false);
+	const [locking, setLocking] = useState(false);
 	const [saved_at, setSaved_at] = useState<Date | null>(null);
 	const {
 		data: savedPrediction,
@@ -34,113 +36,95 @@ export function RacePrediction() {
 		error,
 		refetch,
 	} = useApi<Prediction>(`/api/predictions`, {
-		params: {
-			raceCode: code ?? "",
-		},
+		params: { circuitCode: circuitCode ?? "" },
 	});
 
-	const [predictions, setPredictions] =
-		useState<PredictionContent>(initialPredictions);
+	const [predictions, setPredictions] = useState<PredictionContent>(initialPredictions);
 
 	useEffect(() => {
 		if (!savedPrediction?.prediction) return;
-		console.log("fetched prediction", savedPrediction);
 
-		const parsed = JSON.parse(
-			savedPrediction.prediction,
-		) as PredictionContent;
+		const parsed = JSON.parse(savedPrediction.prediction) as PredictionContent;
 
 		if (savedPrediction.updated_at) {
-			// SQLite CURRENT_TIMESTAMP → "YYYY-MM-DD HH:MM:SS" (no timezone).
-			// Replace the space with T and append Z to get valid ISO 8601.
 			const iso = savedPrediction.updated_at.replace(" ", "T") + "Z";
 			setSaved_at(new Date(iso));
 		}
 
-		// Avoid unnecessary setState if the parsed value is equal
 		setPredictions((prev) => {
 			const same = JSON.stringify(prev) === JSON.stringify(parsed);
 			return same ? prev : parsed;
 		});
-	}, [savedPrediction?.prediction, savedPrediction?.updated_at]);
+	}, [savedPrediction]);
 
 	const savePredictions = useCallback(async () => {
-		if (!user?.id || !code) {
+		if (!user?.id || !circuitCode) {
 			navigate("/");
 			return;
 		}
 
-		const isComplete = Object.values(predictions).every((section) => {
-			return Object.values(section).every((driver) => driver !== null);
-		});
+		const isComplete = Object.values(predictions).every((section) =>
+			Object.values(section).every((driver) => driver !== null)
+		);
 
 		setSaving(true);
-		const response = await fetch(`/api/predictions`, {
+		const response = await fetch("/api/predictions", {
 			method: "POST",
 			body: JSON.stringify({
-				userId: user?.id,
-				raceCode: code,
+				userId: user.id,
+				circuitCode,
 				predictions,
 				isComplete,
-				created_at:
-					savedPrediction?.created_at ?? new Date().toISOString(),
+				created_at: savedPrediction?.created_at ?? new Date().toISOString(),
 			}),
 		});
-		if (!response.ok) {
-			throw new Error("Failed to save predictions");
-		}
-		const data = await response.json();
-		console.log("Saved prediction", data);
+		if (!response.ok) throw new Error("Failed to save predictions");
 		setSaving(false);
 		refetch();
-	}, [
-		user,
-		code,
-		predictions,
-		navigate,
-		savedPrediction?.created_at,
-		refetch,
-	]);
+	}, [user, circuitCode, predictions, navigate, savedPrediction?.created_at, refetch]);
 
-	const updatePredictions = useCallback(
-		(
-			section: "qualifying" | "race" | "gainers" | "losers",
-			key: string,
-			driver: Driver | null,
-		) => {
-			setPredictions((prev) => ({
-				...prev,
-				[section]: {
-					...prev[section],
-					[key]: driver?.acronym ?? null,
-				},
-			}));
-		},
-		[],
-	);
+	const lockPrediction = useCallback(async () => {
+		if (!user?.id || !circuitCode) return;
+		setLocking(true);
+		const response = await fetch("/api/predictions/lock", {
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body: JSON.stringify({ userId: user.id, circuitCode }),
+		});
+		if (!response.ok) {
+			const body = (await response.json()) as { message?: string };
+			alert(body.message ?? "Failed to lock prediction");
+		}
+		setLocking(false);
+		refetch();
+	}, [user, circuitCode, refetch]);
 
-	if (!race) {
-		return <div>Race not found</div>;
-	}
+	if (!race) return <div>Race not found</div>;
+	if (isLoading) return <div>Loading...</div>;
+	if (error) return <div>Error: {JSON.stringify(error)}</div>;
 
-	if (isLoading) {
-		return <div>Loading...</div>;
-	}
-
-	if (error) {
-		return <div>Error: {JSON.stringify(error)}</div>;
-	}
+	const isLocked = savedPrediction?.locked === 1;
+	const isComplete = savedPrediction
+		? (() => {
+				try {
+					const p = JSON.parse(savedPrediction.prediction ?? "{}") as { isComplete?: boolean };
+					return p.isComplete === true;
+				} catch {
+					return false;
+				}
+			})()
+		: false;
 
 	return (
 		<div className="min-h-screen mb-20">
 			<RaceHeader
-				poster={POSTERS[race.code]}
+				poster={POSTERS[race.circuit_code]}
 				name={race.name}
 				country={race.country}
 				round={race.round}
 				venue={race.venue}
 				date={race.date}
-				raceCode={race.code}
+				circuitCode={race.circuit_code}
 			/>
 
 			<div className="mt-8 px-4 md:px-10 max-w-4xl mx-auto">
@@ -151,237 +135,117 @@ export function RacePrediction() {
 					className="mt-4"
 				>
 					{saved_at ? (
-						<Alert variant={"default"} className="max-w-md mb-12">
-							<CheckCircle2Icon />
+						<Alert variant="default" className="max-w-md mb-12">
+							{isLocked ? <LockIcon className="size-4" /> : <CheckCircle2Icon className="size-4" />}
 							<AlertTitle>
-								{(() => {
-									const minsAgo = Math.floor(
-										(Date.now() - saved_at.getTime()) /
-											60_000,
-									);
-									const label =
-										!Number.isFinite(minsAgo) || minsAgo < 1
-											? "just now"
-											: `${minsAgo} min${minsAgo === 1 ? "" : "s"} ago`;
-									return `Saved ${label} (${saved_at.toLocaleTimeString()})`;
-								})()}
+								{isLocked
+									? `Locked at ${saved_at.toLocaleTimeString()}`
+									: `Saved ${getRelativeTime(saved_at)} (${saved_at.toLocaleTimeString()})`}
 							</AlertTitle>
 							<AlertDescription>
-								You can update your predictions until the start
-								of the qualifying session.
+								{isLocked
+									? "Your predictions are locked in. Good luck!"
+									: "You can update your predictions until you lock them."}
 							</AlertDescription>
 						</Alert>
 					) : null}
 
-					<H2>Qualifying</H2>
-					<p className="text-muted-foreground text-sm">
-						Your top-5 grid prediction.{" "}
-						<a
-							href="/rules#scoring-qualifying"
-							className="text-primary underline-offset-2 hover:underline"
-						>
-							How scoring works →
-						</a>
-					</p>
-					<div className="flex flex-wrap md:flex-nowrap gap-2 mt-2">
-						{QUALIFYING_KEYS.map((key) => (
-							<DriverSelect
-								drivers={DRIVERS.filter(
-									(dr) =>
-										!QUALIFYING_KEYS.some(
-											(k) =>
-												predictions.qualifying[k] ===
-												dr.acronym,
-										),
-								)}
-								key={`qualifying-${key}`}
-								selectedDriver={predictions.qualifying[key]}
-								title={`Select your ${key.toLocaleUpperCase()} Prediction`}
-								onSelect={(driver) => {
-									updatePredictions(
-										"qualifying",
-										key,
-										driver,
-									);
-								}}
-							>
-								<p className="text-xs font-kh">Select</p>
-								<p className="text-4xl font-kh">
-									{key.toLocaleUpperCase()}
-								</p>
-							</DriverSelect>
-						))}
-					</div>
-				</motion.div>
+					<PredictionForm predictions={predictions} onChange={setPredictions} readOnly={isLocked} />
 
-				<motion.div
-					initial={{ opacity: 0, y: 14 }}
-					animate={{ opacity: 1, y: 0 }}
-					transition={{ delay: 0.3, duration: 0.45 }}
-					className="mt-8"
-				>
-					<H2>Race</H2>
-					<p className="text-muted-foreground text-sm">
-						Your top-5 finishing prediction.{" "}
-						<a
-							href="/rules#scoring-qualifying"
-							className="text-primary underline-offset-2 hover:underline"
-						>
-							How scoring works →
-						</a>
-					</p>
-					<div className="flex flex-wrap md:flex-nowrap gap-2 mt-2">
-						{QUALIFYING_KEYS.map((key) => (
-							<DriverSelect
-								drivers={DRIVERS.filter(
-									(dr) =>
-										!QUALIFYING_KEYS.some(
-											(k) =>
-												predictions.race[k] ===
-												dr.acronym,
-										),
-								)}
-								key={`race-${key}`}
-								selectedDriver={predictions.race[key]}
-								title={`Select your ${key.toLocaleUpperCase()} Prediction`}
-								onSelect={(driver) => {
-									updatePredictions("race", key, driver);
-								}}
-							>
-								<p className="text-xs font-kh">Select</p>
-								<p className="text-4xl font-kh">{key}</p>
-							</DriverSelect>
-						))}
-					</div>
-				</motion.div>
+					<div className="mt-8 flex flex-col sm:flex-row gap-3">
+						{!isLocked && (
+							<>
+								{/* Save */}
+								<button
+									type="button"
+									className="flex-1"
+									onClick={savePredictions}
+									disabled={saving}
+								>
+									<GlareHover
+										height="48px"
+										width="100%"
+										background="transparent"
+										borderRadius="12px"
+										className="bg-secondary/20 hover:bg-secondary/80"
+										glareColor="#d71414"
+										glareOpacity={0.5}
+										glareAngle={-70}
+										glareSize={400}
+										transitionDuration={2000}
+										playOnce={false}
+										hoverBackground="rgba(155,155,155,0.4)"
+									>
+										{saving ? <Spinner /> : <p>Save</p>}
+									</GlareHover>
+								</button>
 
-				<motion.div
-					initial={{ opacity: 0, y: 14 }}
-					animate={{ opacity: 1, y: 0 }}
-					transition={{ delay: 0.3, duration: 0.45 }}
-					className="mt-8"
-				>
-					<H2>Biggest Gainers</H2>
-					<p className="text-muted-foreground text-sm">
-						3 drivers who gain the most positions from grid to
-						finish.{" "}
-						<a
-							href="/rules#scoring-gainers-losers"
-							className="text-primary underline-offset-2 hover:underline"
-						>
-							How scoring works →
-						</a>
-					</p>
-					<div className="flex flex-wrap md:flex-nowrap gap-2 mt-2">
-						{GAINER_KEYS.map((key) => (
-							<DriverSelect
-								drivers={DRIVERS.filter(
-									(dr) =>
-										!GAINER_KEYS.some(
-											(k) =>
-												predictions.gainers[k] ===
-												dr.acronym,
-										),
-								)}
-								key={`gainers-${key}`}
-								selectedDriver={predictions.gainers[key]}
-								title={`Select your ${key.toLocaleUpperCase()} Prediction`}
-								onSelect={(driver) => {
-									updatePredictions("gainers", key, driver);
-								}}
-							>
-								<p className="text-xs font-kh">Select</p>
-								<p className="text-4xl font-kh">
-									{key.toLocaleUpperCase()}
-								</p>
-							</DriverSelect>
-						))}
-					</div>
-				</motion.div>
+								{/* Lock — only enabled when prediction is complete */}
+								<button
+									type="button"
+									className="flex-1 disabled:opacity-40 disabled:cursor-not-allowed"
+									onClick={lockPrediction}
+									disabled={locking || !isComplete}
+									title={!isComplete ? "Complete all selections to lock" : undefined}
+								>
+									<GlareHover
+										height="48px"
+										width="100%"
+										background="transparent"
+										borderRadius="12px"
+										className="bg-secondary/20 hover:bg-secondary/80"
+										glareColor="#f59e0b"
+										glareOpacity={0.6}
+										glareAngle={-70}
+										glareSize={400}
+										transitionDuration={2000}
+										playOnce={false}
+										hoverBackground="rgba(155,155,155,0.4)"
+									>
+										{locking ? (
+											<Spinner />
+										) : (
+											<span className="flex items-center justify-center gap-2">
+												<LockIcon className="size-4" />
+												<p>Lock Prediction</p>
+											</span>
+										)}
+									</GlareHover>
+								</button>
+							</>
+						)}
 
-				<motion.div
-					initial={{ opacity: 0, y: 14 }}
-					animate={{ opacity: 1, y: 0 }}
-					transition={{ delay: 0.3, duration: 0.45 }}
-					className="mt-8"
-				>
-					<H2>Biggest Losers</H2>
-					<p className="text-muted-foreground text-sm">
-						3 drivers who lose the most positions from grid to
-						finish.{" "}
-						<a
-							href="/rules#scoring-gainers-losers"
-							className="text-primary underline-offset-2 hover:underline"
+						{/* View League — always visible, red glare until locked */}
+						<button
+							type="button"
+							className="flex-1"
+							onClick={() => isLocked && navigate(`/race/${circuitCode}/league`)}
 						>
-							How scoring works →
-						</a>
-					</p>
-					<div className="flex flex-wrap md:flex-nowrap gap-2 mt-2">
-						{LOSER_KEYS.map((key) => (
-							<DriverSelect
-								drivers={DRIVERS.filter(
-									(dr) =>
-										!LOSER_KEYS.some(
-											(k) =>
-												predictions.losers[k] ===
-												dr.acronym,
-										),
-								)}
-								key={`losers-${key}`}
-								selectedDriver={predictions.losers[key]}
-								title={`Select your ${key.toLocaleUpperCase()} Prediction`}
-								onSelect={(driver) => {
-									updatePredictions("losers", key, driver);
-								}}
+							<GlareHover
+								height="48px"
+								width="100%"
+								background="transparent"
+								hoverBackground="rgba(155,155,155,0.4)"
+								borderRadius="12px"
+								className="bg-secondary/20"
+								glareColor={isLocked ? "#6366f1" : "#f43f5e"}
+								glareOpacity={0.5}
+								glareAngle={-70}
+								glareSize={400}
+								transitionDuration={2000}
+								playOnce={false}
 							>
-								<p className="text-xs font-kh">Select</p>
-								<p className="text-4xl font-kh">
-									{key.toLocaleUpperCase()}
-								</p>
-							</DriverSelect>
-						))}
+								<span className="flex items-center justify-center gap-2">
+									{!isLocked && <LockIcon className="size-3 text-rose-400" />}
+									<p className={!isLocked ? "text-rose-400" : ""}>
+										{isLocked ? "View League" : "Lock to view league"}
+									</p>
+								</span>
+							</GlareHover>
+						</button>
 					</div>
 				</motion.div>
 			</div>
-
-			<div className="mt-8 px-4 md:px-10 max-w-4xl mx-auto">
-				<button
-					type="button"
-					className="w-full"
-					onClick={savePredictions}
-				>
-					<GlareHover
-						height="48px"
-						width="100%"
-						background="transparent"
-						borderRadius="12px"
-						className="bg-secondary/20 hover:bg-secondary/80"
-						glareColor="#d71414"
-						glareOpacity={0.5}
-						glareAngle={-70}
-						glareSize={400}
-						transitionDuration={2000}
-						playOnce={false}
-					>
-						{saving ? <Spinner /> : <p>Save</p>}
-					</GlareHover>
-				</button>
-			</div>
-			{/* <div className="mt-8 px-4 md:px-10 max-w-4xl mx-auto">
-				<BGButton onClick={savePredictions}>Save Predictions</BGButton>
-			</div> */}
-
-			{/* <div className="mt-20 px-10 flex flex-wrap gap-4">
-				{DRIVERS.map((dr) => {
-					return (
-						<DriverCard
-							className="min-w-48"
-							key={dr.acronym}
-							driverTag={dr.acronym}
-						/>
-					);
-				})}
-			</div> */}
 		</div>
 	);
 }
