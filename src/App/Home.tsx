@@ -33,24 +33,15 @@ function RaceCard({
 			to={to}
 			className={cn(
 				"p-4 rounded-lg border border-border bg-card hover:bg-secondary transition-colors",
-				className,
+				className
 			)}
 		>
-			<p className="text-xs uppercase tracking-wider text-muted-foreground mb-2">
-				{label}
-			</p>
+			<p className="text-xs uppercase tracking-wider text-muted-foreground mb-2">{label}</p>
 			<div className="flex items-center gap-3">
-				<Flag
-					className="size-8 rounded shadow-sm"
-					countryCode={race.country as CountryCode}
-				/>
+				<Flag className="size-8 rounded shadow-sm" countryCode={race.country as CountryCode} />
 				<div>
 					<p className="font-medium text-lg">{race.name}</p>
-					{subtitle && (
-						<p className="text-sm text-muted-foreground">
-							{subtitle}
-						</p>
-					)}
+					{subtitle && <p className="text-sm text-muted-foreground">{subtitle}</p>}
 				</div>
 			</div>
 		</Link>
@@ -60,29 +51,22 @@ function RaceCard({
 export function UserHome() {
 	const { user } = useUser();
 
-	const { data: predictionsData } = useApi<UserPredictionsResponse>(
-		"/api/user-predictions",
-		{
-			params: {
-				username: user?.username ?? "",
-				requestingUser: user?.username ?? "",
-			},
+	const { data: predictionsData } = useApi<UserPredictionsResponse>("/api/user-predictions", {
+		params: {
+			username: user?.username ?? "",
+			requestingUser: user?.username ?? "",
 		},
-	);
+	});
 
 	const { now, sixDaysFromNow } = useMemo(() => {
 		const now = new Date();
 		now.setHours(0, 0, 0, 0);
-		const sixDaysFromNow = new Date(
-			now.getTime() + 6 * 24 * 60 * 60 * 1000,
-		);
+		const sixDaysFromNow = new Date(now.getTime() + 6 * 24 * 60 * 60 * 1000);
 		return { now, sixDaysFromNow };
 	}, []);
 
 	const upcomingRace = useMemo(() => {
-		return RACES_2026.find(
-			(race) => race.date >= now && race.date <= sixDaysFromNow,
-		);
+		return RACES_2026.find((race) => race.date >= now && race.date <= sixDaysFromNow);
 	}, [now, sixDaysFromNow]);
 
 	const incompletePrediction = (() => {
@@ -122,9 +106,7 @@ export function UserHome() {
 			},
 			{
 				title: "My Predictions",
-				path: user?.username
-					? `/${user.username}/predictions`
-					: "/my-predictions",
+				path: user?.username ? `/${user.username}/predictions` : "/my-predictions",
 			},
 			{
 				title: user?.username ? (
@@ -140,7 +122,7 @@ export function UserHome() {
 				path: "/profile",
 			},
 		],
-		[user],
+		[user]
 	);
 
 	const showCards = upcomingRace || incompletePrediction;
@@ -159,14 +141,11 @@ export function UserHome() {
 							className="flex-1"
 							race={upcomingRace}
 							label="Upcoming Race"
-							subtitle={upcomingRace.date.toLocaleDateString(
-								"en-US",
-								{
-									weekday: "short",
-									month: "short",
-									day: "numeric",
-								},
-							)}
+							subtitle={upcomingRace.date.toLocaleDateString("en-US", {
+								weekday: "short",
+								month: "short",
+								day: "numeric",
+							})}
 							to={`/race/${upcomingRace.circuit_code}`}
 						/>
 					)}

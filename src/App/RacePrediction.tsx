@@ -51,15 +51,12 @@ export function RacePrediction() {
 		params: { circuitCode: circuitCode ?? "" },
 	});
 
-	const [predictions, setPredictions] =
-		useState<PredictionContent>(initialPredictions);
+	const [predictions, setPredictions] = useState<PredictionContent>(initialPredictions);
 
 	useEffect(() => {
 		if (!savedPrediction?.prediction) return;
 
-		const parsed = JSON.parse(
-			savedPrediction.prediction,
-		) as PredictionContent;
+		const parsed = JSON.parse(savedPrediction.prediction) as PredictionContent;
 
 		if (savedPrediction.updated_at) {
 			const iso = savedPrediction.updated_at.replace(" ", "T") + "Z";
@@ -79,7 +76,7 @@ export function RacePrediction() {
 		}
 
 		const isComplete = Object.values(predictions).every((section) =>
-			Object.values(section).every((driver) => driver !== null),
+			Object.values(section).every((driver) => driver !== null)
 		);
 
 		setSaving(true);
@@ -90,21 +87,13 @@ export function RacePrediction() {
 				circuitCode,
 				predictions,
 				isComplete,
-				created_at:
-					savedPrediction?.created_at ?? new Date().toISOString(),
+				created_at: savedPrediction?.created_at ?? new Date().toISOString(),
 			}),
 		});
 		if (!response.ok) throw new Error("Failed to save predictions");
 		setSaving(false);
 		refetch();
-	}, [
-		user,
-		circuitCode,
-		predictions,
-		navigate,
-		savedPrediction?.created_at,
-		refetch,
-	]);
+	}, [user, circuitCode, predictions, navigate, savedPrediction?.created_at, refetch]);
 
 	const lockPrediction = useCallback(async () => {
 		if (!user?.id || !circuitCode) return;
@@ -130,9 +119,7 @@ export function RacePrediction() {
 	const isComplete = savedPrediction
 		? (() => {
 				try {
-					const p = JSON.parse(
-						savedPrediction.prediction ?? "{}",
-					) as { isComplete?: boolean };
+					const p = JSON.parse(savedPrediction.prediction ?? "{}") as { isComplete?: boolean };
 					return p.isComplete === true;
 				} catch {
 					return false;
@@ -153,11 +140,7 @@ export function RacePrediction() {
 				>
 					{saved_at ? (
 						<Alert variant="default" className="max-w-md mb-12">
-							{isLocked ? (
-								<LockIcon className="size-4" />
-							) : (
-								<CheckCircle2Icon className="size-4" />
-							)}
+							{isLocked ? <LockIcon className="size-4" /> : <CheckCircle2Icon className="size-4" />}
 							<AlertTitle>
 								{isLocked
 									? `Locked at ${saved_at.toLocaleTimeString()}`
@@ -171,11 +154,7 @@ export function RacePrediction() {
 						</Alert>
 					) : null}
 
-					<PredictionForm
-						predictions={predictions}
-						onChange={setPredictions}
-						readOnly={isLocked}
-					/>
+					<PredictionForm predictions={predictions} onChange={setPredictions} readOnly={isLocked} />
 
 					<div className="mt-8 flex flex-col sm:flex-row gap-3">
 						{!isLocked && (
@@ -205,11 +184,7 @@ export function RacePrediction() {
 									className="flex-1 disabled:opacity-40 disabled:cursor-not-allowed"
 									onClick={lockPrediction}
 									disabled={locking || !isComplete}
-									title={
-										!isComplete
-											? "Complete all selections to lock"
-											: undefined
-									}
+									title={!isComplete ? "Complete all selections to lock" : undefined}
 								>
 									<GlareHover
 										glareColor="#f59e0b"
@@ -233,10 +208,7 @@ export function RacePrediction() {
 						<button
 							type="button"
 							className="flex-1"
-							onClick={() =>
-								isLocked &&
-								navigate(`/race/${circuitCode}/league`)
-							}
+							onClick={() => isLocked && navigate(`/race/${circuitCode}/league`)}
 						>
 							<GlareHover
 								glareColor={isLocked ? "#6366f1" : "#f43f5e"}
@@ -244,16 +216,8 @@ export function RacePrediction() {
 								{...glareButtonProps}
 							>
 								<span className="flex items-center justify-center gap-2 font-kh">
-									{!isLocked && (
-										<LockIcon className="size-3 text-rose-400" />
-									)}
-									<p
-										className={
-											!isLocked ? "text-rose-400" : ""
-										}
-									>
-										League predictions
-									</p>
+									{!isLocked && <LockIcon className="size-3 text-rose-400" />}
+									<p className={!isLocked ? "text-rose-400" : ""}>League predictions</p>
 								</span>
 							</GlareHover>
 						</button>
