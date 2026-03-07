@@ -3,6 +3,7 @@ import { Hono } from "hono";
 import { logger } from "hono/logger";
 import { createAccount } from "./routes/create-account";
 import { getPredictions, savePredictions } from "./routes/predictions";
+import { getMyPredictions } from "./routes/my-predictions";
 import { leaderboard } from "./routes/leaderboard";
 import { login } from "./routes/login";
 import { updateProfile } from "./routes/profile";
@@ -20,5 +21,6 @@ app.get("/api/leaderboard", leaderboard);
 app.patch("/api/profile", updateProfile);
 app.get("/api/predictions", getPredictions);
 app.post("/api/predictions", savePredictions);
+app.get("/api/my-predictions", getMyPredictions);
 
 export default app;

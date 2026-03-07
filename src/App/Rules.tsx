@@ -32,7 +32,7 @@ export function Rules() {
 				<motion.div variants={item} className="mb-8">
 					<H1>Rules</H1>
 					<p className="mt-4 text-muted-foreground">
-						How the F1 2026 Prediction Game works
+						How GridLock works
 					</p>
 				</motion.div>
 

@@ -11,14 +11,14 @@ import {
 } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { useUser } from "@/context/useUser";
-import poster from "./assets/posters/mex.jpg";
+import poster from "./assets/GridLock2026.webp";
 import { Badge } from "./components/ui/badge";
 
 const BetaBadge = () => {
 	return (
 		<Badge
 			variant="secondary"
-			className="text-xs uppercase tracking-[0.3em] text-muted-foreground"
+			className="text-xxs pt-1 uppercase tracking-[0.3em] text-muted-foreground"
 		>
 			Beta
 		</Badge>
@@ -63,7 +63,7 @@ function AuthShell({ children }: { children: React.ReactNode }) {
 				className="absolute inset-0 bg-cover bg-center scale-110"
 				style={{
 					backgroundImage: `url(${poster})`,
-					filter: "blur(4px) brightness(0.85)",
+					filter: "blur(1px) brightness(0.85)",
 				}}
 			/>
 			<div className="texture-bg absolute inset-0 pointer-events-none" />
@@ -71,7 +71,7 @@ function AuthShell({ children }: { children: React.ReactNode }) {
 				initial={{ opacity: 0, y: 20 }}
 				animate={{ opacity: 1, y: 0 }}
 				transition={{ duration: 0.5, ease: "easeOut" }}
-				className="bg-background/80 backdrop-blur-sm p-12 rounded-lg relative z-10 w-full max-w-md px-4"
+				className="m-1 bg-background/80 backdrop-blur-sm p-12 rounded-lg relative z-10 w-full max-w-md px-4"
 			>
 				{children}
 			</motion.div>
@@ -132,9 +132,11 @@ export function Login() {
 	return (
 		<AuthShell>
 			<p className="font-kh text-sm uppercase tracking-[0.3em] text-muted-foreground mb-6">
-				F1 Predictions 2026 <BetaBadge />
+				GridLock 2026 <BetaBadge />
 			</p>
-			<h1 className="text-4xl font-medium tracking-tight mb-8">Log in</h1>
+			<h1 className="text-4xl font-audiowide uppercase font-medium tracking-tight mb-8">
+				Log in
+			</h1>
 
 			<form onSubmit={handleLogin} autoComplete="email">
 				<FieldSet className="w-full">
@@ -221,7 +223,8 @@ export function CreateAccount() {
 		} catch (error) {
 			setState({
 				status: "error",
-				message: error instanceof Error ? error.message : "Unexpected error",
+				message:
+					error instanceof Error ? error.message : "Unexpected error",
 			});
 		}
 	};
@@ -231,7 +234,7 @@ export function CreateAccount() {
 	return (
 		<AuthShell>
 			<p className="font-kh text-sm uppercase tracking-[0.3em] text-muted-foreground mb-6">
-				F1 Predictions 2026 <BetaBadge />
+				GridLock 2026 <BetaBadge />
 			</p>
 			<h1 className="text-4xl font-audiowide uppercase font-medium tracking-tight mb-8">
 				Create account

@@ -12,6 +12,13 @@ export async function getPredictionsByUserAndRace(
 		.first<Prediction>();
 }
 
+export async function getAllPredictionsByUser(db: D1Database, userId: number) {
+	return db
+		.prepare("SELECT * FROM predictions WHERE user_id = ? ORDER BY updated_at DESC")
+		.bind(userId)
+		.all<Prediction>();
+}
+
 export async function upsertPrediction(
 	db: D1Database,
 	userId: number,

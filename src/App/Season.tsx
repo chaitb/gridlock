@@ -3,10 +3,31 @@ import { Link } from "wouter";
 import { AppLayout } from "./Layout";
 
 const sublinks = [
-	{ title: "WDC", path: "/season/wdc", description: "World Drivers' Championship" },
-	{ title: "WCC", path: "/season/wcc", description: "World Constructors' Championship" },
-	{ title: "Mid-Season", path: "/season/mid-season", description: "Mid-season standings update" },
-	{ title: "My Team", path: "/season/my-team", description: "Your personal team predictions" },
+	{
+		title: "Race Predictions",
+		path: "/race",
+		description: "Predictions for each race",
+	},
+	{
+		title: "WDC",
+		path: "/season/wdc",
+		description: "World Drivers' Championship",
+	},
+	{
+		title: "WCC",
+		path: "/season/wcc",
+		description: "World Constructors' Championship",
+	},
+	{
+		title: "Mid-Season",
+		path: "/season/mid-season",
+		description: "Mid-season standings update",
+	},
+	{
+		title: "My Team",
+		path: "/season/my-team",
+		description: "Your personal team predictions",
+	},
 ];
 
 const container = {
@@ -22,7 +43,9 @@ const item = {
 export function Season() {
 	return (
 		<AppLayout>
-			<h1 className="mt-8 mb-6 text-3xl font-medium tracking-tight">2026 Season Predictions</h1>
+			<h1 className="mt-8 mb-6 text-3xl font-medium tracking-tight">
+				2026 Season Predictions
+			</h1>
 			<motion.ul
 				variants={container}
 				initial="hidden"
@@ -36,7 +59,9 @@ export function Season() {
 								<p className="text-2xl font-medium tracking-tight group-hover:text-muted-foreground transition-colors duration-200">
 									{l.title}
 								</p>
-								<p className="text-sm text-muted-foreground">{l.description}</p>
+								<p className="text-sm text-muted-foreground">
+									{l.description}
+								</p>
 							</div>
 						</Link>
 					</motion.li>
