@@ -3,7 +3,8 @@ import { Link } from "wouter";
 import { Flag } from "@/components/flags";
 import { cn } from "@/lib/utils";
 import { AppLayout } from "./Layout";
-import { RACES_2026 } from "@/data";
+import { RACES_2026, SESSIONS } from "@/data";
+import type { Race } from "@/model";
 
 const container = {
 	hidden: {},
@@ -54,10 +55,7 @@ export function RaceWeekend() {
 								<p className="text-sm text-muted-foreground truncate font-thin">{race.venue}</p>
 							</div>
 							<span className="shrink-0 text-xl md:text-2xl font-thin text-muted-foreground">
-								{race.date.toLocaleDateString("en-US", {
-									month: "short",
-									day: "numeric",
-								})}
+								{dateRange(race)}
 							</span>
 						</Link>
 					</motion.li>
@@ -65,4 +63,37 @@ export function RaceWeekend() {
 			</motion.ul>
 		</AppLayout>
 	);
+}
+
+function dateRange(race: Race): string {
+	const sessions = SESSIONS.filter((s) => s.circuit_code === race.circuit_code).sort(
+		(a, b) => new Date(a.date_start).getTime() - new Date(b.date_start).getTime()
+	);
+	if (sessions.length === 0) {
+		return "—";
+	}
+	if (sessions.length === 1) {
+		return new Date(sessions[0].date_start).toLocaleDateString("en-US", {
+			month: "short",
+			day: "numeric",
+		});
+	}
+	const start = new Date(sessions[0].date_start);
+	const end = new Date(sessions[sessions.length - 1].date_end);
+	if (start.getMonth() === end.getMonth() && start.getFullYear() === end.getFullYear()) {
+		return `${start.toLocaleDateString("en-US", {
+			day: "numeric",
+		})} - ${end.toLocaleDateString("en-US", {
+			day: "numeric",
+		})} ${end.toLocaleDateString("en-US", {
+			month: "short",
+		})}`;
+	}
+	return `${start.toLocaleDateString("en-US", {
+		month: "short",
+		day: "numeric",
+	})} - ${end.toLocaleDateString("en-US", {
+		day: "numeric",
+		month: "short",
+	})}`;
 }

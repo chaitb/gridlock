@@ -19,13 +19,14 @@ export async function getAllPredictionsByUser(db: D1Database, userId: number) {
 		.all<Prediction>();
 }
 
-export async function getAllPredictionsByRace(db: D1Database, circuitCode: string) {
+export async function getAllLockedPredictionsByRace(db: D1Database, circuitCode: string) {
 	return db
 		.prepare(
 			`SELECT p.id, p.user_id, p.circuit_code, p.prediction, p.created_at, p.updated_at, u.username
 			 FROM predictions p
 			 JOIN players u ON p.user_id = u.id
 			 WHERE p.circuit_code = ?
+			 AND p.locked = 1
 			 ORDER BY p.updated_at DESC`
 		)
 		.bind(circuitCode)

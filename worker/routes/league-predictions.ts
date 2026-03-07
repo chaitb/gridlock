@@ -1,5 +1,8 @@
 import type { Context } from "hono";
-import { getAllPredictionsByRace, getPredictionsByUserAndRace } from "../queries/predictionQueries";
+import {
+	getAllLockedPredictionsByRace,
+	getPredictionsByUserAndRace,
+} from "../queries/predictionQueries";
 import { findUserByUsernameOrEmail } from "../queries/userQueries";
 
 export async function getLeaguePredictions(c: Context) {
@@ -29,19 +32,25 @@ export async function getLeaguePredictions(c: Context) {
 
 		if (!userPrediction?.prediction) {
 			return c.json(
-				{ message: "You must submit your predictions first", code: "PREDICTION_REQUIRED" },
+				{
+					message: "You must submit your predictions first",
+					code: "PREDICTION_REQUIRED",
+				},
 				403
 			);
 		}
 
 		if (!userPrediction.locked) {
 			return c.json(
-				{ message: "Lock your predictions to view the league", code: "PREDICTION_INCOMPLETE" },
+				{
+					message: "Lock your predictions to view the league",
+					code: "PREDICTION_INCOMPLETE",
+				},
 				403
 			);
 		}
 
-		const result = await getAllPredictionsByRace(env.F1_PREDICTIONS, circuitCode);
+		const result = await getAllLockedPredictionsByRace(env.F1_PREDICTIONS, circuitCode);
 
 		return c.json({ predictions: result.results });
 	} catch (error) {

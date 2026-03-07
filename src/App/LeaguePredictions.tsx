@@ -5,16 +5,15 @@ import { PredictionForm } from "./PredictionForm";
 import { useApi } from "@/helpers/useApi";
 import { AppLayout } from "./Layout";
 import { RACES_2026 } from "@/data";
-import { DRIVERS } from "./driver";
 import type { ApiError } from "@/helpers/useApi";
 import type { PredictionContent } from "@/model";
-import { GAINER_KEYS, LOSER_KEYS, QUALIFYING_KEYS } from "./PredictionForm";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { container, item, PredictionCardContent } from "./PredictionCard";
 
 type LeaguePrediction = {
 	id: number;
 	user_id: number;
-	race_code: string;
+	circuit_code: string;
 	prediction: string;
 	created_at: string;
 	updated_at: string;
@@ -24,57 +23,6 @@ type LeaguePrediction = {
 type LeaguePredictionsResponse = {
 	predictions: LeaguePrediction[];
 };
-
-const container = {
-	hidden: {},
-	show: { transition: { staggerChildren: 0.05 } },
-};
-
-const item = {
-	hidden: { opacity: 0, y: 8 },
-	show: { opacity: 1, y: 0, transition: { duration: 0.3 } },
-};
-
-function getDriverByAcronym(acronym: string | null) {
-	if (!acronym) return null;
-	return DRIVERS.find((d) => d.acronym === acronym);
-}
-
-function DriverPill({ acronym }: { acronym: string | null }) {
-	const driver = getDriverByAcronym(acronym);
-	if (!driver) {
-		return <span className="px-2 py-0.5 rounded text-xs bg-muted text-muted-foreground">—</span>;
-	}
-	return (
-		<span
-			className="px-2 py-0.5 rounded text-xs font-medium text-white"
-			style={{ backgroundColor: `#${driver.colour}` }}
-		>
-			{driver.acronym}
-		</span>
-	);
-}
-
-function PredictionSection({
-	title,
-	keys,
-	prediction,
-}: {
-	title: string;
-	keys: readonly string[];
-	prediction: Record<string, string | null>;
-}) {
-	return (
-		<div className="space-y-1">
-			<p className="text-[10px] uppercase tracking-wider text-muted-foreground">{title}</p>
-			<div className="flex flex-wrap gap-1">
-				{keys.map((key) => (
-					<DriverPill key={key} acronym={prediction[key]} />
-				))}
-			</div>
-		</div>
-	);
-}
 
 export function LeaguePredictions() {
 	const params = useParams();
@@ -200,28 +148,7 @@ export function LeaguePredictions() {
 									<div className="flex items-center justify-between mb-3">
 										<span className="font-medium text-lg">{pred.username}</span>
 									</div>
-									<div className="grid gap-3">
-										<PredictionSection
-											title="Qualifying"
-											keys={QUALIFYING_KEYS}
-											prediction={content.qualifying}
-										/>
-										<PredictionSection
-											title="Race"
-											keys={QUALIFYING_KEYS}
-											prediction={content.race}
-										/>
-										<PredictionSection
-											title="Gainers"
-											keys={GAINER_KEYS}
-											prediction={content.gainers}
-										/>
-										<PredictionSection
-											title="Losers"
-											keys={LOSER_KEYS}
-											prediction={content.losers}
-										/>
-									</div>
+									<PredictionCardContent content={content} />
 								</motion.button>
 							);
 						})}

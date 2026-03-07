@@ -6,12 +6,18 @@ import { cn } from "@/lib/utils";
 import type { Prediction, CircuitCode, Session } from "@/model";
 import { H2 } from "./Text";
 import { RaceHeader } from "./RaceHeader";
-import { POSTERS } from "./images/posters";
 import { AppLayout } from "./Layout";
 import { RACES_2026 } from "@/data";
 import { useApi } from "@/helpers/useApi";
 import GlareHover from "@/components/GlareHover";
-import { ListIcon, LockIcon, PencilLineIcon } from "lucide-react";
+import {
+	ClockIcon,
+	DumbbellIcon,
+	ListIcon,
+	LockIcon,
+	PencilLineIcon,
+	TrophyIcon,
+} from "lucide-react";
 import { SESSIONS } from "@/data";
 
 export function Race() {
@@ -28,38 +34,38 @@ export function Race() {
 					</Link>
 					{" / "}Not found
 				</p>
-				<h1 className="mt-2 text-3xl font-medium tracking-tight">
-					Race not found
-				</h1>
+				<h1 className="mt-2 text-3xl font-medium tracking-tight">Race not found</h1>
 			</AppLayout>
 		);
 	}
 
 	return (
 		<>
-			<RaceHeader
-				poster={POSTERS[race.circuit_code]}
-				name={race.name}
-				country={race.country}
-				round={race.round}
-				venue={race.venue}
-				date={race.date}
-				circuitCode={race.circuit_code}
-			/>
-
+			<RaceHeader race={race} />
 			<div className="mt-8 px-4 md:px-10">
-				<Schedule circuitCode={race.circuit_code} />
+				<Predictions circuitCode={race.circuit_code} />
 			</div>
 			<div className="mt-8 px-4 md:px-10 mb-20">
-				<Predictions circuitCode={race.circuit_code} />
+				<Schedule circuitCode={race.circuit_code} />
 			</div>
 		</>
 	);
 }
 
-const Predictions: React.FC<{ circuitCode: CircuitCode }> = ({
-	circuitCode,
-}) => {
+const glareButtonProps = {
+	height: "80px",
+	width: "100%",
+	background: "transparent",
+	hoverBackground: "rgba(255,255,255,0.06)",
+	borderRadius: "12px",
+	glareOpacity: 0.5,
+	glareAngle: -70,
+	glareSize: 400,
+	transitionDuration: 2000,
+	playOnce: false,
+};
+
+const Predictions: React.FC<{ circuitCode: CircuitCode }> = ({ circuitCode }) => {
 	const [, navigate] = useLocation();
 	const { data: pred, error } = useApi<Prediction>(`/api/predictions`, {
 		params: { circuitCode },
@@ -83,21 +89,8 @@ const Predictions: React.FC<{ circuitCode: CircuitCode }> = ({
 					className="w-full"
 					onClick={() => navigate(`/race/${circuitCode}/prediction`)}
 				>
-					<GlareHover
-						height="48px"
-						width="100%"
-						background="transparent"
-						hoverBackground="rgba(255,255,255,0.06)"
-						borderRadius="12px"
-						className="bg-secondary/20"
-						glareColor="#d71414"
-						glareOpacity={0.5}
-						glareAngle={-70}
-						glareSize={400}
-						transitionDuration={2000}
-						playOnce={false}
-					>
-						<span className="flex items-center gap-2">
+					<GlareHover glareColor="#d71414" className="bg-secondary/20" {...glareButtonProps}>
+						<span className="flex items-center gap-2 font-kh">
 							<PencilLineIcon className="w-4 h-4" />
 							{isLocked ? "View Prediction" : "Edit Prediction"}
 						</span>
@@ -110,26 +103,15 @@ const Predictions: React.FC<{ circuitCode: CircuitCode }> = ({
 				<button
 					type="button"
 					className="w-full mt-3"
-					onClick={() =>
-						isLocked && navigate(`/race/${circuitCode}/league`)
-					}
+					onClick={() => isLocked && navigate(`/race/${circuitCode}/league`)}
 				>
 					<GlareHover
-						height="48px"
-						width="100%"
-						background="transparent"
-						hoverBackground="rgba(255,255,255,0.06)"
-						borderRadius="12px"
-						className="bg-secondary/20"
 						glareColor={isLocked ? "#6366f1" : "#f43f5e"}
-						glareOpacity={0.5}
-						glareAngle={-70}
-						glareSize={400}
-						transitionDuration={2000}
-						playOnce={false}
+						className="bg-secondary/20"
+						{...glareButtonProps}
 					>
 						{isLocked ? (
-							<span className="flex items-center gap-2">
+							<span className="flex items-center gap-2 font-kh">
 								<ListIcon className="w-4 h-4" />
 								View League Predictions
 							</span>
@@ -158,9 +140,7 @@ function Schedule({ circuitCode }: { circuitCode: CircuitCode }) {
 		>
 			<H2>Schedule</H2>
 			{sessions.length &&
-				sessions.map((session) => (
-					<SessionRow session={session} key={session.session_key} />
-				))}
+				sessions.map((session) => <SessionRow session={session} key={session.session_key} />)}
 		</motion.div>
 	);
 }
@@ -170,11 +150,28 @@ function dayOfWeek(date: Date): string {
 	return days[date.getDay()];
 }
 
+function SessionIcon({
+	session_type,
+	...props
+}: { session_type: string } & React.SVGProps<SVGSVGElement>) {
+	switch (session_type) {
+		case "Race":
+			return <TrophyIcon {...props} />;
+		case "Practice":
+			return <DumbbellIcon {...props} />;
+		case "Qualifying":
+			return <ClockIcon {...props} />;
+		case "Sprint":
+			return <TrophyIcon {...props} />;
+		default:
+			return <ClockIcon {...props} />;
+	}
+}
+
 const SessionRow: React.FC<{ session: Session }> = ({ session }) => {
 	const start = new Date(session.date_start);
 	const isPast = new Date(session.date_end) < new Date();
-	const isOngoing =
-		start < new Date() && new Date(session.date_end) > new Date();
+	const isOngoing = start < new Date() && new Date(session.date_end) > new Date();
 	return (
 		<div
 			className={cn("px-4 py-1 border border-border my-2 rounded-md", {
@@ -183,7 +180,8 @@ const SessionRow: React.FC<{ session: Session }> = ({ session }) => {
 			})}
 		>
 			<div className="flex flex-row items-center">
-				<p className={cn("flex-grow text-2xl")}>
+				<p className="flex items-center gap-2 flex-grow text-2xl">
+					<SessionIcon className="size-5" session_type={session.session_type} />
 					{session.session_name}
 				</p>
 				<div className="text-right font-kh">
@@ -194,11 +192,7 @@ const SessionRow: React.FC<{ session: Session }> = ({ session }) => {
 							day: "numeric",
 						})}
 					</p>
-					<p>
-						{new Date(session.date_start).toLocaleTimeString(
-							"en-US",
-						)}
-					</p>
+					<p>{new Date(session.date_start).toLocaleTimeString("en-US")}</p>
 				</div>
 			</div>
 		</div>

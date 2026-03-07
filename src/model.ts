@@ -214,7 +214,7 @@ export type CircuitCode =
 	| "catalunya"
 	| "spielberg"
 	| "silverstone"
-	| "spa"
+	| "spa-francorchamps"
 	| "hungaroring"
 	| "zandvoort"
 	| "monza"

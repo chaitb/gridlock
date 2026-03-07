@@ -47,14 +47,6 @@ export const FLAGS: Record<CountryCode, string> = {
 	usa,
 } as const;
 
-export function Flag({
-	countryCode,
-	className,
-}: {
-	countryCode: CountryCode;
-	className?: string;
-}) {
-	return (
-		<img src={FLAGS[countryCode]} alt={countryCode} className={className} />
-	);
+export function Flag({ countryCode, className }: { countryCode: CountryCode; className?: string }) {
+	return <img src={FLAGS[countryCode]} alt={countryCode} className={className} />;
 }

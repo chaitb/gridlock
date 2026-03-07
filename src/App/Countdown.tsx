@@ -15,7 +15,7 @@ const Countdown: React.FC<{ date: Date; className?: string }> = memo(({ date, cl
 
 	return (
 		<div className={cn("flex items-center justify-center gap-4 font-mono", className)}>
-			<TimeUnit value={timeLeft.days} label="Days" />
+			{timeLeft.days > 0 && <TimeUnit value={timeLeft.days} label="Days" />}
 			<TimeUnit value={timeLeft.hours} label="Hours" />
 			<TimeUnit value={timeLeft.minutes} label="Minutes" />
 			<TimeUnit value={timeLeft.seconds} label="Seconds" />

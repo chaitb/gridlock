@@ -6,7 +6,7 @@ import { UserPredictions } from "./App/MyPredictions";
 import { Profile } from "./App/Profile";
 import { Race } from "./App/Race";
 import { RacePrediction } from "./App/RacePrediction";
-import { RaceWeekend } from "./App/RaceWeekend";
+import { RaceWeekend } from "./App/Calendar";
 import { Rules } from "./App/Rules";
 import { Season } from "./App/Season";
 import { MidSeason } from "./App/Season/MidSeason";

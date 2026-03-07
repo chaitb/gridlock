@@ -8,11 +8,11 @@ export const RACES_2026: Race[] = ALL_RACES.map((race) => ({
 	code: race.code as RaceCode,
 	date: new Date(race.date),
 	country: race.country as CountryCode,
-	circuit_code: race.circuit_code as CircuitCode,
+	circuit_code: race.circuit_short_name.toLocaleLowerCase().replace(" ", "-") as CircuitCode,
 }));
 
 export const SESSIONS: Session[] = ALL_SESSIONS.map((session) => ({
 	...session,
 	country_code: session.country_code as CountryCode,
-	circuit_code: session.circuit_short_name.toLocaleLowerCase() as CircuitCode,
+	circuit_code: session.circuit_short_name.toLocaleLowerCase().replace(" ", "-") as CircuitCode,
 }));
