@@ -2,7 +2,8 @@ import { motion } from "framer-motion";
 import { useState } from "react";
 import { Link, useLocation, useParams } from "wouter";
 import { PencilLineIcon } from "lucide-react";
-import { type CountryCode, Flag } from "@/components/flags";
+import { Flag } from "@/components/flags";
+import type { CountryCode } from "@/model";
 import { useApi } from "@/helpers/useApi";
 import { useUser } from "@/context/useUser";
 import { AppLayout } from "./Layout";
@@ -12,7 +13,12 @@ import { BGButton } from "@/components/BGButton";
 import { PredictionForm } from "./PredictionForm";
 import { GAINER_KEYS, LOSER_KEYS, QUALIFYING_KEYS } from "./PredictionForm";
 import type { Prediction, PredictionContent } from "@/model";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import {
+	Dialog,
+	DialogContent,
+	DialogHeader,
+	DialogTitle,
+} from "@/components/ui/dialog";
 
 type UserPredictionsResponse = {
 	predictions: Prediction[];
@@ -40,7 +46,11 @@ function getDriverByAcronym(acronym: string | null) {
 function DriverPill({ acronym }: { acronym: string | null }) {
 	const driver = getDriverByAcronym(acronym);
 	if (!driver) {
-		return <span className="px-2 py-0.5 rounded text-xs bg-muted text-muted-foreground">—</span>;
+		return (
+			<span className="px-2 py-0.5 rounded text-xs bg-muted text-muted-foreground">
+				—
+			</span>
+		);
 	}
 	return (
 		<span
@@ -63,7 +73,9 @@ function PredictionSection({
 }) {
 	return (
 		<div className="space-y-1">
-			<p className="text-xs uppercase tracking-wider text-muted-foreground">{title}</p>
+			<p className="text-xs uppercase tracking-wider text-muted-foreground">
+				{title}
+			</p>
 			<div className="flex flex-wrap gap-1">
 				{keys.map((key) => (
 					<DriverPill key={key} acronym={prediction[key]} />
@@ -93,7 +105,10 @@ function PredictionCard({
 	const inner = (
 		<>
 			<div className="flex items-center gap-3 mb-3">
-				<Flag className="size-5 rounded-full shadow-sm" countryCode={race.country as CountryCode} />
+				<Flag
+					className="size-5 rounded-full shadow-sm"
+					countryCode={race.country as CountryCode}
+				/>
 				<span className="font-medium">{race.name}</span>
 				{updated && (
 					<span className="text-xs text-muted-foreground ml-auto">
@@ -107,9 +122,21 @@ function PredictionCard({
 					keys={QUALIFYING_KEYS}
 					prediction={content.qualifying}
 				/>
-				<PredictionSection title="Race" keys={QUALIFYING_KEYS} prediction={content.race} />
-				<PredictionSection title="Gainers" keys={GAINER_KEYS} prediction={content.gainers} />
-				<PredictionSection title="Losers" keys={LOSER_KEYS} prediction={content.losers} />
+				<PredictionSection
+					title="Race"
+					keys={QUALIFYING_KEYS}
+					prediction={content.race}
+				/>
+				<PredictionSection
+					title="Gainers"
+					keys={GAINER_KEYS}
+					prediction={content.gainers}
+				/>
+				<PredictionSection
+					title="Losers"
+					keys={LOSER_KEYS}
+					prediction={content.losers}
+				/>
 			</div>
 		</>
 	);
@@ -120,7 +147,9 @@ function PredictionCard({
 				<button
 					type="button"
 					className="block w-full text-left p-4 hover:bg-secondary transition-colors"
-					onClick={() => navigate(`/race/${race.circuit_code}/prediction`)}
+					onClick={() =>
+						navigate(`/race/${race.circuit_code}/prediction`)
+					}
 				>
 					{inner}
 				</button>
@@ -145,20 +174,26 @@ export function UserPredictions() {
 	const params = useParams();
 	const { user } = useUser();
 	const username = params.username;
-	const [selectedPrediction, setSelectedPrediction] = useState<Prediction | null>(null);
+	const [selectedPrediction, setSelectedPrediction] =
+		useState<Prediction | null>(null);
 	const [dialogOpen, setDialogOpen] = useState(false);
 
-	const { data, isLoading, error } = useApi<UserPredictionsResponse>("/api/user-predictions", {
-		params: {
-			username: username ?? "",
-			requestingUser: user?.username ?? "",
+	const { data, isLoading, error } = useApi<UserPredictionsResponse>(
+		"/api/user-predictions",
+		{
+			params: {
+				username: username ?? "",
+				requestingUser: user?.username ?? "",
+			},
 		},
-	});
+	);
 
 	if (!user) {
 		return (
 			<AppLayout headline="Predictions">
-				<p className="text-muted-foreground">Please log in to view predictions.</p>
+				<p className="text-muted-foreground">
+					Please log in to view predictions.
+				</p>
 			</AppLayout>
 		);
 	}
@@ -203,7 +238,8 @@ export function UserPredictions() {
 					className="space-y-4"
 				>
 					<p className="text-muted-foreground">
-						{isOwner ? "You haven't" : `${username} hasn't`} made any predictions yet.
+						{isOwner ? "You haven't" : `${username} hasn't`} made
+						any predictions yet.
 					</p>
 					{isOwner && (
 						<Link
@@ -223,14 +259,20 @@ export function UserPredictions() {
 							className="mb-6 p-4 rounded-lg border border-border bg-card"
 						>
 							<p className="text-sm text-muted-foreground mb-3">
-								Submit your predictions to view {username}'s picks for these races:
+								Submit your predictions to view {username}'s
+								picks for these races:
 							</p>
 							<div className="flex flex-wrap gap-2">
 								{unavailableRaces.map((circuitCode) => {
-									const race = RACES_2026.find((r) => r.circuit_code === circuitCode);
+									const race = RACES_2026.find(
+										(r) => r.circuit_code === circuitCode,
+									);
 									if (!race) return null;
 									return (
-										<Link key={circuitCode} to={`/race/${circuitCode}/prediction`}>
+										<Link
+											key={circuitCode}
+											to={`/race/${circuitCode}/prediction`}
+										>
 											<BGButton className="h-12 px-4">
 												<PencilLineIcon className="w-4 h-4 inline-block mr-2" />
 												{race.name}
@@ -249,18 +291,24 @@ export function UserPredictions() {
 						className="flex flex-col divide-y divide-border"
 					>
 						{RACES_2026.map((race) => {
-							const pred = predictionsByRace.get(race.circuit_code);
+							const pred = predictionsByRace.get(
+								race.circuit_code,
+							);
 							if (!pred) return null;
 
 							let content: PredictionContent | null = null;
 							try {
-								content = JSON.parse(pred.prediction ?? "{}") as PredictionContent;
+								content = JSON.parse(
+									pred.prediction ?? "{}",
+								) as PredictionContent;
 							} catch {
 								return null;
 							}
 
 							const updated = pred.updated_at
-								? new Date(`${pred.updated_at.replace(" ", "T")}Z`)
+								? new Date(
+										`${pred.updated_at.replace(" ", "T")}Z`,
+									)
 								: null;
 
 							return (
@@ -284,12 +332,17 @@ export function UserPredictions() {
 					{selectedPrediction && (
 						<>
 							<DialogHeader>
-								<DialogTitle>{username}'s Prediction</DialogTitle>
+								<DialogTitle>
+									{username}'s Prediction
+								</DialogTitle>
 							</DialogHeader>
 							<div className="mt-4">
 								<PredictionForm
 									predictions={
-										JSON.parse(selectedPrediction.prediction ?? "{}") as PredictionContent
+										JSON.parse(
+											selectedPrediction.prediction ??
+												"{}",
+										) as PredictionContent
 									}
 									onChange={() => {}}
 									readOnly

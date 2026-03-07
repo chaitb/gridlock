@@ -1,5 +1,27 @@
 import { z } from "zod";
-import type { CountryCode } from "./components/flags";
+
+export type CountryCode =
+	| "aus"
+	| "aut"
+	| "aze"
+	| "bel"
+	| "bra"
+	| "brn"
+	| "can"
+	| "chn"
+	| "esp"
+	| "gbr"
+	| "hun"
+	| "ita"
+	| "jpn"
+	| "ksa"
+	| "mex"
+	| "mon"
+	| "ned"
+	| "qat"
+	| "sgp"
+	| "uae"
+	| "usa";
 
 const driverTagSchema = z.enum([
 	"NOR",

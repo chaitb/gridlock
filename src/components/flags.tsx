@@ -1,4 +1,5 @@
 // 3-letter codes — used for F1 2026 races
+import type { CountryCode } from "@/model";
 import aus from "../assets/flags/aus.svg";
 import aut from "../assets/flags/aut.svg";
 import aze from "../assets/flags/aze.svg";
@@ -21,7 +22,7 @@ import sgp from "../assets/flags/sgp.svg";
 import uae from "../assets/flags/uae.svg";
 import usa from "../assets/flags/usa.svg";
 
-export const flags = {
+export const FLAGS: Record<CountryCode, string> = {
 	// 3-letter (F1 2026 races)
 	aus,
 	aut,
@@ -44,11 +45,16 @@ export const flags = {
 	sgp,
 	uae,
 	usa,
-	// 2-letter (legacy)
 } as const;
 
-export type CountryCode = keyof typeof flags;
-
-export function Flag({ countryCode, className }: { countryCode: CountryCode; className?: string }) {
-	return <img src={flags[countryCode]} alt={countryCode} className={className} />;
+export function Flag({
+	countryCode,
+	className,
+}: {
+	countryCode: CountryCode;
+	className?: string;
+}) {
+	return (
+		<img src={FLAGS[countryCode]} alt={countryCode} className={className} />
+	);
 }

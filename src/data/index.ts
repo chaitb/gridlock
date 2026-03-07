@@ -1,6 +1,6 @@
 import ALL_RACES from "./races.json";
 import ALL_SESSIONS from "./sessions.json";
-import type { CountryCode } from "@/components/flags";
+import type { CountryCode } from "@/model";
 import type { RaceCode, Race, Session, CircuitCode } from "@/model";
 
 export const RACES_2026: Race[] = ALL_RACES.map((race) => ({

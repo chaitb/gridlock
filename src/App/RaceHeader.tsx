@@ -1,8 +1,7 @@
 import { motion } from "framer-motion";
 import { Link } from "wouter";
 import { Flag } from "@/components/flags";
-import type { CountryCode } from "@/components/flags";
-import type { CircuitCode } from "@/model";
+import type { CountryCode, CircuitCode } from "@/model";
 import Countdown from "./Countdown";
 
 type RaceHeaderProps = {
@@ -41,7 +40,11 @@ export function RaceHeader({
 			animate={{ opacity: 1, y: 0 }}
 			transition={{ duration: 0.35 }}
 		>
-			<img src={poster} alt={name} className="absolute z-0 inset-0 object-cover w-full h-full" />
+			<img
+				src={poster}
+				alt={name}
+				className="absolute z-0 inset-0 object-cover w-full h-full"
+			/>
 			<div className="relative z-10 px-4 md:px-10 text-white w-full min-h-100 bg-linear-to-br from-red-500/40 to-black/60 py-6">
 				<p className="text-sm font-kh">
 					<Link to="/home" className="hover:underline">
@@ -52,7 +55,10 @@ export function RaceHeader({
 						Race Calendar
 					</Link>
 					{" / "}
-					<Link to={`/race/${circuitCode}`} className="hover:underline">
+					<Link
+						to={`/race/${circuitCode}`}
+						className="hover:underline"
+					>
 						{name}
 					</Link>
 				</p>
@@ -60,13 +66,18 @@ export function RaceHeader({
 					<h1 className="flex-1 font-round drop-shadow-xl tracking-wide text-6xl lg:text-9xl font-light mr-12 mb-4">
 						{name}
 					</h1>
-					<Flag className="w-32 h-24 rounded-md shadow-xl mb-4" countryCode={country} />
+					<Flag
+						className="w-32 h-24 rounded-md shadow-xl mb-4"
+						countryCode={country}
+					/>
 				</div>
 				<div className="font-kh">
 					<p> Round {round}</p>
 					<p> {venue}</p>
 					<p> {raceDate}</p>
-					{isUpcoming && <Countdown date={date} className="p-12 md:p-20" />}
+					{isUpcoming && (
+						<Countdown date={date} className="p-12 md:p-20" />
+					)}
 				</div>
 			</div>
 		</motion.div>
