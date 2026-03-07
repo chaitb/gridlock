@@ -191,10 +191,12 @@
 	}
 	body {
 		@apply bg-background text-foreground;
+		scrollbar-gutter: stable;
 	}
 }
 
 @layer utilities {
+
 	.texture-bg {
 		@apply relative z-0;
 	}

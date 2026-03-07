@@ -39,10 +39,13 @@ export async function createAccount(c: Context) {
 			return c.json({ message: "Database error" }, 500);
 		}
 
-		return c.json({
-			message: "Account created",
-			id: result.meta.last_row_id,
-		});
+		const user = await env.F1_PREDICTIONS.prepare(
+			"SELECT * FROM players WHERE id = ? LIMIT 1"
+		)
+			.bind(result.meta.last_row_id)
+			.first();
+
+		return c.json({ message: "Account created", user });
 	} catch (error) {
 		console.error("[create-account] unexpected error", error);
 		return c.json({ message: "Database error" }, 500);

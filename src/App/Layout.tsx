@@ -14,7 +14,7 @@ export const AppLayout = ({
 	return (
 		<div className="container mx-auto mt-20 mb-20">
 			{headline && (
-				<h1 className="ml-3 mb-6 text-4xl font-medium tracking-tight text-muted-foreground">
+				<h1 className="flex items-center gap-2 ml-3 mb-6 text-4xl font-medium tracking-tight text-muted-foreground">
 					<Link href="/home">{headline}</Link>
 					<ThemeToggle />
 				</h1>

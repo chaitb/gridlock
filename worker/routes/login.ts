@@ -23,10 +23,15 @@ export async function login(c: Context) {
 			return c.json({ message: "Database error" }, 500);
 		}
 
-		return c.json({
-			message: "Success",
-			user: result.results[0],
-		});
+		const user = result.results[0];
+		if (!user) {
+			return c.json(
+				{ message: "No account found for that email. Create an account first." },
+				404,
+			);
+		}
+
+		return c.json({ message: "Success", user });
 	} catch (error) {
 		console.error("[login] unexpected error", error);
 		return c.json({ message: "Database error" }, 500);

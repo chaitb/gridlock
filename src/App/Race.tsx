@@ -10,9 +10,11 @@ import { RaceHeader } from "./RaceHeader";
 import { POSTERS } from "./images/posters";
 import { AppLayout } from "./Layout";
 import { RACES_2026, type RaceCode } from "./RaceWeekend";
-import { useApi } from "@/helpers/useApi";
+import { ApiError, useApi } from "@/helpers/useApi";
 import { BGButton } from "@/components/BGButton";
-import { PencilLineIcon } from "lucide-react";
+import { CircleAlert, PencilLineIcon } from "lucide-react";
+import { useCallback } from "react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 type Session = {
 	session_key: number;
@@ -45,7 +47,9 @@ export function Race() {
 					</Link>
 					{" / "}Not found
 				</p>
-				<h1 className="mt-2 text-3xl font-medium tracking-tight">Race not found</h1>
+				<h1 className="mt-2 text-3xl font-medium tracking-tight">
+					Race not found
+				</h1>
 			</AppLayout>
 		);
 	}
@@ -74,9 +78,12 @@ export function Race() {
 
 const Predictions: React.FC<{ raceCode: RaceCode }> = ({ raceCode }) => {
 	const [, navigate] = useLocation();
-	const { data: pred, error } = useApi<{ prediction: Prediction }>(`/api/predictions`, {
-		params: { raceCode },
-	});
+	const { data: pred, error } = useApi<{ prediction: Prediction }>(
+		`/api/predictions`,
+		{
+			params: { raceCode },
+		},
+	);
 	return (
 		<motion.div
 			initial={{ opacity: 0, y: 14 }}
@@ -87,7 +94,10 @@ const Predictions: React.FC<{ raceCode: RaceCode }> = ({ raceCode }) => {
 			<H2>Predictions</H2>
 			{error ? JSON.stringify(error) : null}
 			{pred?.prediction ? (
-				<BGButton onClick={() => navigate(`/race/${raceCode}/prediction`)} className="w-full">
+				<BGButton
+					onClick={() => navigate(`/race/${raceCode}/prediction`)}
+					className="w-full"
+				>
 					<PencilLineIcon className="w-4 h-4 inline-block mr-2" />
 					Edit Prediction
 				</BGButton>
@@ -110,6 +120,20 @@ function Schedule() {
 		},
 	});
 
+	const isLiveError = useCallback((error: ApiError) => {
+		const body = error.getBody() as unknown as any;
+		if (error.status === 401) {
+			try {
+				if (body?.detail?.includes("Live")) {
+					return true;
+				}
+			} catch {
+				return false;
+			}
+		}
+		return false;
+	}, []);
+
 	return (
 		<motion.div
 			initial={{ opacity: 0, y: 14 }}
@@ -127,11 +151,27 @@ function Schedule() {
 					<Skeleton className="h-13 w-full my-2" />
 				</>
 			)}
-			{error ? JSON.stringify(error) : null}
+			{error ? (
+				isLiveError(error) ? (
+					<Alert variant="default">
+						<AlertTitle className="flex items-center text-xl">
+							Live event in progress
+							<span className="bg-accent-foreground animate-pulse rounded-full size-4 inline-block ml-2"></span>
+						</AlertTitle>
+						<AlertDescription>
+							Check back later for the latest updates.
+						</AlertDescription>
+					</Alert>
+				) : (
+					error.message
+				)
+			) : null}
 			{!error &&
 				sessions &&
 				sessions.length > 0 &&
-				sessions.map((session) => <Session session={session} key={session.session_key} />)}
+				sessions.map((session) => (
+					<Session session={session} key={session.session_key} />
+				))}
 		</motion.div>
 	);
 }
@@ -144,7 +184,8 @@ function dayOfWeek(date: Date): string {
 const Session: React.FC<{ session: Session }> = ({ session }) => {
 	const start = new Date(session.date_start);
 	const isPast = new Date(session.date_end) < new Date();
-	const isOngoing = start < new Date() && new Date(session.date_end) > new Date();
+	const isOngoing =
+		start < new Date() && new Date(session.date_end) > new Date();
 	return (
 		<div
 			className={cn("px-4 py-1 border border-border my-2 rounded-md", {
@@ -153,7 +194,9 @@ const Session: React.FC<{ session: Session }> = ({ session }) => {
 			})}
 		>
 			<div className="flex flex-row items-center">
-				<p className={cn("flex-grow text-2xl")}>{session.session_name}</p>
+				<p className={cn("flex-grow text-2xl")}>
+					{session.session_name}
+				</p>
 				<div className="text-right font-kh">
 					<p>
 						{dayOfWeek(start)}{" "}
@@ -162,7 +205,11 @@ const Session: React.FC<{ session: Session }> = ({ session }) => {
 							day: "numeric",
 						})}
 					</p>
-					<p>{new Date(session.date_start).toLocaleTimeString("en-US")}</p>
+					<p>
+						{new Date(session.date_start).toLocaleTimeString(
+							"en-US",
+						)}
+					</p>
 				</div>
 			</div>
 		</div>

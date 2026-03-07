@@ -5,7 +5,7 @@ import { DriverSelect, type Driver } from "./Drivers";
 import { POSTERS } from "./images/posters";
 import { RaceHeader } from "./RaceHeader";
 import { RACES_2026 } from "./RaceWeekend";
-import { H1 } from "./Text";
+import { H2 } from "./Text";
 import { DRIVERS } from "./driver";
 import { useUser } from "@/context/useUser";
 import { useApi } from "@/helpers/useApi";
@@ -39,16 +39,22 @@ export function RacePrediction() {
 		},
 	});
 
-	const [predictions, setPredictions] = useState<PredictionContent>(initialPredictions);
+	const [predictions, setPredictions] =
+		useState<PredictionContent>(initialPredictions);
 
 	useEffect(() => {
 		if (!savedPrediction?.prediction) return;
 		console.log("fetched prediction", savedPrediction);
 
-		const parsed = JSON.parse(savedPrediction.prediction) as PredictionContent;
+		const parsed = JSON.parse(
+			savedPrediction.prediction,
+		) as PredictionContent;
 
 		if (savedPrediction.updated_at) {
-			setSaved_at(new Date(savedPrediction.updated_at + " UTC"));
+			// SQLite CURRENT_TIMESTAMP → "YYYY-MM-DD HH:MM:SS" (no timezone).
+			// Replace the space with T and append Z to get valid ISO 8601.
+			const iso = savedPrediction.updated_at.replace(" ", "T") + "Z";
+			setSaved_at(new Date(iso));
 		}
 
 		// Avoid unnecessary setState if the parsed value is equal
@@ -76,7 +82,8 @@ export function RacePrediction() {
 				raceCode: code,
 				predictions,
 				isComplete,
-				created_at: savedPrediction?.created_at ?? new Date().toISOString(),
+				created_at:
+					savedPrediction?.created_at ?? new Date().toISOString(),
 			}),
 		});
 		if (!response.ok) {
@@ -86,10 +93,21 @@ export function RacePrediction() {
 		console.log("Saved prediction", data);
 		setSaving(false);
 		refetch();
-	}, [user, code, predictions, navigate, savedPrediction?.created_at, refetch]);
+	}, [
+		user,
+		code,
+		predictions,
+		navigate,
+		savedPrediction?.created_at,
+		refetch,
+	]);
 
 	const updatePredictions = useCallback(
-		(section: "qualifying" | "race" | "gainers" | "losers", key: string, driver: Driver | null) => {
+		(
+			section: "qualifying" | "race" | "gainers" | "losers",
+			key: string,
+			driver: Driver | null,
+		) => {
 			setPredictions((prev) => ({
 				...prev,
 				[section]: {
@@ -98,7 +116,7 @@ export function RacePrediction() {
 				},
 			}));
 		},
-		[]
+		[],
 	);
 
 	if (!race) {
@@ -136,19 +154,32 @@ export function RacePrediction() {
 						<Alert variant={"default"} className="max-w-md mb-12">
 							<CheckCircle2Icon />
 							<AlertTitle>
-								Saved at {saved_at.toLocaleString()} (
-								{Math.floor((new Date().getTime() - saved_at.getTime()) / 1000 / 60)} mins ago)
+								{(() => {
+									const minsAgo = Math.floor(
+										(Date.now() - saved_at.getTime()) /
+											60_000,
+									);
+									const label =
+										!Number.isFinite(minsAgo) || minsAgo < 1
+											? "just now"
+											: `${minsAgo} min${minsAgo === 1 ? "" : "s"} ago`;
+									return `Saved ${label} (${saved_at.toLocaleTimeString()})`;
+								})()}
 							</AlertTitle>
 							<AlertDescription>
-								You can update your predictions until the start of the race.
+								You can update your predictions until the start
+								of the qualifying session.
 							</AlertDescription>
 						</Alert>
 					) : null}
 
-					<H1>Qualifying</H1>
+					<H2>Qualifying</H2>
 					<p className="text-muted-foreground text-sm">
 						Your top-5 grid prediction.{" "}
-						<a href="/rules#scoring-qualifying" className="text-primary underline-offset-2 hover:underline">
+						<a
+							href="/rules#scoring-qualifying"
+							className="text-primary underline-offset-2 hover:underline"
+						>
 							How scoring works →
 						</a>
 					</p>
@@ -156,17 +187,28 @@ export function RacePrediction() {
 						{QUALIFYING_KEYS.map((key) => (
 							<DriverSelect
 								drivers={DRIVERS.filter(
-									(dr) => !QUALIFYING_KEYS.some((k) => predictions.qualifying[k] === dr.acronym)
+									(dr) =>
+										!QUALIFYING_KEYS.some(
+											(k) =>
+												predictions.qualifying[k] ===
+												dr.acronym,
+										),
 								)}
 								key={`qualifying-${key}`}
 								selectedDriver={predictions.qualifying[key]}
 								title={`Select your ${key.toLocaleUpperCase()} Prediction`}
 								onSelect={(driver) => {
-									updatePredictions("qualifying", key, driver);
+									updatePredictions(
+										"qualifying",
+										key,
+										driver,
+									);
 								}}
 							>
 								<p className="text-xs font-kh">Select</p>
-								<p className="text-4xl font-kh">{key.toLocaleUpperCase()}</p>
+								<p className="text-4xl font-kh">
+									{key.toLocaleUpperCase()}
+								</p>
 							</DriverSelect>
 						))}
 					</div>
@@ -178,10 +220,13 @@ export function RacePrediction() {
 					transition={{ delay: 0.3, duration: 0.45 }}
 					className="mt-8"
 				>
-					<H1>Race</H1>
+					<H2>Race</H2>
 					<p className="text-muted-foreground text-sm">
 						Your top-5 finishing prediction.{" "}
-						<a href="/rules#scoring-qualifying" className="text-primary underline-offset-2 hover:underline">
+						<a
+							href="/rules#scoring-qualifying"
+							className="text-primary underline-offset-2 hover:underline"
+						>
 							How scoring works →
 						</a>
 					</p>
@@ -189,7 +234,12 @@ export function RacePrediction() {
 						{QUALIFYING_KEYS.map((key) => (
 							<DriverSelect
 								drivers={DRIVERS.filter(
-									(dr) => !QUALIFYING_KEYS.some((k) => predictions.race[k] === dr.acronym)
+									(dr) =>
+										!QUALIFYING_KEYS.some(
+											(k) =>
+												predictions.race[k] ===
+												dr.acronym,
+										),
 								)}
 								key={`race-${key}`}
 								selectedDriver={predictions.race[key]}
@@ -211,10 +261,14 @@ export function RacePrediction() {
 					transition={{ delay: 0.3, duration: 0.45 }}
 					className="mt-8"
 				>
-					<H1>Biggest Gainers</H1>
+					<H2>Biggest Gainers</H2>
 					<p className="text-muted-foreground text-sm">
-						3 drivers who gain the most positions from grid to finish.{" "}
-						<a href="/rules#scoring-gainers-losers" className="text-primary underline-offset-2 hover:underline">
+						3 drivers who gain the most positions from grid to
+						finish.{" "}
+						<a
+							href="/rules#scoring-gainers-losers"
+							className="text-primary underline-offset-2 hover:underline"
+						>
 							How scoring works →
 						</a>
 					</p>
@@ -222,7 +276,12 @@ export function RacePrediction() {
 						{GAINER_KEYS.map((key) => (
 							<DriverSelect
 								drivers={DRIVERS.filter(
-									(dr) => !GAINER_KEYS.some((k) => predictions.gainers[k] === dr.acronym)
+									(dr) =>
+										!GAINER_KEYS.some(
+											(k) =>
+												predictions.gainers[k] ===
+												dr.acronym,
+										),
 								)}
 								key={`gainers-${key}`}
 								selectedDriver={predictions.gainers[key]}
@@ -232,7 +291,9 @@ export function RacePrediction() {
 								}}
 							>
 								<p className="text-xs font-kh">Select</p>
-								<p className="text-4xl font-kh">{key.toLocaleUpperCase()}</p>
+								<p className="text-4xl font-kh">
+									{key.toLocaleUpperCase()}
+								</p>
 							</DriverSelect>
 						))}
 					</div>
@@ -244,10 +305,14 @@ export function RacePrediction() {
 					transition={{ delay: 0.3, duration: 0.45 }}
 					className="mt-8"
 				>
-					<H1>Biggest Losers</H1>
+					<H2>Biggest Losers</H2>
 					<p className="text-muted-foreground text-sm">
-						3 drivers who lose the most positions from grid to finish.{" "}
-						<a href="/rules#scoring-gainers-losers" className="text-primary underline-offset-2 hover:underline">
+						3 drivers who lose the most positions from grid to
+						finish.{" "}
+						<a
+							href="/rules#scoring-gainers-losers"
+							className="text-primary underline-offset-2 hover:underline"
+						>
 							How scoring works →
 						</a>
 					</p>
@@ -255,7 +320,12 @@ export function RacePrediction() {
 						{LOSER_KEYS.map((key) => (
 							<DriverSelect
 								drivers={DRIVERS.filter(
-									(dr) => !LOSER_KEYS.some((k) => predictions.losers[k] === dr.acronym)
+									(dr) =>
+										!LOSER_KEYS.some(
+											(k) =>
+												predictions.losers[k] ===
+												dr.acronym,
+										),
 								)}
 								key={`losers-${key}`}
 								selectedDriver={predictions.losers[key]}
@@ -265,7 +335,9 @@ export function RacePrediction() {
 								}}
 							>
 								<p className="text-xs font-kh">Select</p>
-								<p className="text-4xl font-kh">{key.toLocaleUpperCase()}</p>
+								<p className="text-4xl font-kh">
+									{key.toLocaleUpperCase()}
+								</p>
 							</DriverSelect>
 						))}
 					</div>
@@ -273,7 +345,11 @@ export function RacePrediction() {
 			</div>
 
 			<div className="mt-8 px-4 md:px-10 max-w-4xl mx-auto">
-				<button type="button" className="w-full" onClick={savePredictions}>
+				<button
+					type="button"
+					className="w-full"
+					onClick={savePredictions}
+				>
 					<GlareHover
 						height="48px"
 						width="100%"
@@ -281,10 +357,10 @@ export function RacePrediction() {
 						borderRadius="12px"
 						className="bg-secondary/20 hover:bg-secondary/80"
 						glareColor="#d71414"
-						glareOpacity={0.8}
-						glareAngle={-30}
+						glareOpacity={0.5}
+						glareAngle={-70}
 						glareSize={400}
-						transitionDuration={1000}
+						transitionDuration={2000}
 						playOnce={false}
 					>
 						{saving ? <Spinner /> : <p>Save</p>}

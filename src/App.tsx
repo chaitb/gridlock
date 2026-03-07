@@ -14,13 +14,14 @@ import { Wdc } from "./App/Season/Wdc";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { ThemeProvider } from "./components/theme-provider";
 import { UserProvider } from "./context/UserContext";
-import { Login } from "./Login";
+import { CreateAccount, Login } from "./Login";
 
 const App = () => (
 	<ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
 		<UserProvider>
 			<Switch>
-				<Route path="/" component={Login} />
+				<Route path="/" component={CreateAccount} />
+				<Route path="/login" component={Login} />
 				{/* Logged in routes*/}
 				<ProtectedRoute>
 					<Route path="/home">
