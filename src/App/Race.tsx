@@ -10,9 +10,9 @@ import { RaceHeader } from "./RaceHeader";
 import { POSTERS } from "./images/posters";
 import { AppLayout } from "./Layout";
 import { RACES_2026, type RaceCode } from "./RaceWeekend";
-import { ApiError, useApi } from "@/helpers/useApi";
+import { type ApiError, useApi } from "@/helpers/useApi";
 import { BGButton } from "@/components/BGButton";
-import { CircleAlert, PencilLineIcon } from "lucide-react";
+import { PencilLineIcon } from "lucide-react";
 import { useCallback } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
