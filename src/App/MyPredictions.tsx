@@ -1,13 +1,12 @@
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { Link, useLocation, useParams } from "wouter";
-import { LockIcon, PencilLineIcon } from "lucide-react";
+import { LockIcon } from "lucide-react";
 import { Flag } from "@/components/flags";
 import { useApi } from "@/helpers/useApi";
 import { useUser } from "@/context/useUser";
 import { AppLayout } from "./Layout";
 import { RACES_2026 } from "@/data";
-import { BGButton } from "@/components/BGButton";
 import { PredictionForm } from "./PredictionForm";
 import type { CountryCode, Prediction, PredictionContent } from "@/model";
 import {
@@ -62,7 +61,7 @@ function PredictionCard({
 	updated: Date | null;
 	isOwner: boolean;
 	onViewClick: () => void;
-	children: React.ReactNode;
+	children?: React.ReactNode;
 }) {
 	const [, navigate] = useLocation();
 
