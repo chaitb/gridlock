@@ -4,7 +4,6 @@ import { useState } from "react";
 import { useLocation } from "wouter";
 import { Field, FieldDescription, FieldGroup, FieldLabel, FieldSet } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { useUser } from "@/context/useUser";
 import poster from "./assets/GridLock2026.webp";
 import { Badge } from "./components/ui/badge";
 
@@ -19,14 +18,16 @@ const BetaBadge = () => {
 	);
 };
 
+type FormStatus = "idle" | "loading" | "sent" | "error";
+
 type FormState = {
-	status: "idle" | "loading" | "success" | "error" | "not_found";
+	status: FormStatus;
 	message: string;
 };
 
 const feedbackClass = (state: FormState) => {
-	if (state.status === "success") return "text-emerald-400";
-	if (state.status === "error" || state.status === "not_found") return "text-rose-400";
+	if (state.status === "sent") return "text-emerald-400";
+	if (state.status === "error") return "text-rose-400";
 	return "text-muted-foreground";
 };
 
@@ -38,7 +39,7 @@ const sendRequest = async (url: string, body: Record<string, string>) => {
 	});
 	const payload = await response.json();
 	if (!response.ok) {
-		const err = new Error(payload?.message || "Request failed") as Error & {
+		const err = new Error((payload as { message?: string })?.message || "Request failed") as Error & {
 			status: number;
 		};
 		err.status = response.status;
@@ -87,31 +88,47 @@ function SubmitButton({ loading, label }: { loading: boolean; label: string }) {
 	);
 }
 
+// ── "Check your inbox" confirmation ─────────────────────────────────────────
+
+function InboxConfirmation({ email }: { email: string }) {
+	return (
+		<motion.div
+			initial={{ opacity: 0, y: 10 }}
+			animate={{ opacity: 1, y: 0 }}
+			transition={{ duration: 0.4 }}
+			className="space-y-3"
+		>
+			<h1 className="text-3xl font-audiowide uppercase font-medium tracking-tight text-emerald-400">
+				Check your email
+			</h1>
+			<p className="text-sm text-muted-foreground leading-relaxed">
+				We sent a login link to <span className="text-foreground">{email}</span>. It expires in{" "}
+				<strong className="text-foreground">15 minutes</strong>.
+			</p>
+			<p className="text-xs text-muted-foreground/60">
+				Didn't receive it? Check your spam folder or request a new link.
+			</p>
+		</motion.div>
+	);
+}
+
 // ── Login page ───────────────────────────────────────────────────────────────
 
 export function Login() {
 	const [email, setEmail] = useState("");
-	const [state, setState] = useState<FormState>({
-		status: "idle",
-		message: "",
-	});
+	const [state, setState] = useState<FormState>({ status: "idle", message: "" });
 	const [, navigate] = useLocation();
-	const { login } = useUser();
 
 	const handleLogin = async (event: FormEvent<HTMLFormElement>) => {
 		event.preventDefault();
 		setState({ status: "loading", message: "" });
 		try {
-			const res = await sendRequest("/api/login", {
-				email: email.trim(),
-			});
-			setState({ status: "success", message: "Welcome back." });
-			login(res.user);
-			navigate(`/u/${res.user.username}`);
+			await sendRequest("/api/login", { email: email.trim() });
+			setState({ status: "sent", message: "" });
 		} catch (error) {
 			const status = (error as { status?: number }).status;
 			setState({
-				status: status === 404 ? "not_found" : "error",
+				status: "error",
 				message:
 					status === 404
 						? "No account found for that email."
@@ -121,6 +138,17 @@ export function Login() {
 			});
 		}
 	};
+
+	if (state.status === "sent") {
+		return (
+			<AuthShell>
+				<p className="font-kh text-sm uppercase tracking-[0.3em] text-muted-foreground mb-6">
+					GridLock 2026 <BetaBadge />
+				</p>
+				<InboxConfirmation email={email} />
+			</AuthShell>
+		);
+	}
 
 	return (
 		<AuthShell>
@@ -146,16 +174,16 @@ export function Login() {
 						</Field>
 					</FieldGroup>
 				</FieldSet>
-				<SubmitButton loading={state.status === "loading"} label="Log in" />
+				<SubmitButton loading={state.status === "loading"} label="Send login link" />
 			</form>
 
 			{state.message && (
 				<motion.div initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} className="mt-4">
 					<p className={`text-sm leading-snug ${feedbackClass(state)}`}>{state.message}</p>
-					{state.status === "not_found" && (
+					{state.status === "error" && state.message.includes("No account") && (
 						<button
 							type="button"
-							onClick={() => navigate("/")}
+							onClick={() => navigate("/signup")}
 							className="mt-1 text-sm underline underline-offset-2 text-accent-foreground"
 						>
 							Create an account instead →
@@ -168,7 +196,7 @@ export function Login() {
 				No account?{" "}
 				<button
 					type="button"
-					onClick={() => navigate("/")}
+					onClick={() => navigate("/signup")}
 					className="text-muted-foreground underline underline-offset-2 hover:text-foreground transition-colors"
 				>
 					Create one
@@ -183,23 +211,18 @@ export function Login() {
 export function CreateAccount() {
 	const [email, setEmail] = useState("");
 	const [username, setUsername] = useState("");
-	const [state, setState] = useState<FormState>({
-		status: "idle",
-		message: "",
-	});
+	const [state, setState] = useState<FormState>({ status: "idle", message: "" });
 	const [, navigate] = useLocation();
-	const { login } = useUser();
 
 	const handleCreate = async (event: FormEvent<HTMLFormElement>) => {
 		event.preventDefault();
 		setState({ status: "loading", message: "" });
 		try {
-			const res = await sendRequest("/api/create-account", {
+			await sendRequest("/api/create-account", {
 				email: email.trim(),
 				username: username.trim(),
 			});
-			login(res.user);
-			navigate(`/u/${res.user.username}`);
+			setState({ status: "sent", message: "" });
 		} catch (error) {
 			setState({
 				status: "error",
@@ -208,7 +231,18 @@ export function CreateAccount() {
 		}
 	};
 
-	const disabled = state.status === "loading" || state.status === "success";
+	const disabled = state.status === "loading" || state.status === "sent";
+
+	if (state.status === "sent") {
+		return (
+			<AuthShell>
+				<p className="font-kh text-sm uppercase tracking-[0.3em] text-muted-foreground mb-6">
+					GridLock 2026 <BetaBadge />
+				</p>
+				<InboxConfirmation email={email} />
+			</AuthShell>
+		);
+	}
 
 	return (
 		<AuthShell>
@@ -256,15 +290,6 @@ export function CreateAccount() {
 			{state.message && (
 				<motion.div initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} className="mt-4">
 					<p className={`text-sm leading-snug ${feedbackClass(state)}`}>{state.message}</p>
-					{state.status === "success" && (
-						<button
-							type="button"
-							onClick={() => navigate("/login")}
-							className="mt-1 text-sm underline underline-offset-2 text-accent-foreground"
-						>
-							Log in →
-						</button>
-					)}
 				</motion.div>
 			)}
 

@@ -13,6 +13,7 @@ import { MidSeason } from "./App/Season/MidSeason";
 import { MyTeam } from "./App/Season/MyTeam";
 import { Wcc } from "./App/Season/Wcc";
 import { Wdc } from "./App/Season/Wdc";
+import { Verify } from "./App/Verify";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { ThemeProvider } from "./components/theme-provider";
 import { UserProvider } from "./context/UserContext";
@@ -22,10 +23,14 @@ const App = () => (
 	<ThemeProvider defaultTheme="system" storageKey="vite-ui-theme">
 		<UserProvider>
 			<Switch>
-				<Route path="/" component={CreateAccount} />
+				<Route path="/signup" component={CreateAccount} />
 				<Route path="/login" component={Login} />
+				<Route path="/verify" component={Verify} />
 				{/* Logged in routes*/}
 				<ProtectedRoute>
+					<Route path="/">
+						<UserHome />
+					</Route>
 					<Route path="/home">
 						<UserHome />
 					</Route>

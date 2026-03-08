@@ -1,16 +1,14 @@
 import type { Context } from "hono";
 import { getAllPredictionsByUser, getPredictionsByUserAndRace } from "../queries/predictionQueries";
 import { findUserByUsernameOrEmail } from "../queries/userQueries";
+import type { AppEnv } from "../types";
 
-export async function getUserPredictions(c: Context) {
+export async function getUserPredictions(c: Context<AppEnv>) {
 	const { env } = c;
-	if (!env.F1_PREDICTIONS) {
-		return c.json({ message: "D1 binding missing" }, 500);
-	}
+	// The authenticated requesting user's ID comes from the session cookie via middleware
+	const requestingUserId = c.get("userId");
 
 	const username = c.req.query("username");
-	const requestingUser = c.req.query("requestingUser");
-
 	if (!username) {
 		return c.json({ message: "Missing username" }, 400);
 	}
@@ -24,27 +22,22 @@ export async function getUserPredictions(c: Context) {
 		const result = await getAllPredictionsByUser(env.F1_PREDICTIONS, targetUser.id);
 		const predictions = result.results;
 
-		// If no requesting user or same user, return all predictions as owner
-		if (!requestingUser || requestingUser === username) {
+		// Same user viewing their own predictions — return everything as owner
+		if (requestingUserId === targetUser.id) {
 			return c.json({
 				predictions,
 				isOwner: true,
 			});
 		}
 
-		// Different user - check access per race
-		const requestingUserData = await findUserByUsernameOrEmail(env.F1_PREDICTIONS, requestingUser);
-		if (!requestingUserData) {
-			return c.json({ message: "Requesting user not found" }, 401);
-		}
-
+		// Different user — only reveal predictions for races where the requester has also locked
 		const availablePredictions: typeof predictions = [];
 		const unavailableRaces: string[] = [];
 
 		for (const pred of predictions) {
 			const requestingPred = await getPredictionsByUserAndRace(
 				env.F1_PREDICTIONS,
-				requestingUserData.id,
+				requestingUserId,
 				pred.circuit_code
 			);
 

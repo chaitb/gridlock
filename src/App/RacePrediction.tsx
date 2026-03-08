@@ -5,7 +5,6 @@ import { LockIcon, SaveIcon } from "lucide-react";
 import { PredictionForm } from "./PredictionForm";
 import { RaceHeader } from "./RaceHeader";
 import { RACES_2026 } from "@/data";
-import { useUser } from "@/context/useUser";
 import { useApi } from "@/helpers/useApi";
 import type { Prediction, PredictionContent } from "@/model";
 import { initialPredictions } from "@/model";
@@ -35,7 +34,7 @@ const glareButtonProps = {
 
 export function RacePrediction() {
 	const params = useParams();
-	const { user } = useUser();
+
 	const circuitCode = params.circuit_code;
 	const race = RACES_2026.find((r) => r.circuit_code === circuitCode);
 	const [, navigate] = useLocation();
@@ -70,7 +69,7 @@ export function RacePrediction() {
 	}, [savedPrediction]);
 
 	const savePredictions = useCallback(async () => {
-		if (!user?.id || !circuitCode) {
+		if (!circuitCode) {
 			navigate("/");
 			return;
 		}
@@ -82,26 +81,25 @@ export function RacePrediction() {
 		setSaving(true);
 		const response = await fetch("/api/predictions", {
 			method: "POST",
+			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({
-				userId: user.id,
 				circuitCode,
 				predictions,
 				isComplete,
-				created_at: savedPrediction?.created_at ?? new Date().toISOString(),
 			}),
 		});
 		if (!response.ok) throw new Error("Failed to save predictions");
 		setSaving(false);
 		refetch();
-	}, [user, circuitCode, predictions, navigate, savedPrediction?.created_at, refetch]);
+	}, [circuitCode, predictions, navigate, refetch]);
 
 	const lockPrediction = useCallback(async () => {
-		if (!user?.id || !circuitCode) return;
+		if (!circuitCode) return;
 		setLocking(true);
 		const response = await fetch("/api/predictions/lock", {
 			method: "POST",
 			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({ userId: user.id, circuitCode }),
+			body: JSON.stringify({ circuitCode }),
 		});
 		if (!response.ok) {
 			const body = (await response.json()) as { message?: string };
@@ -109,7 +107,7 @@ export function RacePrediction() {
 		}
 		setLocking(false);
 		refetch();
-	}, [user, circuitCode, refetch]);
+	}, [circuitCode, refetch]);
 
 	if (!race) return <div>Race not found</div>;
 	if (isLoading) return <div>Loading...</div>;

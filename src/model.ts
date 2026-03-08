@@ -64,7 +64,6 @@ export const createAccountSchema = z.object({
 });
 
 export const updateProfileSchema = z.object({
-	id: z.number().int().positive(),
 	username: z.string().trim().min(1),
 });
 
@@ -100,15 +99,9 @@ export const storedPredictionSchema = predictionContentSchema.extend({
 });
 
 export const savePredictionsSchema = z.object({
-	userId: z.number().int().positive(),
 	circuitCode: z.string().trim().min(2),
 	predictions: predictionContentSchema,
 	isComplete: z.boolean().optional().default(false),
-});
-
-export const getPredictionsSchema = z.object({
-	userId: z.string().trim().min(3),
-	circuitCode: z.string().trim().min(2),
 });
 
 export const userSchema = z.object({
@@ -129,7 +122,6 @@ export const leaderboardEntrySchema = z.object({
 });
 
 export const lockPredictionSchema = z.object({
-	userId: z.number().int().positive(),
 	circuitCode: z.string().trim().min(2),
 });
 

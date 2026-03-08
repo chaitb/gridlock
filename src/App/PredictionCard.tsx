@@ -1,5 +1,9 @@
 import { DRIVERS } from "./driver";
-import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
+import {
+	HoverCard,
+	HoverCardContent,
+	HoverCardTrigger,
+} from "@/components/ui/hover-card";
 import { DriverCardFull } from "./Drivers";
 
 export const container = {
@@ -20,7 +24,11 @@ export function getDriverByAcronym(acronym: string | null) {
 export function DriverPill({ acronym }: { acronym: string | null }) {
 	const driver = getDriverByAcronym(acronym);
 	if (!driver) {
-		return <span className="px-2 py-0.5 rounded text-xs bg-muted text-muted-foreground">—</span>;
+		return (
+			<span className="px-2 py-0.5 rounded text-xs bg-muted text-muted-foreground">
+				—
+			</span>
+		);
 	}
 	return (
 		<HoverCard openDelay={100} closeDelay={300}>
@@ -32,7 +40,12 @@ export function DriverPill({ acronym }: { acronym: string | null }) {
 					{driver.acronym}
 				</span>
 			</HoverCardTrigger>
-			<HoverCardContent className="w-80 p-0" side="right" align="center" sideOffset={10}>
+			<HoverCardContent
+				className="w-80 p-0 border-none bg-transparent shadow-none backdrop-blur-lg"
+				side="right"
+				align="center"
+				sideOffset={10}
+			>
 				<DriverCardFull driver={driver} className="w-full" />
 			</HoverCardContent>
 		</HoverCard>
@@ -50,7 +63,9 @@ export function PredictionSection({
 }) {
 	return (
 		<div className="space-y-1">
-			<p className="text-xs uppercase tracking-wider text-muted-foreground">{title}</p>
+			<p className="text-xs uppercase tracking-wider text-muted-foreground text-ellipsis overflow-hidden">
+				{title}
+			</p>
 			<div className="flex flex-wrap gap-1">
 				{keys.map((key) => (
 					<DriverPill key={key} acronym={prediction[key]} />
@@ -82,8 +97,16 @@ export function PredictionCardContent({
 				keys={["p1", "p2", "p3", "p4", "p5"]}
 				prediction={content.race}
 			/>
-			<PredictionSection title="Gainers" keys={["g1", "g2", "g3"]} prediction={content.gainers} />
-			<PredictionSection title="Losers" keys={["l1", "l2", "l3"]} prediction={content.losers} />
+			<PredictionSection
+				title="Gainers"
+				keys={["g1", "g2", "g3"]}
+				prediction={content.gainers}
+			/>
+			<PredictionSection
+				title="Losers"
+				keys={["l1", "l2", "l3"]}
+				prediction={content.losers}
+			/>
 		</div>
 	);
 }

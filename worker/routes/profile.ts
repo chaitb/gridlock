@@ -1,28 +1,32 @@
 import type { Context } from "hono";
-import { updateProfileSchema } from "../../src/model";
+import { z } from "zod";
 import { findUsernameConflict, updateUserUsername } from "../queries/userQueries";
+import type { AppEnv } from "../types";
 
-export async function updateProfile(c: Context) {
+const updateProfileBodySchema = z.object({
+	username: z.string().trim().min(1),
+});
+
+export async function updateProfile(c: Context<AppEnv>) {
 	const { env, req } = c;
-	if (!env.F1_PREDICTIONS) {
-		return c.json({ message: "D1 binding missing" }, 500);
-	}
+	// User ID comes from the verified session cookie — never trust the client to supply their own ID
+	const userId = c.get("userId");
 
 	const body = await req.json().catch(() => null);
-	const parsed = updateProfileSchema.safeParse(body);
+	const parsed = updateProfileBodySchema.safeParse(body);
 	if (!parsed.success) {
 		return c.json({ message: "Invalid request", errors: parsed.error.issues }, 400);
 	}
 
-	const { id, username } = parsed.data;
+	const { username } = parsed.data;
 	try {
-		const conflict = await findUsernameConflict(env.F1_PREDICTIONS, username, id);
+		const conflict = await findUsernameConflict(env.F1_PREDICTIONS, username, userId);
 
 		if (conflict) {
 			return c.json({ message: "Username already in use" }, 409);
 		}
 
-		const result = await updateUserUsername(env.F1_PREDICTIONS, username, id);
+		const result = await updateUserUsername(env.F1_PREDICTIONS, username, userId);
 
 		if (!result.success || !result.meta.changes) {
 			return c.json({ message: "User not found" }, 404);

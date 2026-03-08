@@ -1,34 +1,41 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { UserContext } from "./useUser";
 import type { User } from "@/model";
 
-function getInitialUser(): User | null {
-	if (typeof window === "undefined") return null;
-	try {
-		const stored = localStorage.getItem("user");
-		return stored ? JSON.parse(stored) : null;
-	} catch {
-		localStorage.removeItem("user");
-		return null;
-	}
-}
-
 export function UserProvider({ children }: { children: React.ReactNode }) {
-	const [user, setUser] = useState<User | null>(getInitialUser);
-	const [isLoading] = useState(false);
+	const [user, setUser] = useState<User | null>(null);
+	const [isLoading, setIsLoading] = useState(true);
 
+	// On mount, hydrate the session from the HTTP-only cookie via /api/me.
+	// This is the only source of truth — no localStorage involved.
+	useEffect(() => {
+		fetch("/api/me")
+			.then(async (res) => {
+				if (!res.ok) {
+					setUser(null);
+					return;
+				}
+				const body = (await res.json()) as { user: User };
+				setUser(body.user);
+			})
+			.catch(() => setUser(null))
+			.finally(() => setIsLoading(false));
+	}, []);
+
+	// Called by the /verify page after the worker sets the session cookie.
+	// The cookie is already set server-side; we just update local state here.
 	const login = useMemo(
 		() => (userData: User) => {
 			setUser(userData);
-			localStorage.setItem("user", JSON.stringify(userData));
 		},
 		[]
 	);
 
+	// Clears the session cookie server-side and wipes local state.
 	const logout = useMemo(
 		() => () => {
+			fetch("/api/logout", { method: "POST" }).catch(() => {});
 			setUser(null);
-			localStorage.removeItem("user");
 		},
 		[]
 	);

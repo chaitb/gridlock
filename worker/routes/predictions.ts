@@ -1,30 +1,27 @@
 import type { Context } from "hono";
-import { getPredictionsSchema, savePredictionsSchema } from "../../src/model";
+import { savePredictionsSchema } from "../../src/model";
 import { getPredictionsByUserAndRace, upsertPrediction } from "../queries/predictionQueries";
-import { findUserByUsernameOrEmail } from "../queries/userQueries";
+import type { AppEnv } from "../types";
+import { z } from "zod";
 
-export async function getPredictions(c: Context) {
+const getParamsSchema = z.object({
+	circuitCode: z.string().trim().min(2),
+});
+
+export async function getPredictions(c: Context<AppEnv>) {
 	const { env } = c;
-	if (!env.F1_PREDICTIONS) {
-		return c.json({ message: "D1 binding missing" }, 500);
-	}
+	const userId = c.get("userId");
 
-	const userId = c.req.query("userId");
 	const circuitCode = c.req.query("circuitCode");
-	const parsed = getPredictionsSchema.safeParse({ userId, circuitCode });
+	const parsed = getParamsSchema.safeParse({ circuitCode });
 	if (!parsed.success) {
 		return c.json({ message: "Invalid request", errors: parsed.error.issues }, 400);
 	}
 
 	try {
-		const user = await findUserByUsernameOrEmail(env.F1_PREDICTIONS, userId);
-		if (!user) {
-			return c.json({ message: "User not found" }, 401);
-		}
-
 		const result = await getPredictionsByUserAndRace(
 			env.F1_PREDICTIONS,
-			user.id,
+			userId,
 			parsed.data.circuitCode
 		);
 
@@ -35,11 +32,9 @@ export async function getPredictions(c: Context) {
 	}
 }
 
-export async function savePredictions(c: Context) {
+export async function savePredictions(c: Context<AppEnv>) {
 	const { env, req } = c;
-	if (!env.F1_PREDICTIONS) {
-		return c.json({ message: "D1 binding missing" }, 500);
-	}
+	const userId = c.get("userId");
 
 	const body = await req.json().catch(() => null);
 	const parsed = savePredictionsSchema.safeParse(body);
@@ -47,7 +42,7 @@ export async function savePredictions(c: Context) {
 		return c.json({ message: "Invalid request", errors: parsed.error.issues }, 400);
 	}
 
-	const { userId, circuitCode, predictions, isComplete } = parsed.data;
+	const { circuitCode, predictions, isComplete } = parsed.data;
 	const predictionJson = JSON.stringify({ ...predictions, isComplete });
 
 	try {

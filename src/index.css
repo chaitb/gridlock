@@ -65,11 +65,16 @@
 	--shadow-color: oklch(0 0 0);
 	--shadow-2xs: 0 1px 2.5px 0px hsl(0 0% 0% / 0.06);
 	--shadow-xs: 0 1px 2.5px 0px hsl(0 0% 0% / 0.06);
-	--shadow-sm: 0 1px 2.5px 0px hsl(0 0% 0% / 0.12), 0 1px 2px -1px hsl(0 0% 0% / 0.12);
-	--shadow: 0 1px 2.5px 0px hsl(0 0% 0% / 0.12), 0 1px 2px -1px hsl(0 0% 0% / 0.12);
-	--shadow-md: 0 1px 2.5px 0px hsl(0 0% 0% / 0.12), 0 2px 4px -1px hsl(0 0% 0% / 0.12);
-	--shadow-lg: 0 1px 2.5px 0px hsl(0 0% 0% / 0.12), 0 4px 6px -1px hsl(0 0% 0% / 0.12);
-	--shadow-xl: 0 1px 2.5px 0px hsl(0 0% 0% / 0.12), 0 8px 10px -1px hsl(0 0% 0% / 0.12);
+	--shadow-sm:
+		0 1px 2.5px 0px hsl(0 0% 0% / 0.12), 0 1px 2px -1px hsl(0 0% 0% / 0.12);
+	--shadow:
+		0 1px 2.5px 0px hsl(0 0% 0% / 0.12), 0 1px 2px -1px hsl(0 0% 0% / 0.12);
+	--shadow-md:
+		0 1px 2.5px 0px hsl(0 0% 0% / 0.12), 0 2px 4px -1px hsl(0 0% 0% / 0.12);
+	--shadow-lg:
+		0 1px 2.5px 0px hsl(0 0% 0% / 0.12), 0 4px 6px -1px hsl(0 0% 0% / 0.12);
+	--shadow-xl:
+		0 1px 2.5px 0px hsl(0 0% 0% / 0.12), 0 8px 10px -1px hsl(0 0% 0% / 0.12);
 	--shadow-2xl: 0 1px 2.5px 0px hsl(0 0% 0% / 0.3);
 	--tracking-normal: 0em;
 	--spacing: 0.26rem;
@@ -120,11 +125,16 @@
 	--shadow-color: oklch(0 0 0);
 	--shadow-2xs: 0 1px 2.5px 0px hsl(0 0% 0% / 0.06);
 	--shadow-xs: 0 1px 2.5px 0px hsl(0 0% 0% / 0.06);
-	--shadow-sm: 0 1px 2.5px 0px hsl(0 0% 0% / 0.12), 0 1px 2px -1px hsl(0 0% 0% / 0.12);
-	--shadow: 0 1px 2.5px 0px hsl(0 0% 0% / 0.12), 0 1px 2px -1px hsl(0 0% 0% / 0.12);
-	--shadow-md: 0 1px 2.5px 0px hsl(0 0% 0% / 0.12), 0 2px 4px -1px hsl(0 0% 0% / 0.12);
-	--shadow-lg: 0 1px 2.5px 0px hsl(0 0% 0% / 0.12), 0 4px 6px -1px hsl(0 0% 0% / 0.12);
-	--shadow-xl: 0 1px 2.5px 0px hsl(0 0% 0% / 0.12), 0 8px 10px -1px hsl(0 0% 0% / 0.12);
+	--shadow-sm:
+		0 1px 2.5px 0px hsl(0 0% 0% / 0.12), 0 1px 2px -1px hsl(0 0% 0% / 0.12);
+	--shadow:
+		0 1px 2.5px 0px hsl(0 0% 0% / 0.12), 0 1px 2px -1px hsl(0 0% 0% / 0.12);
+	--shadow-md:
+		0 1px 2.5px 0px hsl(0 0% 0% / 0.12), 0 2px 4px -1px hsl(0 0% 0% / 0.12);
+	--shadow-lg:
+		0 1px 2.5px 0px hsl(0 0% 0% / 0.12), 0 4px 6px -1px hsl(0 0% 0% / 0.12);
+	--shadow-xl:
+		0 1px 2.5px 0px hsl(0 0% 0% / 0.12), 0 8px 10px -1px hsl(0 0% 0% / 0.12);
 	--shadow-2xl: 0 1px 2.5px 0px hsl(0 0% 0% / 0.3);
 }
 
@@ -196,17 +206,44 @@
 }
 
 @layer utilities {
+	.gradient-bg {
+		@apply relative z-0;
+	}
+	.gradient-bg::before {
+		content: "";
+		@apply bg-gradient-to-r from-zinc-700/80 via-gray-500/70 to-slate-500/60;
+		top: 0;
+		left: 0;
+		position: absolute;
+		mix-blend-mode: overlay;
+		width: 100%;
+		height: 100%;
+	}
+
 	.texture-bg {
 		@apply relative z-0;
 	}
 
-	.texture-bg::before {
+	.texture-bg::after {
 		content: "";
-		background-color: transparent;
 		background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 600 600'%3E%3Cfilter id='a'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23a)'/%3E%3C/svg%3E");
 		background-repeat: repeat;
-		background-size: 500px;
-		opacity: 0.3;
+		background-size: 200px;
+		opacity: 0.6;
+		top: 0;
+		left: 0;
+		position: absolute;
+		mix-blend-mode: overlay;
+		width: 100%;
+		height: 100%;
+	}
+	.gradient-bg-reverse {
+		@apply relative z-0;
+	}
+
+	.gradient-bg-reverse::before {
+		content: "";
+		@apply bg-gradient-to-l from-zinc-700/80 via-gray-500/70 to-slate-500/60;
 		top: 0;
 		left: 0;
 		position: absolute;

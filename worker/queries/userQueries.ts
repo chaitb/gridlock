@@ -5,6 +5,17 @@ export async function findUserByEmail(db: D1Database, email: string) {
 	return db.prepare("SELECT * FROM players WHERE email = ?").bind(email).run();
 }
 
+export async function findUserById(db: D1Database, id: number): Promise<User | null> {
+	return db.prepare("SELECT * FROM players WHERE id = ? LIMIT 1").bind(id).first<User>();
+}
+
+export async function setVerifiedAt(db: D1Database, id: number) {
+	return db
+		.prepare("UPDATE players SET verified_at = CURRENT_TIMESTAMP WHERE id = ? AND verified_at IS NULL")
+		.bind(id)
+		.run();
+}
+
 export async function findUserByUsernameOrEmail(
 	db: D1Database,
 	username?: string,
@@ -13,16 +24,22 @@ export async function findUserByUsernameOrEmail(
 	if (!username && !email) {
 		return null;
 	}
+	// When both are provided (e.g. during account creation), check for either conflict
+	// in a single query so an existing email with a different username is still caught.
+	if (username && email) {
+		return db
+			.prepare("SELECT * FROM players WHERE username = ? OR email = ? LIMIT 1")
+			.bind(username, email)
+			.first<User>();
+	}
 	if (username) {
 		return db
 			.prepare("SELECT * FROM players WHERE username = ? LIMIT 1")
 			.bind(username)
 			.first<User>();
 	}
-	if (email) {
-		return db.prepare("SELECT * FROM players WHERE email = ? LIMIT 1").bind(email).first<User>();
-	}
-	return null;
+	// email only
+	return db.prepare("SELECT * FROM players WHERE email = ? LIMIT 1").bind(email).first<User>();
 }
 
 export async function createUser(db: D1Database, username: string, email: string) {

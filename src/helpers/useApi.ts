@@ -1,4 +1,3 @@
-import { useUser } from "@/context/useUser";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
 export class ApiError extends Error {
@@ -22,21 +21,13 @@ export class ApiError extends Error {
 }
 
 export function useApi<T>(url: string, options?: { params?: Record<string, string | number> }) {
-	const { user } = useUser();
 	const [data, setData] = useState<T | null>(null);
 	const [error, setError] = useState<ApiError | null>(null);
 	const [isLoading, setIsLoading] = useState(true);
 	const [refetchKey, setRefetchKey] = useState(0);
 
 	const fullUrl = useMemo((): string => {
-		let full: URL;
-		if (url.startsWith("/api") && user?.username) {
-			full = new URL(window.location.href);
-			full.pathname = url;
-			full.searchParams.set("userId", user.username);
-		} else {
-			full = new URL(url);
-		}
+		const full = new URL(url, window.location.href);
 
 		if (options?.params) {
 			for (const [key, value] of Object.entries(options.params)) {
@@ -44,7 +35,7 @@ export function useApi<T>(url: string, options?: { params?: Record<string, strin
 			}
 		}
 		return full.toString();
-	}, [url, user, options]);
+	}, [url, options]);
 
 	const fetchData = useCallback(async () => {
 		setIsLoading(true);

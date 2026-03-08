@@ -2,15 +2,12 @@ import { useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useUser } from "@/context/useUser";
 import { AppLayout } from "./Layout";
 
 export function Profile() {
-	const stored = JSON.parse(localStorage.getItem("user") ?? "{}") as {
-		id?: number;
-		username?: string;
-	};
-
-	const [username, setUsername] = useState(stored.username ?? "");
+	const { user } = useUser();
+	const [username, setUsername] = useState(user?.username ?? "");
 	const [status, setStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
 	const [message, setMessage] = useState("");
 
@@ -26,11 +23,11 @@ export function Profile() {
 			const res = await fetch("/api/profile", {
 				method: "PATCH",
 				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ id: stored.id, username: trimmed }),
+				// userId is no longer sent — the worker reads it from the session cookie
+				body: JSON.stringify({ username: trimmed }),
 			});
 			const body = (await res.json()) as { message: string };
 			if (!res.ok) throw new Error(body.message);
-			localStorage.setItem("user", JSON.stringify({ ...stored, username: trimmed }));
 			setStatus("success");
 			setMessage("Username updated.");
 		} catch (err) {

@@ -6,11 +6,15 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
 	const [, navigate] = useLocation();
 
 	if (isLoading) {
-		return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+		return (
+			<div className="min-h-screen flex items-center justify-center">
+				Loading...
+			</div>
+		);
 	}
 
 	if (!user) {
-		navigate("/");
+		navigate("/login");
 		return null;
 	}
 

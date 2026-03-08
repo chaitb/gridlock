@@ -1,20 +1,23 @@
 import type { Context } from "hono";
-import { lockPredictionSchema } from "../../src/model";
+import { z } from "zod";
 import { getPredictionsByUserAndRace, lockPrediction } from "../queries/predictionQueries";
+import type { AppEnv } from "../types";
 
-export async function lockPredictionRoute(c: Context) {
+const lockParamsSchema = z.object({
+	circuitCode: z.string().trim().min(2),
+});
+
+export async function lockPredictionRoute(c: Context<AppEnv>) {
 	const { env, req } = c;
-	if (!env.F1_PREDICTIONS) {
-		return c.json({ message: "D1 binding missing" }, 500);
-	}
+	const userId = c.get("userId");
 
 	const body = await req.json().catch(() => null);
-	const parsed = lockPredictionSchema.safeParse(body);
+	const parsed = lockParamsSchema.safeParse(body);
 	if (!parsed.success) {
 		return c.json({ message: "Invalid request", errors: parsed.error.issues }, 400);
 	}
 
-	const { userId, circuitCode } = parsed.data;
+	const { circuitCode } = parsed.data;
 
 	try {
 		const existing = await getPredictionsByUserAndRace(env.F1_PREDICTIONS, userId, circuitCode);
@@ -23,14 +26,14 @@ export async function lockPredictionRoute(c: Context) {
 			return c.json({ message: "No prediction found to lock" }, 404);
 		}
 
-		let parsed_content: { isComplete?: boolean } | null = null;
+		let parsedContent: { isComplete?: boolean } | null = null;
 		try {
-			parsed_content = JSON.parse(existing.prediction);
+			parsedContent = JSON.parse(existing.prediction);
 		} catch {
 			// ignore
 		}
 
-		if (!parsed_content?.isComplete) {
+		if (!parsedContent?.isComplete) {
 			return c.json(
 				{ message: "Prediction must be complete before locking", code: "PREDICTION_INCOMPLETE" },
 				400

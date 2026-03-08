@@ -1,10 +1,5 @@
-import type { D1Database } from "@cloudflare/workers-types";
 // import { sendEmail } from "./email";
-
-type Bindings = {
-	F1_PREDICTIONS: D1Database;
-	RESEND_API_KEY: string;
-};
+import type { Bindings } from "./types";
 
 export async function handleScheduled(_event: ScheduledEvent, _env: Bindings) {
 	console.log("[scheduled] cron triggered at", new Date().toISOString());
