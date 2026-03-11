@@ -3,7 +3,7 @@ import { TrophyIcon } from "lucide-react";
 import { Link } from "wouter";
 import { Flag } from "@/components/flags";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
-import { RACES_2026, SESSIONS } from "@/data";
+import { RACES_2026 } from "@/data";
 import { cn } from "@/lib/utils";
 import type { Race, Session } from "@/shared/model";
 import { AppLayout } from "./Layout";
