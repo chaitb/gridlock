@@ -1,5 +1,5 @@
 import type { Context } from "hono";
-import { createAccountSchema } from "../../src/model";
+import { createAccountSchema } from "@/shared/model";
 import { signMagicToken } from "../auth";
 import { sendMagicLinkEmail } from "../email";
 import { createUser, findUserByUsernameOrEmail } from "../queries/userQueries";
@@ -50,9 +50,12 @@ export async function createAccount(c: Context<AppEnv>) {
 		if (!emailResult.success) {
 			console.error("[create-account] email send failed", emailResult.error);
 			// Account was created but email failed — still return success but warn
-			return c.json({
-				message: "Account created but failed to send login email. Contact support.",
-			}, 500);
+			return c.json(
+				{
+					message: "Account created but failed to send login email. Contact support.",
+				},
+				500
+			);
 		}
 
 		return c.json({ message: "Account created. Check your email to log in." }, 201);

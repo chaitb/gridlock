@@ -34,7 +34,7 @@ import {
 	DrawerTrigger,
 } from "@/components/ui/drawer";
 import { cn } from "@/lib/utils";
-import type { Driver, DriverTag } from "@/model";
+import type { Driver, DriverTag } from "@/shared/model";
 import { DRIVERS } from "./driver";
 
 const DRIVER_HEADSHOTS: Record<DriverTag, string> = {

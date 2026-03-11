@@ -1,15 +1,22 @@
 import { motion } from "framer-motion";
+import { ShuffleIcon } from "lucide-react";
 import { useCallback } from "react";
+import { Button } from "@/components/ui/button";
 import {
 	type Driver,
 	GAINER_KEYS,
 	LOSER_KEYS,
 	type PredictionContent,
 	QUALIFYING_KEYS,
-} from "@/model";
+} from "@/shared/model";
+import { randomizeSection } from "@/shared/predictionFormHelpers";
 import { DriverSelect } from "./Drivers";
 import { DRIVERS } from "./driver";
 import { H2 } from "./Text";
+
+export function objKeys<T extends object>(obj: T): Array<keyof T> {
+	return Object.keys(obj) as Array<keyof T>;
+}
 
 type PredictionFormProps = {
 	predictions: PredictionContent;
@@ -42,6 +49,52 @@ export function PredictionForm({
 		[predictions, onChange, readOnly]
 	);
 
+	const randomize = useCallback(
+		(section_key: "qualifying" | "race" | "gainers" | "losers") => {
+			if (readOnly) return;
+			const updatedSection = randomizeSection(predictions[section_key]);
+			onChange({
+				...predictions,
+				[section_key]: updatedSection,
+			});
+		},
+		[predictions, onChange, readOnly]
+	);
+
+	const SectionHeader = ({
+		title,
+		sub,
+		section_key,
+		scoring_link,
+	}: {
+		title: string;
+		sub: string;
+		section_key: keyof PredictionContent;
+		scoring_link: string;
+	}) => (
+		<>
+			<H2>{title}</H2>
+			<div className="flex gap-2 mt-2 min-w-0 items-center">
+				<p className="pr-10 text-muted-foreground text-sm flex-grow">
+					{sub}{" "}
+					<a href={scoring_link} className="text-primary underline-offset-2 hover:underline">
+						How scoring works →
+					</a>
+				</p>
+				{!readOnly && (
+					<Button
+						variant={"ghost"}
+						size={"xs"}
+						className="text-sm py-0 my-0"
+						onClick={() => randomize(section_key)}
+					>
+						<ShuffleIcon className="size-4 text-muted-foreground" />
+					</Button>
+				)}
+			</div>
+		</>
+	);
+
 	return (
 		<div className="space-y-8 w-full min-w-0">
 			<motion.div
@@ -49,16 +102,12 @@ export function PredictionForm({
 				animate={{ opacity: 1, y: 0 }}
 				transition={{ delay: 0.15, duration: 0.45 }}
 			>
-				<H2>Qualifying</H2>
-				<p className="text-muted-foreground text-sm">
-					Top-5 grid prediction.{" "}
-					<a
-						href="/rules#scoring-qualifying"
-						className="text-primary underline-offset-2 hover:underline"
-					>
-						How scoring works →
-					</a>
-				</p>
+				<SectionHeader
+					title="Qualifying"
+					sub="Top-5 grid prediction."
+					scoring_link="/rules#scoring-qualifying"
+					section_key="qualifying"
+				/>
 				<div className="flex flex-wrap gap-2 mt-2 min-w-0">
 					{QUALIFYING_KEYS.map((key) => (
 						<DriverSelect
@@ -83,16 +132,12 @@ export function PredictionForm({
 				animate={{ opacity: 1, y: 0 }}
 				transition={{ delay: 0.25, duration: 0.45 }}
 			>
-				<H2>Race</H2>
-				<p className="text-muted-foreground text-sm">
-					Top-5 finishing prediction.{" "}
-					<a
-						href="/rules#scoring-qualifying"
-						className="text-primary underline-offset-2 hover:underline"
-					>
-						How scoring works →
-					</a>
-				</p>
+				<SectionHeader
+					title="Race"
+					sub="Top-5 finishing prediction."
+					scoring_link="/rules#scoring-race"
+					section_key="race"
+				/>
 				<div className="flex flex-wrap gap-2 mt-2 min-w-0">
 					{QUALIFYING_KEYS.map((key) => (
 						<DriverSelect
@@ -117,16 +162,12 @@ export function PredictionForm({
 				animate={{ opacity: 1, y: 0 }}
 				transition={{ delay: 0.35, duration: 0.45 }}
 			>
-				<H2>Biggest Gainers</H2>
-				<p className="text-muted-foreground text-sm">
-					3 drivers who gain the most positions from grid to finish.{" "}
-					<a
-						href="/rules#scoring-gainers-losers"
-						className="text-primary underline-offset-2 hover:underline"
-					>
-						How scoring works →
-					</a>
-				</p>
+				<SectionHeader
+					title="Biggest Gainers"
+					sub="3 drivers who gain the most positions from grid to finish."
+					scoring_link="/rules#scoring-gainers-losers"
+					section_key="gainers"
+				/>
 				<div className="flex flex-wrap gap-2 mt-2 min-w-0">
 					{GAINER_KEYS.map((key) => (
 						<DriverSelect
@@ -151,16 +192,12 @@ export function PredictionForm({
 				animate={{ opacity: 1, y: 0 }}
 				transition={{ delay: 0.45, duration: 0.45 }}
 			>
-				<H2>Biggest Losers</H2>
-				<p className="text-muted-foreground text-sm">
-					3 drivers who lose the most positions from grid to finish.{" "}
-					<a
-						href="/rules#scoring-gainers-losers"
-						className="text-primary underline-offset-2 hover:underline"
-					>
-						How scoring works →
-					</a>
-				</p>
+				<SectionHeader
+					title="Biggest Losers"
+					sub="3 drivers who lose the most positions from grid to finish."
+					scoring_link="/rules#scoring-gainers-losers"
+					section_key="losers"
+				/>
 				<div className="flex flex-wrap gap-2 mt-2 min-w-0">
 					{LOSER_KEYS.map((key) => (
 						<DriverSelect

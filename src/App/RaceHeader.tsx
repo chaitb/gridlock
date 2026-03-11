@@ -1,29 +1,21 @@
 import { motion } from "framer-motion";
 import { Link } from "wouter";
 import { Flag } from "@/components/flags";
-import type { Race } from "@/model";
+import type { Race } from "@/shared/model";
 import Countdown from "./Countdown";
 import { POSTERS } from "./images/posters";
-import { SESSIONS } from "@/data";
 
-export function RaceHeader({ race }: { race: Race }) {
+export function RaceHeader({
+	race,
+	countdown,
+	isPrediction,
+}: {
+	race: Race;
+	countdown?: Date | false | null;
+	isPrediction?: boolean;
+}) {
 	const poster = POSTERS[race.circuit_code];
-	const today = new Date();
-
-	const date = new Date(
-		SESSIONS.find(
-			(session) => session.circuit_code === race.circuit_code && session.session_type === "Race"
-		)?.date_start ?? ""
-	);
-	const isUpcoming = date >= today;
-
-	const raceDate = date.toLocaleDateString("en-US", {
-		weekday: "long",
-		year: "numeric",
-		month: "long",
-		day: "numeric",
-	});
-
+	const raceDate = race.getStartDateString();
 	return (
 		<motion.div
 			className="relative mb-10"
@@ -49,6 +41,14 @@ export function RaceHeader({ race }: { race: Race }) {
 					<Link to={`/race/${race.circuit_code}`} className="hover:underline">
 						{race.name}
 					</Link>
+					{isPrediction && (
+						<>
+							{" / "}
+							<Link to={`/race/${race.circuit_code}/prediction`} className="hover:underline">
+								Predictions
+							</Link>
+						</>
+					)}
 				</p>
 				<div className="flex flex-wrap items-center mt-12 flex-row">
 					<h1 className="flex-1 font-round drop-shadow-xl tracking-wide text-6xl lg:text-9xl font-light mr-12 mb-4">
@@ -60,7 +60,7 @@ export function RaceHeader({ race }: { race: Race }) {
 					<p> Round {race.round}</p>
 					<p> {race.venue}</p>
 					<p> {raceDate}</p>
-					{isUpcoming && <Countdown date={date} className="p-12 md:p-20" />}
+					{countdown && <Countdown date={countdown} className="p-12 md:p-20" />}
 				</div>
 			</div>
 		</motion.div>

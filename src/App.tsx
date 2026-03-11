@@ -1,4 +1,6 @@
 import { Route, Switch } from "wouter";
+import { Admin } from "./App/Admin";
+import { RaceWeekend } from "./App/Calendar";
 import { UserHome } from "./App/Home";
 import { Leaderboard } from "./App/Leaderboard";
 import { LeaguePredictions } from "./App/LeaguePredictions";
@@ -6,7 +8,6 @@ import { UserPredictions } from "./App/MyPredictions";
 import { Profile } from "./App/Profile";
 import { Race } from "./App/Race";
 import { RacePrediction } from "./App/RacePrediction";
-import { RaceWeekend } from "./App/Calendar";
 import { Rules } from "./App/Rules";
 import { Season } from "./App/Season";
 import { MidSeason } from "./App/Season/MidSeason";
@@ -75,6 +76,9 @@ const App = () => (
 					</Route>
 					<Route path="/profile">
 						<Profile />
+					</Route>
+					<Route path="/__admin">
+						<Admin />
 					</Route>
 				</ProtectedRoute>
 				{/* End logged in routes */}

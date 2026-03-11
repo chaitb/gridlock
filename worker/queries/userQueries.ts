@@ -1,5 +1,5 @@
 import type { D1Database } from "@cloudflare/workers-types";
-import type { User } from "../../src/model";
+import type { User } from "@/shared/model";
 
 export async function findUserByEmail(db: D1Database, email: string) {
 	return db.prepare("SELECT * FROM players WHERE email = ?").bind(email).run();
@@ -11,7 +11,9 @@ export async function findUserById(db: D1Database, id: number): Promise<User | n
 
 export async function setVerifiedAt(db: D1Database, id: number) {
 	return db
-		.prepare("UPDATE players SET verified_at = CURRENT_TIMESTAMP WHERE id = ? AND verified_at IS NULL")
+		.prepare(
+			"UPDATE players SET verified_at = CURRENT_TIMESTAMP WHERE id = ? AND verified_at IS NULL"
+		)
 		.bind(id)
 		.run();
 }
@@ -73,4 +75,25 @@ export async function getLeaderboard(db: D1Database) {
 			 ORDER BY points DESC`
 		)
 		.all();
+}
+
+export async function getVerifiedUsersWithoutLockedPrediction(
+	db: D1Database,
+	circuitCode: string
+): Promise<{ id: number; email: string; username: string | null }[]> {
+	return db
+		.prepare(
+			`SELECT p.id, p.email, p.username
+			 FROM players p
+			 WHERE p.verified_at IS NOT NULL
+			 AND NOT EXISTS (
+				 SELECT 1 FROM predictions pred
+				 WHERE pred.user_id = p.id
+				 AND pred.circuit_code = ?
+				 AND pred.locked = 1
+			 )`
+		)
+		.bind(circuitCode)
+		.all<{ id: number; email: string; username: string | null }>()
+		.then((result) => result.results);
 }

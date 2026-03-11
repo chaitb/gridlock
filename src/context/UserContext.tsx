@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
+import type { User } from "@/shared/model";
 import { UserContext } from "./useUser";
-import type { User } from "@/model";
 
 export function UserProvider({ children }: { children: React.ReactNode }) {
 	const [user, setUser] = useState<User | null>(null);

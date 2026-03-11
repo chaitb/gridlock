@@ -1,6 +1,6 @@
-import type { CircuitCode } from "@/model";
-import aus from "../../assets/posters/aus.jpg";
 import shanghai from "@/assets/posters/mcl.jpg";
+import type { CircuitCode } from "@/shared/model";
+import aus from "../../assets/posters/aus.jpg";
 
 export const POSTERS: Record<CircuitCode, string> = {
 	melbourne: aus,

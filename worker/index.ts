@@ -1,9 +1,10 @@
 import { Hono } from "hono";
 import { logger } from "hono/logger";
 import { requireAuth } from "./middleware/auth";
+import { adminAction } from "./routes/admin";
 import { createAccount } from "./routes/create-account";
-import { getLeaguePredictions } from "./routes/league-predictions";
 import { leaderboard } from "./routes/leaderboard";
+import { getLeaguePredictions } from "./routes/league-predictions";
 import { lockPredictionRoute } from "./routes/lock-prediction";
 import { login } from "./routes/login";
 import { logout } from "./routes/logout";
@@ -32,6 +33,7 @@ app.use("/api/predictions/lock", requireAuth);
 app.use("/api/user-predictions", requireAuth);
 app.use("/api/league-predictions", requireAuth);
 app.use("/api/profile", requireAuth);
+app.use("/api/admin", requireAuth);
 
 app.get("/api/me", getMe);
 app.patch("/api/profile", updateProfile);
@@ -40,6 +42,7 @@ app.post("/api/predictions", savePredictions);
 app.post("/api/predictions/lock", lockPredictionRoute);
 app.get("/api/user-predictions", getUserPredictions);
 app.get("/api/league-predictions", getLeaguePredictions);
+app.post("/api/admin", adminAction);
 
 export default {
 	fetch: app.fetch,
