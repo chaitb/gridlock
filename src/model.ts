@@ -141,6 +141,15 @@ export type Prediction = z.infer<typeof predictionSchema>;
 export type PredictionContent = z.infer<typeof predictionContentSchema>;
 export type StoredPrediction = z.infer<typeof storedPredictionSchema>;
 
+export type Driver = {
+	full_name: string;
+	number: number;
+	acronym: DriverTag;
+	team_name: string;
+	colour: string;
+	headshot_url: string;
+};
+
 export const initialPredictions: PredictionContent = {
 	qualifying: {
 		p1: null,
@@ -253,3 +262,17 @@ export type Session = {
 export const QUALIFYING_KEYS = ["p1", "p2", "p3", "p4", "p5"] as const;
 export const GAINER_KEYS = ["g1", "g2", "g3"] as const;
 export const LOSER_KEYS = ["l1", "l2", "l3"] as const;
+
+export type SessionResult = {
+	position: number | null;
+	driver_number: number;
+	number_of_laps: number;
+	points: number;
+	dnf: boolean;
+	dns: boolean;
+	dsq: boolean;
+	duration: number | null;
+	gap_to_leader: number | null | string;
+	meeting_key: number;
+	session_key: number;
+};
