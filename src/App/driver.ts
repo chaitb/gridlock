@@ -1,6 +1,7 @@
 export const DRIVERS = [
 	{
 		full_name: "Lando NORRIS",
+		number: 1,
 		acronym: "NOR",
 		team_name: "McLaren",
 		colour: "F47600",
@@ -9,6 +10,7 @@ export const DRIVERS = [
 	},
 	{
 		full_name: "Max VERSTAPPEN",
+		number: 3,
 		acronym: "VER",
 		team_name: "Red Bull Racing",
 		colour: "4781D7",
@@ -17,6 +19,7 @@ export const DRIVERS = [
 	},
 	{
 		full_name: "Gabriel BORTOLETO",
+		number: 5,
 		acronym: "BOR",
 		team_name: "Audi",
 		colour: "F50537",
@@ -25,6 +28,7 @@ export const DRIVERS = [
 	},
 	{
 		full_name: "Isack HADJAR",
+		number: 6,
 		acronym: "HAD",
 		team_name: "Red Bull Racing",
 		colour: "4781D7",
@@ -33,6 +37,7 @@ export const DRIVERS = [
 	},
 	{
 		full_name: "Pierre GASLY",
+		number: 10,
 		acronym: "GAS",
 		team_name: "Alpine",
 		colour: "00A1E8",
@@ -41,6 +46,7 @@ export const DRIVERS = [
 	},
 	{
 		full_name: "Sergio PEREZ",
+		number: 11,
 		acronym: "PER",
 		team_name: "Cadillac",
 		colour: "909090",
@@ -49,6 +55,7 @@ export const DRIVERS = [
 	},
 	{
 		full_name: "Kimi ANTONELLI",
+		number: 12,
 		acronym: "ANT",
 		team_name: "Mercedes",
 		colour: "00D7B6",
@@ -57,6 +64,7 @@ export const DRIVERS = [
 	},
 	{
 		full_name: "Fernando ALONSO",
+		number: 14,
 		acronym: "ALO",
 		team_name: "Aston Martin",
 		colour: "229971",
@@ -65,6 +73,7 @@ export const DRIVERS = [
 	},
 	{
 		full_name: "Charles LECLERC",
+		number: 16,
 		acronym: "LEC",
 		team_name: "Ferrari",
 		colour: "ED1131",
@@ -73,6 +82,7 @@ export const DRIVERS = [
 	},
 	{
 		full_name: "Lance STROLL",
+		number: 18,
 		acronym: "STR",
 		team_name: "Aston Martin",
 		colour: "229971",
@@ -81,6 +91,7 @@ export const DRIVERS = [
 	},
 	{
 		full_name: "Alexander ALBON",
+		number: 23,
 		acronym: "ALB",
 		team_name: "Williams",
 		colour: "1868DB",
@@ -89,6 +100,7 @@ export const DRIVERS = [
 	},
 	{
 		full_name: "Nico HULKENBERG",
+		number: 27,
 		acronym: "HUL",
 		team_name: "Audi",
 		colour: "F50537",
@@ -97,6 +109,7 @@ export const DRIVERS = [
 	},
 	{
 		full_name: "Liam LAWSON",
+		number: 30,
 		acronym: "LAW",
 		team_name: "Racing Bulls",
 		colour: "6C98FF",
@@ -105,6 +118,7 @@ export const DRIVERS = [
 	},
 	{
 		full_name: "Esteban OCON",
+		number: 31,
 		acronym: "OCO",
 		team_name: "Haas F1 Team",
 		colour: "9C9FA2",
@@ -113,6 +127,7 @@ export const DRIVERS = [
 	},
 	{
 		full_name: "Arvid LINDBLAD",
+		number: 41,
 		acronym: "LIN",
 		team_name: "Racing Bulls",
 		colour: "6C98FF",
@@ -121,6 +136,7 @@ export const DRIVERS = [
 	},
 	{
 		full_name: "Franco COLAPINTO",
+		number: 43,
 		acronym: "COL",
 		team_name: "Alpine",
 		colour: "00A1E8",
@@ -129,6 +145,7 @@ export const DRIVERS = [
 	},
 	{
 		full_name: "Lewis HAMILTON",
+		number: 44,
 		acronym: "HAM",
 		team_name: "Ferrari",
 		colour: "ED1131",
@@ -137,6 +154,7 @@ export const DRIVERS = [
 	},
 	{
 		full_name: "Carlos SAINZ",
+		number: 55,
 		acronym: "SAI",
 		team_name: "Williams",
 		colour: "1868DB",
@@ -145,6 +163,7 @@ export const DRIVERS = [
 	},
 	{
 		full_name: "George RUSSELL",
+		number: 63,
 		acronym: "RUS",
 		team_name: "Mercedes",
 		colour: "00D7B6",
@@ -153,6 +172,7 @@ export const DRIVERS = [
 	},
 	{
 		full_name: "Valtteri BOTTAS",
+		number: 77,
 		acronym: "BOT",
 		team_name: "Cadillac",
 		colour: "909090",
@@ -161,6 +181,7 @@ export const DRIVERS = [
 	},
 	{
 		full_name: "Oscar PIASTRI",
+		number: 81,
 		acronym: "PIA",
 		team_name: "McLaren",
 		colour: "F47600",
@@ -169,6 +190,7 @@ export const DRIVERS = [
 	},
 	{
 		full_name: "Oliver BEARMAN",
+		number: 87,
 		acronym: "BEA",
 		team_name: "Haas F1 Team",
 		colour: "9C9FA2",

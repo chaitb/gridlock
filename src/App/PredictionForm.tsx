@@ -1,9 +1,15 @@
 import { motion } from "framer-motion";
 import { useCallback } from "react";
-import { DriverSelect, type Driver } from "./Drivers";
-import { H2 } from "./Text";
+import {
+	type Driver,
+	GAINER_KEYS,
+	LOSER_KEYS,
+	type PredictionContent,
+	QUALIFYING_KEYS,
+} from "@/model";
+import { DriverSelect } from "./Drivers";
 import { DRIVERS } from "./driver";
-import { GAINER_KEYS, LOSER_KEYS, QUALIFYING_KEYS, type PredictionContent } from "@/model";
+import { H2 } from "./Text";
 
 type PredictionFormProps = {
 	predictions: PredictionContent;
