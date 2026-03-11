@@ -13,7 +13,7 @@ import { EnterButton } from "@/components/EnterButton";
 import GlareHover from "@/components/GlareHover";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
-import { RACES_2026, SESSIONS } from "@/data";
+import { RACES_2026 } from "@/data";
 import { useApi } from "@/helpers/useApi";
 import { useMediaQuery } from "@/helpers/useMediaQuery";
 import { cn } from "@/lib/utils";

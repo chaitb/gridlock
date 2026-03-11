@@ -42,7 +42,6 @@ export function RacePrediction() {
 	const [saved_at, setSaved_at] = useState<Date | null>(null);
 	const {
 		data: savedPrediction,
-		isLoading,
 		error,
 		refetch,
 	} = useApi<Prediction>(`/api/predictions`, {

@@ -41,7 +41,7 @@ function RaceRow({ race, isNext }: { race: Race; isNext: boolean }) {
 	const today = new Date();
 	const isUpcoming = new Date(race.date) >= today;
 	const sessions = race
-		.getSessions(SESSIONS)
+		.getSessions()
 		.sort((a, b) => new Date(a.date_start).getTime() - new Date(b.date_start).getTime());
 
 	const race_session = sessions.find((s) => s.session_type === "Race");
