@@ -1,5 +1,5 @@
 import type { Context } from "hono";
-import { loginSchema } from "../../src/model";
+import { loginSchema } from "@/shared/model";
 import { signMagicToken } from "../auth";
 import { sendMagicLinkEmail } from "../email";
 import { findUserByEmail } from "../queries/userQueries";
@@ -28,10 +28,7 @@ export async function login(c: Context<AppEnv>) {
 
 		const user = result.results[0];
 		if (!user) {
-			return c.json(
-				{ message: "No account found for that email. Create an account first." },
-				404
-			);
+			return c.json({ message: "No account found for that email. Create an account first." }, 404);
 		}
 
 		const magicToken = await signMagicToken(user.id as number, env.JWT_SECRET);

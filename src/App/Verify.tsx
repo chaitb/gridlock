@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { useUser } from "@/context/useUser";
-import type { User } from "@/model";
+import type { User } from "@/shared/model";
 import poster from "../assets/GridLock2026.webp";
 
 type VerifyState = "loading" | "success" | "error";
@@ -75,11 +75,7 @@ export function Verify() {
 			</p>
 
 			{status === "loading" && (
-				<motion.div
-					initial={{ opacity: 0 }}
-					animate={{ opacity: 1 }}
-					className="space-y-3"
-				>
+				<motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3">
 					<h1 className="text-3xl font-audiowide uppercase font-medium tracking-tight">
 						Verifying…
 					</h1>

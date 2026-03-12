@@ -1,21 +1,16 @@
 import { motion } from "framer-motion";
+import { LockIcon } from "lucide-react";
 import { useState } from "react";
 import { Link, useLocation, useParams } from "wouter";
-import { LockIcon } from "lucide-react";
 import { Flag } from "@/components/flags";
-import { useApi } from "@/helpers/useApi";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useUser } from "@/context/useUser";
-import { AppLayout } from "./Layout";
 import { RACES_2026 } from "@/data";
-import { PredictionForm } from "./PredictionForm";
-import type { CountryCode, Prediction, PredictionContent } from "@/model";
-import {
-	Dialog,
-	DialogContent,
-	DialogHeader,
-	DialogTitle,
-} from "@/components/ui/dialog";
+import { useApi } from "@/helpers/useApi";
+import type { CountryCode, Prediction, PredictionContent } from "@/shared/model";
+import { AppLayout } from "./Layout";
 import { container, item, PredictionCardContent } from "./PredictionCard";
+import { PredictionForm } from "./PredictionForm";
 
 type UserPredictionsResponse = {
 	predictions: Prediction[];
@@ -71,9 +66,7 @@ function PredictionCard({
 				<button
 					type="button"
 					className="block w-full text-left p-4 hover:bg-secondary transition-colors"
-					onClick={() =>
-						navigate(`/race/${race.circuit_code}/prediction`)
-					}
+					onClick={() => navigate(`/race/${race.circuit_code}/prediction`)}
 				>
 					<PredictionCardHeader race={race} updated={updated} />
 					{content && <PredictionCardContent content={content} />}
@@ -103,8 +96,7 @@ export function UserPredictions() {
 	const { user } = useUser();
 	const [, navigate] = useLocation();
 	const username = params.username;
-	const [selectedPrediction, setSelectedPrediction] =
-		useState<Prediction | null>(null);
+	const [selectedPrediction, setSelectedPrediction] = useState<Prediction | null>(null);
 	const [dialogOpen, setDialogOpen] = useState(false);
 
 	const {
@@ -120,9 +112,7 @@ export function UserPredictions() {
 	if (!user) {
 		return (
 			<AppLayout headline="Predictions">
-				<p className="text-muted-foreground">
-					Please log in to view predictions.
-				</p>
+				<p className="text-muted-foreground">Please log in to view predictions.</p>
 			</AppLayout>
 		);
 	}
@@ -167,8 +157,7 @@ export function UserPredictions() {
 					className="space-y-4"
 				>
 					<p className="text-muted-foreground">
-						{isOwner ? "You haven't" : `${username} hasn't`} made
-						any predictions yet.
+						{isOwner ? "You haven't" : `${username} hasn't`} made any predictions yet.
 					</p>
 					{isOwner && (
 						<Link
@@ -180,7 +169,7 @@ export function UserPredictions() {
 					)}
 				</motion.div>
 			) : null}
-			{/* 
+			{/*
 				// 	{unavailableRaces.length > 0 && (
 				// 		<motion.div
 				// 			initial={{ opacity: 0, y: 10 }}
@@ -225,16 +214,11 @@ export function UserPredictions() {
 								key={race.circuit_code}
 								race={race}
 								isOwner={isOwner}
-								onViewClick={() =>
-									navigate(
-										`/race/${race.circuit_code}/prediction`,
-									)
-								}
+								onViewClick={() => navigate(`/race/${race.circuit_code}/prediction`)}
 							>
 								<div className="border-2 border-dashed border-destructive/30 rounded-md p-4 flex justify-center text-center items-center gap-2 mx-auto text-sm text-muted-foreground">
 									<LockIcon className="w-4 h-4 inline-block" />
-									Submit your prediction to view {username}'s
-									picks for this race
+									Submit your prediction to view {username}'s picks for this race
 								</div>
 							</PredictionCard>
 						);
@@ -242,9 +226,7 @@ export function UserPredictions() {
 						return null;
 					} else {
 						try {
-							content = JSON.parse(
-								pred.prediction ?? "{}",
-							) as PredictionContent;
+							content = JSON.parse(pred.prediction ?? "{}") as PredictionContent;
 						} catch {
 							return null;
 						}
@@ -272,17 +254,12 @@ export function UserPredictions() {
 					{selectedPrediction && (
 						<>
 							<DialogHeader>
-								<DialogTitle>
-									{username}'s Prediction
-								</DialogTitle>
+								<DialogTitle>{username}'s Prediction</DialogTitle>
 							</DialogHeader>
 							<div className="mt-4">
 								<PredictionForm
 									predictions={
-										JSON.parse(
-											selectedPrediction.prediction ??
-												"{}",
-										) as PredictionContent
+										JSON.parse(selectedPrediction.prediction ?? "{}") as PredictionContent
 									}
 									onChange={() => {}}
 									readOnly

@@ -1,19 +1,14 @@
 import { motion } from "framer-motion";
 import { useState } from "react";
 import { Link, useParams } from "wouter";
-import { PredictionForm } from "./PredictionForm";
-import { useApi } from "@/helpers/useApi";
-import { AppLayout } from "./Layout";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { RACES_2026 } from "@/data";
 import type { ApiError } from "@/helpers/useApi";
-import type { PredictionContent } from "@/model";
-import {
-	Dialog,
-	DialogContent,
-	DialogHeader,
-	DialogTitle,
-} from "@/components/ui/dialog";
+import { useApi } from "@/helpers/useApi";
+import type { PredictionContent } from "@/shared/model";
+import { AppLayout } from "./Layout";
 import { container, item, PredictionCardContent } from "./PredictionCard";
+import { PredictionForm } from "./PredictionForm";
 
 type LeaguePrediction = {
 	id: number;
@@ -48,9 +43,7 @@ function LeaguePredictionCard({
 				<div className="flex items-center gap-3 mb-3">
 					<span className="font-medium">@{pred.username}</span>
 					<span className="text-xs text-muted-foreground ml-auto">
-						{new Date(
-							`${pred.updated_at.replace(" ", "T")}Z`,
-						).toLocaleDateString()}
+						{new Date(`${pred.updated_at.replace(" ", "T")}Z`).toLocaleDateString()}
 					</span>
 				</div>
 				<PredictionCardContent content={content} />
@@ -63,16 +56,12 @@ export function LeaguePredictions() {
 	const params = useParams();
 	const circuitCode = params.circuit_code;
 	const race = RACES_2026.find((r) => r.circuit_code === circuitCode);
-	const [selectedPrediction, setSelectedPrediction] =
-		useState<LeaguePrediction | null>(null);
+	const [selectedPrediction, setSelectedPrediction] = useState<LeaguePrediction | null>(null);
 	const [dialogOpen, setDialogOpen] = useState(false);
 
-	const { data, isLoading, error } = useApi<LeaguePredictionsResponse>(
-		"/api/league-predictions",
-		{
-			params: { circuitCode: circuitCode ?? "" },
-		},
-	);
+	const { data, isLoading, error } = useApi<LeaguePredictionsResponse>("/api/league-predictions", {
+		params: { circuitCode: circuitCode ?? "" },
+	});
 
 	if (!race) {
 		return (
@@ -102,9 +91,7 @@ export function LeaguePredictions() {
 						animate={{ opacity: 1, y: 0 }}
 						className="space-y-4"
 					>
-						<p className="text-muted-foreground">
-							{apiError.message}
-						</p>
+						<p className="text-muted-foreground">{apiError.message}</p>
 						<Link
 							to={`/race/${circuitCode}/prediction`}
 							className="inline-block text-accent-foreground underline underline-offset-2 hover:no-underline"
@@ -124,9 +111,7 @@ export function LeaguePredictions() {
 						animate={{ opacity: 1, y: 0 }}
 						className="space-y-4"
 					>
-						<p className="text-muted-foreground">
-							{apiError.message}
-						</p>
+						<p className="text-muted-foreground">{apiError.message}</p>
 						<Link
 							to={`/race/${circuitCode}/prediction`}
 							className="inline-block text-accent-foreground underline underline-offset-2 hover:no-underline"
@@ -163,9 +148,7 @@ export function LeaguePredictions() {
 			</div>
 
 			{predictions.length === 0 ? (
-				<p className="text-muted-foreground">
-					No predictions submitted yet.
-				</p>
+				<p className="text-muted-foreground">No predictions submitted yet.</p>
 			) : (
 				<motion.ul
 					variants={container}
@@ -176,9 +159,7 @@ export function LeaguePredictions() {
 					{predictions.map((pred) => {
 						let content: PredictionContent | null = null;
 						try {
-							content = JSON.parse(
-								pred.prediction ?? "{}",
-							) as PredictionContent;
+							content = JSON.parse(pred.prediction ?? "{}") as PredictionContent;
 						} catch {
 							return null;
 						}
@@ -213,10 +194,7 @@ export function LeaguePredictions() {
 							<div className="mt-4 w-full">
 								<PredictionForm
 									predictions={
-										JSON.parse(
-											selectedPrediction.prediction ??
-												"{}",
-										) as PredictionContent
+										JSON.parse(selectedPrediction.prediction ?? "{}") as PredictionContent
 									}
 									onChange={() => {}}
 									readOnly

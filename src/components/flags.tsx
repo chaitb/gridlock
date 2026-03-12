@@ -1,5 +1,5 @@
 // 3-letter codes — used for F1 2026 races
-import type { CountryCode } from "@/model";
+import type { CountryCode } from "@/shared/model";
 import aus from "../assets/flags/aus.svg";
 import aut from "../assets/flags/aut.svg";
 import aze from "../assets/flags/aze.svg";

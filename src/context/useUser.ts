@@ -1,5 +1,5 @@
 import { createContext, useContext } from "react";
-import type { User } from "@/model";
+import type { User } from "@/shared/model";
 
 type UserContextType = {
 	user: User | null;

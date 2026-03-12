@@ -229,7 +229,7 @@ export type CircuitCode =
 	| "lusail"
 	| "yas-marina-circuit";
 
-export type Race = {
+export type RaceType = {
 	round: number;
 	code: RaceCode;
 	country: CountryCode;
@@ -258,6 +258,8 @@ export type Session = {
 	gmt_offset: string;
 	year: number;
 };
+
+export { Race } from "./Race";
 
 export const QUALIFYING_KEYS = ["p1", "p2", "p3", "p4", "p5"] as const;
 export const GAINER_KEYS = ["g1", "g2", "g3"] as const;

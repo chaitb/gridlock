@@ -1,17 +1,16 @@
 import { motion } from "framer-motion";
+import { CheckCircle2Icon, LockIcon, SaveIcon } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 import { useLocation, useParams } from "wouter";
-import { LockIcon, SaveIcon } from "lucide-react";
-import { PredictionForm } from "./PredictionForm";
-import { RaceHeader } from "./RaceHeader";
+import GlareHover from "@/components/GlareHover";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Spinner } from "@/components/ui/spinner";
 import { RACES_2026 } from "@/data";
 import { useApi } from "@/helpers/useApi";
-import type { Prediction, PredictionContent } from "@/model";
-import { initialPredictions } from "@/model";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { CheckCircle2Icon } from "lucide-react";
-import GlareHover from "@/components/GlareHover";
-import { Spinner } from "@/components/ui/spinner";
+import type { Prediction, PredictionContent } from "@/shared/model";
+import { initialPredictions } from "@/shared/model";
+import { PredictionForm } from "./PredictionForm";
+import { RaceHeader } from "./RaceHeader";
 
 function getRelativeTime(date: Date): string {
 	const minsAgo = Math.floor((Date.now() - date.getTime()) / 60_000);
@@ -43,7 +42,6 @@ export function RacePrediction() {
 	const [saved_at, setSaved_at] = useState<Date | null>(null);
 	const {
 		data: savedPrediction,
-		isLoading,
 		error,
 		refetch,
 	} = useApi<Prediction>(`/api/predictions`, {
@@ -110,7 +108,6 @@ export function RacePrediction() {
 	}, [circuitCode, refetch]);
 
 	if (!race) return <div>Race not found</div>;
-	if (isLoading) return <div>Loading...</div>;
 	if (error) return <div>Error: {JSON.stringify(error)}</div>;
 
 	const isLocked = savedPrediction?.locked === 1;
@@ -127,7 +124,11 @@ export function RacePrediction() {
 
 	return (
 		<div className="min-h-screen mb-20">
-			<RaceHeader race={race} />
+			<RaceHeader
+				race={race}
+				countdown={race.isOpenForPredictions() && race.getPredictionLockDate()}
+				isPrediction={true}
+			/>
 
 			<div className="mt-8 px-4 md:px-10 max-w-4xl mx-auto">
 				<motion.div

@@ -1,8 +1,8 @@
 import type { Context } from "hono";
-import { savePredictionsSchema } from "../../src/model";
+import { z } from "zod";
+import { savePredictionsSchema } from "@/shared/model";
 import { getPredictionsByUserAndRace, upsertPrediction } from "../queries/predictionQueries";
 import type { AppEnv } from "../types";
-import { z } from "zod";
 
 const getParamsSchema = z.object({
 	circuitCode: z.string().trim().min(2),

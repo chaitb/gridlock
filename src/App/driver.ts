@@ -1,3 +1,5 @@
+import type { Driver } from "@/shared/model";
+
 export const DRIVERS = [
 	{
 		full_name: "Lando NORRIS",
@@ -197,4 +199,4 @@ export const DRIVERS = [
 		headshot_url:
 			"https://media.formula1.com/d_driver_fallback_image.png/content/dam/fom-website/drivers/O/OLIBEA01_Oliver_Bearman/olibea01.png.transform/1col/image.png",
 	},
-] as const;
+] as Driver[];

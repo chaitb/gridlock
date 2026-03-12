@@ -1,5 +1,5 @@
 import type { D1Database } from "@cloudflare/workers-types";
-import type { Prediction } from "../../src/model";
+import type { Prediction } from "@/shared/model";
 
 export async function getPredictionsByUserAndRace(
 	db: D1Database,

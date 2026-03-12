@@ -1,14 +1,13 @@
 import { motion } from "framer-motion";
-import { Link } from "wouter";
-import { AppLayout } from "./Layout";
-import { useUser } from "@/context/useUser";
 import { useMemo } from "react";
+import { Link } from "wouter";
+import { Flag } from "@/components/flags";
+import { useUser } from "@/context/useUser";
 import { RACES_2026 } from "@/data";
 import { useApi } from "@/helpers/useApi";
-import type { Prediction, Race } from "@/model";
-import { Flag } from "@/components/flags";
-import type { CountryCode } from "@/model";
 import { cn } from "@/lib/utils";
+import type { CountryCode, Prediction, Race } from "@/shared/model";
+import { AppLayout } from "./Layout";
 
 type UserPredictionsResponse = {
 	predictions: Prediction[];
