@@ -1,4 +1,4 @@
-import { SignJWT, jwtVerify } from "jose";
+import { jwtVerify, SignJWT } from "jose";
 
 const MAGIC_EXPIRY = "15m";
 const SESSION_EXPIRY = "30d";
@@ -25,7 +25,7 @@ export async function signMagicToken(userId: number, secret: string): Promise<st
 export async function verifyMagicToken(token: string, secret: string): Promise<number | null> {
 	try {
 		const { payload } = await jwtVerify(token, secretKey(secret));
-		if (payload["purpose"] !== "magic-link" || !payload.sub) return null;
+		if (payload.purpose !== "magic-link" || !payload.sub) return null;
 		const id = Number(payload.sub);
 		return Number.isFinite(id) && id > 0 ? id : null;
 	} catch {

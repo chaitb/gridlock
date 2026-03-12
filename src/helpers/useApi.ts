@@ -24,7 +24,7 @@ export function useApi<T>(url: string, options?: { params?: Record<string, strin
 	const [data, setData] = useState<T | null>(null);
 	const [error, setError] = useState<ApiError | null>(null);
 	const [isLoading, setIsLoading] = useState(true);
-	const [refetchKey, setRefetchKey] = useState(0);
+	const [_refetchKey, setRefetchKey] = useState(0);
 
 	const fullUrl = useMemo((): string => {
 		const full = new URL(url, window.location.href);
@@ -67,7 +67,7 @@ export function useApi<T>(url: string, options?: { params?: Record<string, strin
 
 	useEffect(() => {
 		fetchData();
-	}, [fetchData, refetchKey]);
+	}, [fetchData]);
 
 	const refetch = useCallback(() => {
 		setRefetchKey((k) => k + 1);

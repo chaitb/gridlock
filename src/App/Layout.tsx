@@ -1,6 +1,6 @@
 // Navigation imports kept for future use
 
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import { ThemeToggle } from "@/components/theme-toggle";
 // import { NavigationMenu, ... } from "@/components/ui/navigation-menu";
 

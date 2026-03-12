@@ -20,7 +20,10 @@ export async function verifyMagicLink(c: Context<AppEnv>) {
 
 	const userId = await verifyMagicToken(token, env.JWT_SECRET);
 	if (!userId) {
-		return c.json({ message: "This link is invalid or has expired. Please request a new one." }, 401);
+		return c.json(
+			{ message: "This link is invalid or has expired. Please request a new one." },
+			401
+		);
 	}
 
 	const user = await findUserById(env.F1_PREDICTIONS, userId);

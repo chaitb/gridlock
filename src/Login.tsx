@@ -39,7 +39,9 @@ const sendRequest = async (url: string, body: Record<string, string>) => {
 	});
 	const payload = await response.json();
 	if (!response.ok) {
-		const err = new Error((payload as { message?: string })?.message || "Request failed") as Error & {
+		const err = new Error(
+			(payload as { message?: string })?.message || "Request failed"
+		) as Error & {
 			status: number;
 		};
 		err.status = response.status;

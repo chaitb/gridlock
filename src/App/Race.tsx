@@ -28,6 +28,9 @@ import { DriverCardCompact, DriverCardFull } from "./Drivers";
 import { DRIVERS } from "./driver";
 import { AppLayout } from "./Layout";
 import { RaceHeader } from "./RaceHeader";
+
+const SKELETON_KEYS = Array.from({ length: 22 }, (_, i) => `skeleton-${i}`);
+
 import { H2 } from "./Text";
 
 export function Race() {
@@ -76,7 +79,7 @@ const glareButtonProps = {
 };
 
 const Predictions: React.FC<{ circuitCode: CircuitCode }> = ({ circuitCode }) => {
-	const [, navigate] = useLocation();
+	const [, _navigate] = useLocation();
 	const { data: pred, error } = useApi<Prediction>(`/api/predictions`, {
 		params: { circuitCode },
 	});
@@ -252,8 +255,8 @@ export function SessionResults({ session }: { session: Session }) {
 	if (isLoading || !results) {
 		return (
 			<div className="grid grid-cols-2 lg:grid-cols-3 gap-4 p-4 overflow-y-auto max-h-[calc(100vh-10rem)]">
-				{[...Array(22)].map((_, i) => (
-					<Skeleton key={i} className="w-30 h-40 lg:w-40 lg:h-48" />
+				{SKELETON_KEYS.map((key) => (
+					<Skeleton key={key} className="w-30 h-40 lg:w-40 lg:h-48" />
 				))}
 			</div>
 		);

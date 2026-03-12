@@ -66,7 +66,7 @@ export function Verify() {
 				setMessage(err instanceof Error ? err.message : "Unexpected error during verification.");
 			});
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, []);
+	}, [login, navigate]);
 
 	return (
 		<VerifyShell>

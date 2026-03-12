@@ -8,7 +8,7 @@ import {
 	TableRow,
 } from "@/components/ui/table";
 import { AppLayout } from "./Layout";
-import { H1, H2 } from "./Text";
+import { H2 } from "./Text";
 
 const container = {
 	hidden: {},

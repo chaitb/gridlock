@@ -1,6 +1,4 @@
 import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
-import { toPairs } from "lodash";
-import groupBy from "lodash/groupBy";
 import type React from "react";
 import type { PropsWithChildren } from "react";
 import ALB from "@/assets/drivers/alb.avif";
@@ -97,7 +95,7 @@ type DriverCardProps = {
 };
 
 export const DriverCardFull: React.FC<DriverCardProps> = ({ driver, className = "" }) => {
-	const color = "#" + driver.colour;
+	const color = `#${driver.colour}`;
 
 	// ... inside your component
 	const x = useMotionValue(0);

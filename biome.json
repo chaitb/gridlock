@@ -22,13 +22,19 @@
 			"recommended": true,
 			"correctness": {
 				"noUnusedVariables": "error",
-				"noUnusedImports": "error"
+				"noUnusedImports": {
+					"fix": "safe",
+					"level": "error"
+				}
 			},
 			"suspicious": {
 				"noExplicitAny": "warn"
 			},
 			"style": {
-				"useImportType": "error"
+				"useImportType": {
+					"level": "error",
+					"fix": "safe"
+				}
 			}
 		}
 	},

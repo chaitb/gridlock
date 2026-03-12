@@ -56,7 +56,7 @@ export function RacePrediction() {
 		const parsed = JSON.parse(savedPrediction.prediction) as PredictionContent;
 
 		if (savedPrediction.updated_at) {
-			const iso = savedPrediction.updated_at.replace(" ", "T") + "Z";
+			const iso = `${savedPrediction.updated_at.replace(" ", "T")}Z`;
 			setSaved_at(new Date(iso));
 		}
 

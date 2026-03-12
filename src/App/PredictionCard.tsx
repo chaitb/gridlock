@@ -1,10 +1,6 @@
-import { DRIVERS } from "./driver";
-import {
-	HoverCard,
-	HoverCardContent,
-	HoverCardTrigger,
-} from "@/components/ui/hover-card";
+import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { DriverCardFull } from "./Drivers";
+import { DRIVERS } from "./driver";
 
 export const container = {
 	hidden: {},
@@ -24,11 +20,7 @@ export function getDriverByAcronym(acronym: string | null) {
 export function DriverPill({ acronym }: { acronym: string | null }) {
 	const driver = getDriverByAcronym(acronym);
 	if (!driver) {
-		return (
-			<span className="px-2 py-0.5 rounded text-xs bg-muted text-muted-foreground">
-				—
-			</span>
-		);
+		return <span className="px-2 py-0.5 rounded text-xs bg-muted text-muted-foreground">—</span>;
 	}
 	return (
 		<HoverCard openDelay={100} closeDelay={300}>
@@ -97,16 +89,8 @@ export function PredictionCardContent({
 				keys={["p1", "p2", "p3", "p4", "p5"]}
 				prediction={content.race}
 			/>
-			<PredictionSection
-				title="Gainers"
-				keys={["g1", "g2", "g3"]}
-				prediction={content.gainers}
-			/>
-			<PredictionSection
-				title="Losers"
-				keys={["l1", "l2", "l3"]}
-				prediction={content.losers}
-			/>
+			<PredictionSection title="Gainers" keys={["g1", "g2", "g3"]} prediction={content.gainers} />
+			<PredictionSection title="Losers" keys={["l1", "l2", "l3"]} prediction={content.losers} />
 		</div>
 	);
 }
