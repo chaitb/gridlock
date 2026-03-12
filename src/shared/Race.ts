@@ -42,7 +42,44 @@ export class Race {
 	}
 
 	getSessions(): Session[] {
-		return this.sessions;
+		return this.sessions.sort(
+			(a, b) => new Date(a.date_start).getTime() - new Date(b.date_start).getTime()
+		);
+	}
+
+	getSession(sessionType: string): Session | undefined {
+		return this.getSessions().find((s) => s.session_type === sessionType);
+	}
+
+	getDateRange(): string {
+		const sessions = this.getSessions();
+		if (sessions.length === 0) {
+			return "—";
+		}
+		if (sessions.length === 1) {
+			return new Date(sessions[0].date_start).toLocaleDateString("en-US", {
+				month: "short",
+				day: "numeric",
+			});
+		}
+		const start = new Date(sessions[0].date_start);
+		const end = new Date(sessions[sessions.length - 1].date_end);
+		if (start.getMonth() === end.getMonth() && start.getFullYear() === end.getFullYear()) {
+			return `${start.toLocaleDateString("en-US", {
+				day: "numeric",
+			})} - ${end.toLocaleDateString("en-US", {
+				day: "numeric",
+			})} ${end.toLocaleDateString("en-US", {
+				month: "short",
+			})}`;
+		}
+		return `${start.toLocaleDateString("en-US", {
+			month: "short",
+			day: "numeric",
+		})} - ${end.toLocaleDateString("en-US", {
+			day: "numeric",
+			month: "short",
+		})}`;
 	}
 
 	getRaceStartDate(): Date {
@@ -70,7 +107,9 @@ export class Race {
 
 	getPredictionLockDate(): Date {
 		return new Date(
-			this.getSessions().find((s) => s.session_type === "Qualifying")?.date_start ?? ""
+			this.getSessions().find(
+				(s) => s.session_type === "Qualifying" && !s.session_name.toLowerCase().includes("sprint")
+			)?.date_start ?? ""
 		);
 	}
 
