@@ -1,6 +1,4 @@
 import { motion } from "framer-motion";
-import { H1, H2 } from "./Text";
-import { AppLayout } from "./Layout";
 import {
 	Table,
 	TableBody,
@@ -9,6 +7,8 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/ui/table";
+import { AppLayout } from "./Layout";
+import { H1, H2 } from "./Text";
 
 const container = {
 	hidden: {},
@@ -22,10 +22,9 @@ const item = {
 
 export function Rules() {
 	return (
-		<AppLayout>
-			<motion.div variants={container} initial="hidden" animate="show" className="max-w-2xl">
+		<AppLayout headline="Rules">
+			<motion.div variants={container} initial="hidden" animate="show" className="mx-3 max-w-2xl">
 				<motion.div variants={item} className="mb-8">
-					<H1>Rules</H1>
 					<p className="mt-4 text-muted-foreground">How GridLock works</p>
 				</motion.div>
 

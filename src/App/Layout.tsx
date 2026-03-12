@@ -1,6 +1,6 @@
 // Navigation imports kept for future use
 
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { ThemeToggle } from "@/components/theme-toggle";
 // import { NavigationMenu, ... } from "@/components/ui/navigation-menu";
 
@@ -17,10 +17,28 @@ export const AppLayout = ({
 		<div className="container mx-auto mt-20 mb-20">
 			{/*<RacingStripe />*/}
 			{headline && (
-				<h1 className="flex items-center gap-2 ml-3 mb-6 text-4xl font-medium tracking-tight text-muted-foreground">
-					<Link href="/home">{headline}</Link>
-					<ThemeToggle />
-				</h1>
+				<div className="flex justify-between items-center mx-3 mb-4 font-audiowide uppercase">
+					<Link
+						href="/home"
+						className="text-5xl text-primary hover:text-muted-foreground transition-colors duration-300"
+					>
+						<motion.h1
+							key="headline"
+							initial={{ opacity: 0, x: 20 }}
+							animate={{ opacity: 1, x: 0 }}
+							transition={{ duration: 0.2 }}
+						>
+							{headline}
+						</motion.h1>
+					</Link>
+					<motion.div
+						initial={{ opacity: 0, x: -20 }}
+						animate={{ opacity: 1, x: 0 }}
+						transition={{ duration: 0.2 }}
+					>
+						<ThemeToggle />
+					</motion.div>
+				</div>
 			)}
 
 			{/*<NavigationMenu className="mx-auto mt-2">

@@ -1,4 +1,6 @@
 import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
+import { toPairs } from "lodash";
+import groupBy from "lodash/groupBy";
 import type React from "react";
 import type { PropsWithChildren } from "react";
 import ALB from "@/assets/drivers/alb.avif";
@@ -35,7 +37,21 @@ import {
 } from "@/components/ui/drawer";
 import { cn } from "@/lib/utils";
 import type { Driver, DriverTag } from "@/shared/model";
-import { DRIVERS } from "./driver";
+import { type Constructor, DRIVERS } from "./driver";
+
+const CONSTRUCTORS_RANKS_2025: Record<Constructor, number> = {
+	McLaren: 1,
+	Mercedes: 2,
+	"Red Bull Racing": 3,
+	Ferrari: 4,
+	Williams: 5,
+	"Racing Bulls": 6,
+	"Aston Martin": 7,
+	"Haas F1 Team": 8,
+	Audi: 9,
+	Alpine: 10,
+	Cadillac: 11,
+};
 
 const DRIVER_HEADSHOTS: Record<DriverTag, string> = {
 	HAM: HAM,
@@ -175,6 +191,10 @@ export const DriverSelect: React.FC<DriverSelectProps> = ({
 	disabled = false,
 }) => {
 	const sDriver = DRIVERS.find((dr) => dr.acronym === selectedDriver);
+	const sortedDrivers = drivers.sort(
+		(a, b) => CONSTRUCTORS_RANKS_2025[a.team_name] - CONSTRUCTORS_RANKS_2025[b.team_name]
+	);
+
 	return (
 		<Drawer direction="bottom">
 			<DrawerTrigger asChild>
@@ -207,9 +227,9 @@ export const DriverSelect: React.FC<DriverSelectProps> = ({
 					<DrawerDescription> {subtitle}</DrawerDescription>
 				</DrawerHeader>
 				<div className="no-scrollbar my-4 overflow-y-auto px-4 py-4">
-					<div className="grid mx-auto grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-4">
-						{drivers.map((driver) => (
-							<DrawerClose key={driver.acronym} asChild>
+					<div className="grid mx-auto max-w-xl lg:max-w-4xl grid-cols-2 lg:grid-cols-4 gap-3">
+						{sortedDrivers.map((driver) => (
+							<DrawerClose key={`${driver.team_name}-${driver.acronym}`} asChild>
 								<button type="button" onClick={() => onSelect?.(driver)}>
 									<DriverCardFull driver={driver} className="mx-auto" />
 								</button>

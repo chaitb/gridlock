@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type { Constructor } from "@/App/driver";
 
 export type CountryCode =
 	| "aus"
@@ -145,7 +146,7 @@ export type Driver = {
 	full_name: string;
 	number: number;
 	acronym: DriverTag;
-	team_name: string;
+	team_name: Constructor;
 	colour: string;
 	headshot_url: string;
 };

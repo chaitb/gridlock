@@ -55,13 +55,16 @@ function RaceRow({ race, isNext }: { race: Race; isNext: boolean }) {
 				if (!isDialogOpen) setIsHovered(false);
 			}}
 		>
-			<div className="flex items-center gap-4 px-3 hover:text-muted-foreground transition-colors duration-200 hover:bg-secondary">
-				<Link to={`/race/${race.circuit_code}`} className="flex py-3 items-baseline gap-4 grow">
-					<span className="w-6 shrink-0 text-xl md:text-4xl font-thin text-muted-foreground tabular-nums mr-4">
+			<div className="w-full justify-between flex items-center gap-2 md:gap-4 px-3 hover:text-muted-foreground transition-colors duration-200 hover:bg-secondary">
+				<Link
+					to={`/race/${race.circuit_code}`}
+					className="flex py-3 items-baseline gap-2 md:gap-4 shrink truncate"
+				>
+					<span className="w-6 shrink-0 text-xl md:text-4xl font-thin text-muted-foreground tabular-nums md:mr-4">
 						{race.round.toString().padStart(2, "0")}
 					</span>
 					<Flag
-						className="size-5 md:size-7 border-border scale-95 translate-y-0.5 rounded-full object-cover shadow-sm"
+						className="size-4 md:size-7 border-border scale-95 translate-y-0.5 rounded-full object-cover shadow-sm"
 						countryCode={race.country}
 					/>
 					<div
@@ -76,20 +79,20 @@ function RaceRow({ race, isNext }: { race: Race; isNext: boolean }) {
 						{isHovered ? (
 							<motion.div
 								key="daterange"
-								className="flex-1 min-w-0 overflow-hidden"
+								className="flex-1 min-w-0 truncate"
 								initial={{ opacity: 0, x: 20 }}
 								animate={{ opacity: 1, x: 0 }}
 								exit={{ opacity: 0, x: 20 }}
 								transition={{ duration: 0.15 }}
 							>
-								<p className="text-xl md:text-2xl font-thin text-muted-foreground truncate">
+								<p className="text-sm md:text-2xl font-thin text-muted-foreground truncate">
 									{race.getDateRange()}
 								</p>
 							</motion.div>
 						) : (
 							<motion.div
 								key="venue"
-								className="flex-1 min-w-0 overflow-hidden"
+								className="shrink hidden md:block min-w-0 truncate"
 								initial={{ opacity: 0, x: -12 }}
 								animate={{ opacity: 1, x: 0 }}
 								exit={{ opacity: 0, x: -20 }}
@@ -100,7 +103,7 @@ function RaceRow({ race, isNext }: { race: Race; isNext: boolean }) {
 						)}
 					</AnimatePresence>
 				</Link>
-				<span className="shrink-0">
+				<div className="shrink-0">
 					<AnimatePresence mode="wait" initial={false}>
 						{isHovered && (
 							<motion.span
@@ -109,10 +112,12 @@ function RaceRow({ race, isNext }: { race: Race; isNext: boolean }) {
 								animate={{ opacity: 1, x: 0 }}
 								exit={{ opacity: 0, x: 20 }}
 								transition={{ duration: 0.15 }}
-								className="flex items-center gap-2"
 							>
 								{isUpcoming ? (
-									<>
+									<Link
+										className="flex items-center gap-2"
+										to={`/race/${race.circuit_code}${isNext ? "/prediction" : ""}`}
+									>
 										{isNext && <LockIcon className="size-6 text-accent-foreground" />}
 										<CountDown
 											size="sm"
@@ -120,7 +125,7 @@ function RaceRow({ race, isNext }: { race: Race; isNext: boolean }) {
 											date={isNext ? race.getPredictionLockDate() : race.getRaceStartDate()}
 											className={isNext ? "text-accent-foreground" : ""}
 										/>
-									</>
+									</Link>
 								) : (
 									<Dialog
 										onOpenChange={(open) => {
@@ -145,13 +150,13 @@ function RaceRow({ race, isNext }: { race: Race; isNext: boolean }) {
 								animate={{ opacity: 1, x: 0 }}
 								exit={{ opacity: 0, x: -20 }}
 								transition={{ duration: 0.15 }}
-								className="text-xl md:text-2xl font-thin text-muted-foreground"
+								className="text-sm md:text-2xl font-thin text-muted-foreground"
 							>
-								{race.getDateRange()}
+								<Link to={`/race/${race.circuit_code}`}>{race.getDateRange()}</Link>
 							</motion.span>
 						)}
 					</AnimatePresence>
-				</span>
+				</div>
 			</div>
 		</motion.li>
 	);

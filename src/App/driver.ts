@@ -1,5 +1,18 @@
 import type { Driver } from "@/shared/model";
 
+export type Constructor =
+	| "Alpine"
+	| "Aston Martin"
+	| "Audi"
+	| "Cadillac"
+	| "Ferrari"
+	| "Haas F1 Team"
+	| "McLaren"
+	| "Mercedes"
+	| "Racing Bulls"
+	| "Red Bull Racing"
+	| "Williams";
+
 export const DRIVERS = [
 	{
 		full_name: "Lando NORRIS",

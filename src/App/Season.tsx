@@ -42,13 +42,12 @@ const item = {
 
 export function Season() {
 	return (
-		<AppLayout>
-			<h1 className="mt-8 mb-6 text-3xl font-medium tracking-tight">2026 Season Predictions</h1>
+		<AppLayout headline={"2026 Season Predictions"}>
 			<motion.ul
 				variants={container}
 				initial="hidden"
 				animate="show"
-				className="flex flex-col divide-y divide-border"
+				className="mx-3 flex flex-col divide-y divide-border"
 			>
 				{sublinks.map((l) => (
 					<motion.li key={l.path} variants={item}>

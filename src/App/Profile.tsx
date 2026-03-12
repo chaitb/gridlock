@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { type FormEvent, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -37,9 +37,8 @@ export function Profile() {
 	};
 
 	return (
-		<AppLayout>
-			<h1 className="mt-8 mb-6 text-3xl font-medium tracking-tight">Profile</h1>
-			<form onSubmit={handleSubmit} className="flex flex-col gap-4 max-w-sm">
+		<AppLayout headline="Profile">
+			<form onSubmit={handleSubmit} className="mx-3 flex flex-col gap-4 max-w-sm">
 				<div className="space-y-1">
 					<Label htmlFor="username">Username</Label>
 					<Input

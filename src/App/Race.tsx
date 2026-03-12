@@ -94,10 +94,10 @@ const Predictions: React.FC<{ circuitCode: CircuitCode }> = ({ circuitCode }) =>
 			<H2>Predictions</H2>
 			{error ? JSON.stringify(error) : null}
 			{hasPrediction ? (
-				<button
+				<Link
 					type="button"
-					className="w-full"
-					onClick={() => navigate(`/race/${circuitCode}/prediction`)}
+					className="w-full block"
+					to={isLocked ? `/race/${circuitCode}/league` : `/race/${circuitCode}/prediction`}
 				>
 					<GlareHover glareColor="#d71414" className="bg-secondary/20" {...glareButtonProps}>
 						<span className="flex items-center gap-2 font-kh">
@@ -105,15 +105,15 @@ const Predictions: React.FC<{ circuitCode: CircuitCode }> = ({ circuitCode }) =>
 							{isLocked ? "View Prediction" : "Edit Prediction"}
 						</span>
 					</GlareHover>
-				</button>
+				</Link>
 			) : (
 				<EnterButton />
 			)}
 			{hasPrediction && (
-				<button
+				<Link
 					type="button"
-					className="w-full mt-3"
-					onClick={() => isLocked && navigate(`/race/${circuitCode}/league`)}
+					className="w-full mt-3 block"
+					to={isLocked ? `/race/${circuitCode}/league` : `/race/${circuitCode}/prediction`}
 				>
 					<GlareHover
 						glareColor={isLocked ? "#6366f1" : "#f43f5e"}
@@ -132,7 +132,7 @@ const Predictions: React.FC<{ circuitCode: CircuitCode }> = ({ circuitCode }) =>
 							</span>
 						)}
 					</GlareHover>
-				</button>
+				</Link>
 			)}
 		</motion.div>
 	);

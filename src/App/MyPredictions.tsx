@@ -91,11 +91,8 @@ function PredictionCard({
 	);
 }
 
-export function UserPredictions() {
-	const params = useParams();
-	const { user } = useUser();
+function UserPredictionsInner({ username }: { username: string }) {
 	const [, navigate] = useLocation();
-	const username = params.username;
 	const [selectedPrediction, setSelectedPrediction] = useState<Prediction | null>(null);
 	const [dialogOpen, setDialogOpen] = useState(false);
 
@@ -103,34 +100,14 @@ export function UserPredictions() {
 		data: theirPredictionsResponse,
 		isLoading,
 		error,
-	} = useApi<UserPredictionsResponse>("/api/user-predictions", {
-		params: {
-			username: username ?? "",
-		},
-	});
-
-	if (!user) {
-		return (
-			<AppLayout headline="Predictions">
-				<p className="text-muted-foreground">Please log in to view predictions.</p>
-			</AppLayout>
-		);
-	}
+	} = useApi<UserPredictionsResponse>("/api/user-predictions", { params: { username } });
 
 	if (isLoading) {
-		return (
-			<AppLayout headline="Predictions">
-				<p className="text-muted-foreground">Loading...</p>
-			</AppLayout>
-		);
+		return <p className="text-muted-foreground px-3">Loading...</p>;
 	}
 
 	if (error) {
-		return (
-			<AppLayout headline="Predictions">
-				<p className="text-destructive">Error: {error.message}</p>
-			</AppLayout>
-		);
+		return <p className="text-destructive px-3">Error: {error.message}</p>;
 	}
 
 	const theirPreds = theirPredictionsResponse?.predictions ?? [];
@@ -141,20 +118,18 @@ export function UserPredictions() {
 		theirPredsByRace.set(pred.circuit_code, pred);
 	}
 
-	const headline = isOwner ? "My Predictions" : `${username}'s Predictions`;
-
 	const handleViewClick = (pred: Prediction) => {
 		setSelectedPrediction(pred);
 		setDialogOpen(true);
 	};
 
 	return (
-		<AppLayout headline={headline}>
-			{theirPreds.length === 0 && unavailableRaces.length === 0 ? (
+		<>
+			{theirPreds.length === 0 && unavailableRaces.length === 0 && (
 				<motion.div
 					initial={{ opacity: 0, y: 10 }}
 					animate={{ opacity: 1, y: 0 }}
-					className="space-y-4"
+					className="space-y-4 px-3"
 				>
 					<p className="text-muted-foreground">
 						{isOwner ? "You haven't" : `${username} hasn't`} made any predictions yet.
@@ -168,35 +143,7 @@ export function UserPredictions() {
 						</Link>
 					)}
 				</motion.div>
-			) : null}
-			{/*
-				// 	{unavailableRaces.length > 0 && (
-				// 		<motion.div
-				// 			initial={{ opacity: 0, y: 10 }}
-				// 			animate={{ opacity: 1, y: 0 }}
-				// 			className="mb-6 p-4 rounded-lg border border-border bg-card"
-				// 		>
-				// 			<p className="text-sm text-muted-foreground mb-3">
-				// 				Submit your predictions to view {username}'s picks for these races:
-				// 			</p>
-				// 			<div className="flex flex-wrap gap-2">
-				// 				{unavailableRaces.map((circuitCode) => {
-				// 					const race = RACES_2026.find((r) => r.circuit_code === circuitCode);
-				// 					if (!race) return null;
-				// 					return (
-				// 						<Link key={circuitCode} to={`/race/${circuitCode}/prediction`}>
-				// 							<BGButton className="h-12 px-4">
-				// 								<PencilLineIcon className="w-4 h-4 inline-block mr-2" />
-				// 								{race.name}
-				// 							</BGButton>
-				// 						</Link>
-				// 					);
-				// 				})}
-				// 			</div>
-				// 		</motion.div>
-				// 	)}
- */}
-
+			)}
 			<motion.ul
 				variants={container}
 				initial="hidden"
@@ -205,7 +152,7 @@ export function UserPredictions() {
 			>
 				{RACES_2026.map((race) => {
 					const pred = theirPredsByRace.get(race.circuit_code);
-					let content: PredictionContent | null = null;
+
 					if (unavailableRaces.includes(race.circuit_code)) {
 						return (
 							<PredictionCard
@@ -222,30 +169,31 @@ export function UserPredictions() {
 								</div>
 							</PredictionCard>
 						);
-					} else if (!pred) {
-						return null;
-					} else {
-						try {
-							content = JSON.parse(pred.prediction ?? "{}") as PredictionContent;
-						} catch {
-							return null;
-						}
-
-						const updated = pred.updated_at
-							? new Date(`${pred.updated_at.replace(" ", "T")}Z`)
-							: null;
-
-						return (
-							<PredictionCard
-								key={race.circuit_code}
-								race={race}
-								content={content}
-								updated={updated}
-								isOwner={isOwner}
-								onViewClick={() => handleViewClick(pred)}
-							/>
-						);
 					}
+
+					if (!pred) return null;
+
+					let content: PredictionContent | null = null;
+					try {
+						content = JSON.parse(pred.prediction ?? "{}") as PredictionContent;
+					} catch {
+						return null;
+					}
+
+					const updated = pred.updated_at
+						? new Date(`${pred.updated_at.replace(" ", "T")}Z`)
+						: null;
+
+					return (
+						<PredictionCard
+							key={race.circuit_code}
+							race={race}
+							content={content}
+							updated={updated}
+							isOwner={isOwner}
+							onViewClick={() => handleViewClick(pred)}
+						/>
+					);
 				})}
 			</motion.ul>
 
@@ -269,6 +217,28 @@ export function UserPredictions() {
 					)}
 				</DialogContent>
 			</Dialog>
+		</>
+	);
+}
+
+export function UserPredictions() {
+	const params = useParams();
+	const { user } = useUser();
+	const username = params.username;
+
+	const headline = !user
+		? "Predictions"
+		: username === user.username
+			? "My Predictions"
+			: `${username}'s Predictions`;
+
+	return (
+		<AppLayout headline={headline}>
+			{!user ? (
+				<p className="text-muted-foreground px-3">Please log in to view predictions.</p>
+			) : (
+				<UserPredictionsInner username={username ?? ""} />
+			)}
 		</AppLayout>
 	);
 }
