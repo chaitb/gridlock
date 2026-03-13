@@ -1,8 +1,8 @@
 import type { Context } from "hono";
 import { z } from "zod";
-import { sendMagicLinkEmail } from "../email";
+import { sendEmail, sendMagicLinkEmail } from "../email";
 import { findUserById } from "../queries/userQueries";
-import { sendLockReminderEmail } from "../scheduled_events/lockReminder";
+import { buildReminderEmail } from "../scheduled_events/lockReminder";
 import type { AppEnv } from "../types";
 
 const ADMIN_EMAILS = [
@@ -47,14 +47,14 @@ export async function adminAction(c: Context<AppEnv>) {
 
 		if (args.template === "lock_reminder") {
 			const lockDate = new Date(Date.now() + 24 * 60 * 60 * 1000);
-			await sendLockReminderEmail(
-				c.env.RESEND_API_KEY,
+			const { to: _, ...email } = buildReminderEmail(
 				c.env.APP_URL,
-				to,
 				"Australian Grand Prix",
 				"melbourne",
-				lockDate
+				lockDate,
+				24
 			);
+			await sendEmail(c.env.RESEND_API_KEY, { to, ...email });
 			return c.json({ message: `Sent lock_reminder preview to ${to}` });
 		}
 	}

@@ -2,8 +2,10 @@
 
 import { motion } from "framer-motion";
 import { ThemeToggle } from "@/components/theme-toggle";
+
 // import { NavigationMenu, ... } from "@/components/ui/navigation-menu";
 
+import { useEffect } from "react";
 import { Link } from "wouter";
 
 export const AppLayout = ({
@@ -13,6 +15,13 @@ export const AppLayout = ({
 	headline?: string;
 	children: React.ReactNode;
 }) => {
+	useEffect(() => {
+		if (headline && headline !== "GridLock 2026") {
+			document.title = `GridLock - ${headline}`;
+		} else {
+			document.title = "GridLock 2026";
+		}
+	}, [headline]);
 	return (
 		<div className="container mx-auto mt-20 mb-20">
 			{/*<RacingStripe />*/}

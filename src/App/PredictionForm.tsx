@@ -78,8 +78,12 @@ export function PredictionForm({
 			<H2>{title}</H2>
 			<div className="flex gap-2 mt-2 min-w-0 items-center">
 				<p className="pr-10 text-muted-foreground text-sm flex-grow">
-					{sub}{" "}
-					<a href={scoring_link} className="text-primary underline-offset-2 hover:underline">
+					{sub} {/*// this should always be in a new tab*/}
+					<a
+						target="_blank"
+						href={scoring_link}
+						className="text-primary underline-offset-2 hover:underline"
+					>
 						How scoring works →
 					</a>
 				</p>

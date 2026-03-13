@@ -1,4 +1,13 @@
 import { Resend } from "resend";
+import { withRetry } from "./retry";
+
+export interface EmailPayload {
+	to: string;
+	subject: string;
+	html: string;
+}
+
+const FROM = "GridLock <grid@gridlock.chaitanyabhagwat.com>";
 
 export async function sendEmail(
 	apiKey: string,
@@ -8,21 +17,47 @@ export async function sendEmail(
 		html: string;
 	}
 ) {
-	const resend = new Resend(apiKey);
+	return withRetry(async () => {
+		const resend = new Resend(apiKey);
 
-	const { data, error } = await resend.emails.send({
-		from: "GridLock <grid@gridlock.chaitanyabhagwat.com>",
-		to: options.to,
-		subject: options.subject,
-		html: options.html,
+		const { data, error } = await resend.emails.send({
+			from: FROM,
+			to: options.to,
+			subject: options.subject,
+			html: options.html,
+		});
+
+		if (error) {
+			console.error("[email] failed to send", error);
+			throw error;
+		}
+
+		return { success: true, data };
 	});
+}
 
-	if (error) {
-		console.error("[email] failed to send", error);
-		return { success: false, error };
-	}
+export async function sendBatchEmails(apiKey: string, emails: EmailPayload[]) {
+	if (emails.length === 0) return { success: true, data: null };
 
-	return { success: true, data };
+	return withRetry(async () => {
+		const resend = new Resend(apiKey);
+
+		const batch = emails.map((email) => ({
+			from: FROM,
+			to: [email.to],
+			subject: email.subject,
+			html: email.html,
+		}));
+
+		const { data, error } = await resend.batch.send(batch);
+
+		if (error) {
+			console.error("[email] batch send failed", error);
+			throw error;
+		}
+
+		return { success: true, data };
+	});
 }
 
 /**
