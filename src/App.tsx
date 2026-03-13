@@ -17,6 +17,7 @@ import { Wdc } from "./App/Season/Wdc";
 import { Verify } from "./App/Verify";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { ThemeProvider } from "./components/theme-provider";
+import { Toaster } from "./components/ui/sonner";
 import { UserProvider } from "./context/UserContext";
 import { CreateAccount, Login } from "./Login";
 
@@ -85,6 +86,7 @@ const App = () => (
 
 				<Route>404: No such page!</Route>
 			</Switch>
+			<Toaster />
 		</UserProvider>
 	</ThemeProvider>
 );

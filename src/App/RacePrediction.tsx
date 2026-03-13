@@ -1,14 +1,17 @@
 import { motion } from "framer-motion";
+import { isEqual } from "lodash";
 import { CheckCircle2Icon, LockIcon, SaveIcon } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation, useParams } from "wouter";
 import GlareHover from "@/components/GlareHover";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { toast } from "@/components/ui/sonner";
 import { Spinner } from "@/components/ui/spinner";
 import { RACES_2026 } from "@/data";
 import { useApi } from "@/helpers/useApi";
+import { safeJsonParse } from "@/lib/utils";
 import type { Prediction, PredictionContent } from "@/shared/model";
-import { initialPredictions } from "@/shared/model";
+import { initialPredictions, predictionContentSchema } from "@/shared/model";
 import { PredictionForm } from "./PredictionForm";
 import { RaceHeader } from "./RaceHeader";
 
@@ -33,13 +36,13 @@ const glareButtonProps = {
 
 export function RacePrediction() {
 	const params = useParams();
-
 	const circuitCode = params.circuit_code;
 	const race = RACES_2026.find((r) => r.circuit_code === circuitCode);
 	const [, navigate] = useLocation();
 	const [saving, setSaving] = useState(false);
 	const [locking, setLocking] = useState(false);
-	const [saved_at, setSaved_at] = useState<Date | null>(null);
+	const [locked, setLocked] = useState(false);
+	const [saved_at, setSaved_at] = useState<Date | "delta" | null>(null);
 	const {
 		data: savedPrediction,
 		error,
@@ -50,31 +53,54 @@ export function RacePrediction() {
 
 	const [predictions, setPredictions] = useState<PredictionContent>(initialPredictions);
 
+	const onChangePredictions = (newPredictions: PredictionContent) => {
+		setSaved_at("delta");
+		setPredictions(newPredictions);
+	};
+
 	useEffect(() => {
 		if (!savedPrediction?.prediction) return;
 
-		const parsed = JSON.parse(savedPrediction.prediction) as PredictionContent;
+		const parsed_result = predictionContentSchema.safeParse(
+			safeJsonParse(savedPrediction.prediction)
+		);
+
+		if (parsed_result.error) {
+			console.log(parsed_result.error, savedPrediction);
+			toast.error("Invalid prediction data", {
+				description:
+					"Your saved prediction data is corrupted. Please refresh the page." + parsed_result.error,
+			});
+			return;
+		}
+
+		const parsed = parsed_result.data;
 
 		if (savedPrediction.updated_at) {
 			const iso = `${savedPrediction.updated_at.replace(" ", "T")}Z`;
 			setSaved_at(new Date(iso));
 		}
+		if (savedPrediction.locked) {
+			setLocked(true);
+		}
 
 		setPredictions((prev) => {
-			const same = JSON.stringify(prev) === JSON.stringify(parsed);
+			const same = isEqual(prev, parsed);
 			return same ? prev : parsed;
 		});
 	}, [savedPrediction]);
+
+	const isComplete = useMemo(() => {
+		return Object.values(predictions).every((section) =>
+			Object.values(section).every((driver) => driver !== null)
+		);
+	}, [predictions]);
 
 	const savePredictions = useCallback(async () => {
 		if (!circuitCode) {
 			navigate("/");
 			return;
 		}
-
-		const isComplete = Object.values(predictions).every((section) =>
-			Object.values(section).every((driver) => driver !== null)
-		);
 
 		setSaving(true);
 		const response = await fetch("/api/predictions", {
@@ -86,10 +112,18 @@ export function RacePrediction() {
 				isComplete,
 			}),
 		});
-		if (!response.ok) throw new Error("Failed to save predictions");
+		if (!response.ok) {
+			const body = (await response.json().catch(() => ({}))) as { message?: string };
+			toast.error("Failed to save predictions", {
+				description: body.message ?? "Please try again.",
+			});
+			setSaving(false);
+			return;
+		}
 		setSaving(false);
+		toast.success("Prediction saved");
 		refetch();
-	}, [circuitCode, predictions, navigate, refetch]);
+	}, [circuitCode, predictions, navigate, refetch, isComplete]);
 
 	const lockPrediction = useCallback(async () => {
 		if (!circuitCode) return;
@@ -100,8 +134,10 @@ export function RacePrediction() {
 			body: JSON.stringify({ circuitCode }),
 		});
 		if (!response.ok) {
-			const body = (await response.json()) as { message?: string };
-			alert(body.message ?? "Failed to lock prediction");
+			const body = (await response.json().catch(() => ({}))) as { message?: string };
+			toast.error("Failed to lock prediction", {
+				description: body.message ?? "Please try again.",
+			});
 		}
 		setLocking(false);
 		refetch();
@@ -109,18 +145,6 @@ export function RacePrediction() {
 
 	if (!race) return <div>Race not found</div>;
 	if (error) return <div>Error: {JSON.stringify(error)}</div>;
-
-	const isLocked = savedPrediction?.locked === 1;
-	const isComplete = savedPrediction
-		? (() => {
-				try {
-					const p = JSON.parse(savedPrediction.prediction ?? "{}") as { isComplete?: boolean };
-					return p.isComplete === true;
-				} catch {
-					return false;
-				}
-			})()
-		: false;
 
 	return (
 		<div className="min-h-screen mb-20">
@@ -139,24 +163,30 @@ export function RacePrediction() {
 				>
 					{saved_at ? (
 						<Alert variant="default" className="max-w-md mb-12">
-							{isLocked ? <LockIcon className="size-4" /> : <CheckCircle2Icon className="size-4" />}
+							{locked ? <LockIcon className="size-4" /> : <CheckCircle2Icon className="size-4" />}
 							<AlertTitle>
-								{isLocked
-									? `Locked at ${saved_at.toLocaleTimeString()}`
-									: `Saved ${getRelativeTime(saved_at)} (${saved_at.toLocaleTimeString()})`}
+								{saved_at === "delta"
+									? "Unsaved changes..."
+									: locked
+										? `Locked at ${saved_at.toLocaleTimeString()}`
+										: `Saved ${getRelativeTime(saved_at)} (${saved_at.toLocaleTimeString()})`}
 							</AlertTitle>
 							<AlertDescription>
-								{isLocked
+								{locked
 									? "Your predictions are locked in. Good luck!"
 									: "You can update your predictions until you lock them."}
 							</AlertDescription>
 						</Alert>
 					) : null}
 
-					<PredictionForm predictions={predictions} onChange={setPredictions} readOnly={isLocked} />
+					<PredictionForm
+						predictions={predictions}
+						onChange={onChangePredictions}
+						readOnly={locked}
+					/>
 
 					<div className="mt-8 flex flex-col sm:flex-row gap-3">
-						{!isLocked && (
+						{!locked && (
 							<>
 								{/* Save */}
 								<button
@@ -182,8 +212,14 @@ export function RacePrediction() {
 									type="button"
 									className="flex-1 disabled:opacity-40 disabled:cursor-not-allowed"
 									onClick={lockPrediction}
-									disabled={locking || !isComplete}
-									title={!isComplete ? "Complete all selections to lock" : undefined}
+									disabled={locking || !isComplete || !saved_at || saved_at === "delta"}
+									title={
+										!isComplete
+											? "Complete all selections to lock"
+											: !saved_at
+												? "Save your prediction before locking"
+												: undefined
+									}
 								>
 									<GlareHover
 										glareColor="#f59e0b"
@@ -207,16 +243,16 @@ export function RacePrediction() {
 						<button
 							type="button"
 							className="flex-1"
-							onClick={() => isLocked && navigate(`/race/${circuitCode}/league`)}
+							onClick={() => locked && navigate(`/race/${circuitCode}/league`)}
 						>
 							<GlareHover
-								glareColor={isLocked ? "#6366f1" : "#f43f5e"}
+								glareColor={locked ? "#6366f1" : "#f43f5e"}
 								className="bg-secondary/20"
 								{...glareButtonProps}
 							>
 								<span className="flex items-center justify-center gap-2 font-kh">
-									{!isLocked && <LockIcon className="size-3 text-rose-400" />}
-									<p className={!isLocked ? "text-rose-400" : ""}>League predictions</p>
+									{!locked && <LockIcon className="size-3 text-rose-400" />}
+									<p className={!locked ? "text-rose-400" : ""}>League predictions</p>
 								</span>
 							</GlareHover>
 						</button>

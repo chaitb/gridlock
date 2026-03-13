@@ -97,11 +97,7 @@ const Predictions: React.FC<{ circuitCode: CircuitCode }> = ({ circuitCode }) =>
 			<H2>Predictions</H2>
 			{error ? JSON.stringify(error) : null}
 			{hasPrediction ? (
-				<Link
-					type="button"
-					className="w-full block"
-					to={isLocked ? `/race/${circuitCode}/league` : `/race/${circuitCode}/prediction`}
-				>
+				<Link type="button" className="w-full block" to={`/race/${circuitCode}/prediction`}>
 					<GlareHover glareColor="#d71414" className="bg-secondary/20" {...glareButtonProps}>
 						<span className="flex items-center gap-2 font-kh">
 							<PencilLineIcon className="w-4 h-4" />

@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { isEqual } from "lodash";
 import { ShuffleIcon } from "lucide-react";
 import { useCallback } from "react";
 import { Button } from "@/components/ui/button";
@@ -53,6 +54,7 @@ export function PredictionForm({
 		(section_key: "qualifying" | "race" | "gainers" | "losers") => {
 			if (readOnly) return;
 			const updatedSection = randomizeSection(predictions[section_key]);
+			if (isEqual(updatedSection, predictions[section_key])) return;
 			onChange({
 				...predictions,
 				[section_key]: updatedSection,

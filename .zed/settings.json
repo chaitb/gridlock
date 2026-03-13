@@ -17,9 +17,10 @@
 				"source.fixAll.biome": true
 			},
 			"inlay_hints": {
-				"enabled": true,
-				"show_type_hints": true,
-				"show_other_hints": true
+				"enabled": false,
+				"show_type_hints": false,
+				"show_other_hints": true,
+				"show_parameter_hints": true
 			}
 		},
 		"TSX": {
@@ -37,9 +38,9 @@
 				"source.fixAll.biome": true
 			},
 			"inlay_hints": {
-				"enabled": true,
-				"show_type_hints": true,
-				"show_parameter_hints": false,
+				"enabled": false,
+				"show_type_hints": false,
+				"show_parameter_hints": true,
 				"show_other_hints": true
 			}
 		}
