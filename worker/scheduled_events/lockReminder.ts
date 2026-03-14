@@ -1,27 +1,38 @@
 import { RACES_2026 } from "@/data";
-import { sendEmail } from "../email";
+import { type EmailPayload, sendBatchEmails } from "../email";
 import { markEventEmailSent, wasEventEmailSent } from "../queries/eventEmailQueries";
 import { getVerifiedUsersWithoutLockedPrediction } from "../queries/userQueries";
 import type { Bindings } from "../types";
 
-const EVENT_NAME = "lock_prediction_reminder";
-const EMAIL_TYPE = "reminder";
+const REMINDER_WINDOWS = [
+	{ event: "lock_prediction_reminder_24h", hoursFrom: 23, hoursTo: 25 },
+	{ event: "lock_prediction_reminder_2h", hoursFrom: 1, hoursTo: 3 },
+] as const;
 
-function isWithinHours(date: Date, hoursFrom: number, hoursTo: number): boolean {
-	const now = new Date();
-	const diffMs = date.getTime() - now.getTime();
-	const diffHours = diffMs / (1000 * 60 * 60);
-	return diffHours >= hoursFrom && diffHours <= hoursTo;
+function getHoursUntil(date: Date): number {
+	return (date.getTime() - Date.now()) / (1000 * 60 * 60);
 }
 
-export async function sendLockReminderEmail(
-	apiKey: string,
+function findActiveRace() {
+	return RACES_2026.find((race) => {
+		const lockDate = race.getPredictionLockDate();
+		const hours = getHoursUntil(lockDate);
+		return REMINDER_WINDOWS.some((w) => hours >= w.hoursFrom && hours <= w.hoursTo);
+	});
+}
+
+function getActiveWindow(lockDate: Date) {
+	const hours = getHoursUntil(lockDate);
+	return REMINDER_WINDOWS.find((w) => hours >= w.hoursFrom && hours <= w.hoursTo);
+}
+
+export function buildReminderEmail(
 	appUrl: string,
-	to: string,
 	raceName: string,
 	circuitCode: string,
-	lockDate: Date
-) {
+	lockDate: Date,
+	hoursUntil: number
+): EmailPayload {
 	const lockDateStr = lockDate.toLocaleDateString("en-US", {
 		weekday: "long",
 		month: "long",
@@ -32,6 +43,7 @@ export async function sendLockReminderEmail(
 	});
 
 	const predictionUrl = `${appUrl}/race/${circuitCode}/prediction`;
+	const timeDesc = hoursUntil > 10 ? "tomorrow" : "in a few hours";
 
 	const html = `
 <!DOCTYPE html>
@@ -39,7 +51,7 @@ export async function sendLockReminderEmail(
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>${raceName} predictions closing soon</title>
+  <title>${raceName} predictions closing ${timeDesc}</title>
 </head>
 <body style="margin:0;padding:0;background:#0a0a0a;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;">
   <table width="100%" cellpadding="0" cellspacing="0" style="padding:40px 16px;">
@@ -58,7 +70,7 @@ export async function sendLockReminderEmail(
           <tr>
             <td style="padding:36px 40px;">
               <h1 style="margin:0 0 12px;font-size:24px;font-weight:600;color:#f0f0f0;letter-spacing:-0.5px;">
-                ${raceName} predictions close soon
+                ${raceName} predictions close ${timeDesc}
               </h1>
               <p style="margin:0 0 24px;font-size:15px;line-height:1.6;color:#888;">
                 Predictions for the <strong style="color:#f0f0f0;">${raceName}</strong> will lock on <strong style="color:#f0f0f0;">${lockDateStr}</strong> — before qualifying begins.
@@ -95,96 +107,91 @@ export async function sendLockReminderEmail(
 </html>
 `.trim();
 
-	return sendEmail(apiKey, {
-		to,
-		subject: `${raceName} predictions close soon — lock your picks!`,
+	return {
+		to: "",
+		subject: `${raceName} predictions close ${timeDesc} — lock your picks!`,
 		html,
-	});
+	};
 }
 
 export async function lockPredictionReminder(env: Bindings) {
-	console.log("[lockReminder] checking for races with predictions closing in 23-25 hours");
+	console.log("[lockReminder] checking for races with predictions closing soon");
 
-	const now = new Date();
-	console.log("[lockReminder] current time:", now.toISOString());
+	const race = findActiveRace();
 
-	for (const race of RACES_2026) {
-		const lockDate = race.getPredictionLockDate();
-		const isWithinWindow = isWithinHours(lockDate, 23, 25);
+	if (!race) {
+		console.log("[lockReminder] no races in reminder window");
+		return;
+	}
 
-		console.log(
-			`[lockReminder] ${race.name} - lock date: ${lockDate.toISOString()}, in window: ${isWithinWindow}`
-		);
+	const lockDate = race.getPredictionLockDate();
+	const window = getActiveWindow(lockDate);
 
-		if (!isWithinWindow) continue;
+	if (!window) {
+		console.log("[lockReminder] race found but no matching window");
+		return;
+	}
 
-		const alreadySent = await wasEventEmailSent(
-			env.F1_PREDICTIONS,
-			EVENT_NAME,
-			EMAIL_TYPE,
-			race.circuit_code
-		);
+	const hoursUntil = getHoursUntil(lockDate);
+	console.log(
+		`[lockReminder] ${race.name} - lock date: ${lockDate.toISOString()}, hours until: ${hoursUntil.toFixed(1)}h`
+	);
 
-		if (alreadySent) {
-			console.log(`[lockReminder] reminder already sent for ${race.name}, skipping`);
-			continue;
-		}
+	const alreadySent = await wasEventEmailSent(
+		env.F1_PREDICTIONS,
+		window.event,
+		"reminder",
+		race.circuit_code
+	);
 
-		console.log(`[lockReminder] ${race.name} is within the 23-25 hour window`);
+	if (alreadySent) {
+		console.log(`[lockReminder] ${window.event} already sent for ${race.name}, skipping`);
+		return;
+	}
 
-		const users = await getVerifiedUsersWithoutLockedPrediction(
-			env.F1_PREDICTIONS,
-			race.circuit_code
-		);
+	const users = await getVerifiedUsersWithoutLockedPrediction(
+		env.F1_PREDICTIONS,
+		race.circuit_code
+	);
 
-		console.log(
-			`[lockReminder] found ${users.length} users without locked predictions for ${race.name}`
-		);
+	console.log(
+		`[lockReminder] found ${users.length} users without locked predictions for ${race.name}`
+	);
 
-		if (users.length === 0) {
-			await markEventEmailSent(env.F1_PREDICTIONS, EVENT_NAME, EMAIL_TYPE, race.circuit_code, true);
-			continue;
-		}
+	if (users.length === 0) {
+		await markEventEmailSent(env.F1_PREDICTIONS, window.event, "reminder", race.circuit_code, true);
+		console.log(`[lockReminder] no users to notify, marked ${window.event} as sent`);
+		return;
+	}
 
-		const results = await Promise.allSettled(
-			users.map((user) =>
-				sendLockReminderEmail(
-					env.RESEND_API_KEY,
-					env.APP_URL,
-					user.email,
-					race.name,
-					race.circuit_code,
-					lockDate
-				)
-			)
-		);
+	const { subject, html } = buildReminderEmail(
+		env.APP_URL,
+		race.name,
+		race.circuit_code,
+		lockDate,
+		hoursUntil
+	);
 
-		let allSucceeded = true;
-		for (let i = 0; i < results.length; i++) {
-			const result = results[i];
-			const user = users[i];
-			if (result.status === "fulfilled") {
-				console.log(`[lockReminder] email sent to ${user.email} for ${race.name}`);
-			} else {
-				allSucceeded = false;
-				console.error(
-					`[lockReminder] failed to send email to ${user.email} for ${race.name}:`,
-					result.reason
-				);
-			}
-		}
+	const emails = users.map((user) => ({
+		to: user.email,
+		subject,
+		html,
+	}));
 
+	try {
+		await sendBatchEmails(env.RESEND_API_KEY, emails);
+		console.log(`[lockReminder] batch sent to ${users.length} users for ${race.name}`);
+		await markEventEmailSent(env.F1_PREDICTIONS, window.event, "reminder", race.circuit_code, true);
+	} catch (error) {
+		console.error(`[lockReminder] batch send failed for ${race.name}:`, error);
 		await markEventEmailSent(
 			env.F1_PREDICTIONS,
-			EVENT_NAME,
-			EMAIL_TYPE,
+			window.event,
+			"reminder",
 			race.circuit_code,
-			allSucceeded
-		);
-		console.log(
-			`[lockReminder] marked event_email sent for ${race.name} (success: ${allSucceeded})`
+			false
 		);
 	}
 
-	console.log("[lockReminder] finished processing all races");
+	console.log("[lockReminder] finished");
 }
