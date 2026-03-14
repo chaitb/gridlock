@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 import type { Race } from "@/shared/Race";
 import CountDown from "./Countdown";
 import { AppLayout } from "./Layout";
-import { SessionResults } from "./Race";
+import { SessionResults } from "./SessionResults";
 
 const container = {
 	hidden: {},
@@ -144,7 +144,10 @@ function RaceRow({ race, isNext }: { race: Race; isNext: boolean }) {
 											<TrophyIcon className="size-6 text-orange-300 hover:text-orange-400 transition-colors duration-200" />
 										</DialogTrigger>
 										<DialogContent className="md:max-w-[calc(100%-6rem)] xl:max-w-7xl">
-											<SessionResults session={race_session} />
+											<SessionResults
+												session={race_session}
+												onDriverClick={() => setIsDialogOpen(false)}
+											/>
 										</DialogContent>
 									</Dialog>
 								)}

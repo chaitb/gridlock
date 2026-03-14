@@ -3,6 +3,7 @@ import { logger } from "hono/logger";
 import { requireAuth } from "./middleware/auth";
 import { adminAction, adminGetUsers } from "./routes/admin";
 import { createAccount } from "./routes/create-account";
+import { getDriverResults } from "./routes/driver-results";
 import { leaderboard } from "./routes/leaderboard";
 import { getLeaguePredictions } from "./routes/league-predictions";
 import { lockPredictionRoute } from "./routes/lock-prediction";
@@ -12,6 +13,7 @@ import { getMe } from "./routes/me";
 import { getUserPredictions } from "./routes/my-predictions";
 import { getPredictions, savePredictions } from "./routes/predictions";
 import { updateProfile } from "./routes/profile";
+import { getSessionResults } from "./routes/session-results";
 import { verifyMagicLink } from "./routes/verify";
 import { handleScheduled } from "./scheduled";
 import type { AppEnv } from "./types";
@@ -25,6 +27,8 @@ app.post("/api/create-account", createAccount);
 app.get("/api/verify", verifyMagicLink);
 app.post("/api/logout", logout);
 app.get("/api/leaderboard", leaderboard);
+app.get("/api/session-results", getSessionResults);
+app.get("/api/driver-results", getDriverResults);
 
 // ── Protected routes (session cookie required) ───────────────────────────────
 app.use("/api/me", requireAuth);

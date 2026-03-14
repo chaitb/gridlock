@@ -266,16 +266,19 @@ export const QUALIFYING_KEYS = ["p1", "p2", "p3", "p4", "p5"] as const;
 export const GAINER_KEYS = ["g1", "g2", "g3"] as const;
 export const LOSER_KEYS = ["l1", "l2", "l3"] as const;
 
-export type SessionResult = {
-	position: number | null;
-	driver_number: number;
-	number_of_laps: number;
-	points: number;
-	dnf: boolean;
-	dns: boolean;
-	dsq: boolean;
-	duration: number | null;
-	gap_to_leader: number | null | string;
-	meeting_key: number;
-	session_key: number;
-};
+export const sessionResultSchema = z.object({
+	position: z.number().nullable(),
+	driver_number: z.number(),
+	number_of_laps: z.number(),
+	points: z.number().optional(),
+	dnf: z.boolean(),
+	dns: z.boolean(),
+	dsq: z.boolean(),
+	starting_position: z.number().optional().nullable(),
+	duration: z.union([z.number(), z.string(), z.array(z.number().nullable())]).nullable(),
+	gap_to_leader: z.union([z.number(), z.string(), z.array(z.number().nullable())]).nullable(),
+	meeting_key: z.number(),
+	session_key: z.number(),
+});
+
+export type SessionResult = z.infer<typeof sessionResultSchema>;
