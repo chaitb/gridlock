@@ -1,4 +1,5 @@
 import { DRIVERS } from "@/App/driver";
+import type { PredictionContent } from "./model";
 
 function shuffle<T>(arr: T[]): T[] {
 	const copy = [...arr];
@@ -21,4 +22,25 @@ export function randomizeSection<T extends Record<string, string | null>>(sectio
 	});
 
 	return Object.fromEntries(entries) as T;
+}
+
+export function getCompletePrediction(prediction: PredictionContent): PredictionContent {
+	let currentPrediction = { ...prediction };
+	currentPrediction = {
+		...currentPrediction,
+		qualifying: randomizeSection(currentPrediction.qualifying),
+	};
+	currentPrediction = {
+		...currentPrediction,
+		race: randomizeSection(currentPrediction.race),
+	};
+	currentPrediction = {
+		...currentPrediction,
+		gainers: randomizeSection(currentPrediction.gainers),
+	};
+	currentPrediction = {
+		...currentPrediction,
+		losers: randomizeSection(currentPrediction.losers),
+	};
+	return currentPrediction;
 }
