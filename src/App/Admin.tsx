@@ -1,6 +1,13 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
+	Drawer,
+	DrawerContent,
+	DrawerDescription,
+	DrawerHeader,
+	DrawerTitle,
+} from "@/components/ui/drawer";
+import {
 	Select,
 	SelectContent,
 	SelectItem,
@@ -17,7 +24,7 @@ import {
 } from "@/components/ui/table";
 import { RACES_2026 } from "@/data";
 import { useApi } from "@/helpers/useApi";
-import type { User } from "@/shared/model";
+import type { DriverTag, User } from "@/shared/model";
 import { AppLayout } from "./Layout";
 import { H2 } from "./Text";
 
@@ -111,7 +118,39 @@ export function Admin() {
 	);
 }
 
-type ScoreResult = { userId: number; score: number; exactMatches: number };
+type PositionScore = {
+	driver: DriverTag;
+	predicted: number;
+	actual: number | null;
+	accuracy: string;
+	points: number;
+};
+
+type GainerLoserScore = {
+	driver: DriverTag;
+	predictedRank: number;
+	actualRank: number | null;
+	gainedLost: number;
+	accuracy: string;
+	points: number;
+};
+
+type BonusScore = { type: string; points: number };
+
+type ScoreBreakdown = {
+	qualifying: Record<string, PositionScore>;
+	race: Record<string, PositionScore>;
+	gainers: Record<string, GainerLoserScore>;
+	losers: Record<string, GainerLoserScore>;
+	bonuses: BonusScore[];
+};
+
+type ScoreResult = {
+	userId: number;
+	score: number;
+	exactMatches: number;
+	breakdown: ScoreBreakdown;
+};
 type ScoreResponse = { scored: number; results: ScoreResult[] };
 
 const ScoreRace = () => {
@@ -119,6 +158,7 @@ const ScoreRace = () => {
 	const [scoreLoading, setScoreLoading] = useState(false);
 	const [scoreStatus, setScoreStatus] = useState<Status>(null);
 	const [scoreResults, setScoreResults] = useState<ScoreResult[]>([]);
+	const [selectedResult, setSelectedResult] = useState<ScoreResult | null>(null);
 
 	async function handleScore() {
 		if (!circuitCode) return;
@@ -151,7 +191,8 @@ const ScoreRace = () => {
 	return (
 		<div className="space-y-3">
 			<p className="text-sm text-muted-foreground">
-				Select a race and run scoring against locked predictions.
+				Select a race and run scoring against locked predictions. Click a row to inspect the
+				breakdown.
 			</p>
 			<div className="flex items-center gap-3">
 				<Select value={circuitCode} onValueChange={setCircuitCode}>
@@ -191,7 +232,11 @@ const ScoreRace = () => {
 					</TableHeader>
 					<TableBody>
 						{scoreResults.map((r) => (
-							<TableRow key={r.userId}>
+							<TableRow
+								key={r.userId}
+								className="cursor-pointer hover:bg-muted/50"
+								onClick={() => setSelectedResult(r)}
+							>
 								<TableCell>{r.userId}</TableCell>
 								<TableCell className="text-right font-medium">{r.score}</TableCell>
 								<TableCell className="text-right">{r.exactMatches}</TableCell>
@@ -200,6 +245,154 @@ const ScoreRace = () => {
 					</TableBody>
 				</Table>
 			)}
+
+			<Drawer
+				direction="right"
+				open={!!selectedResult}
+				onOpenChange={(open) => !open && setSelectedResult(null)}
+			>
+				<DrawerContent className="h-full w-full max-w-md">
+					<DrawerHeader>
+						<DrawerTitle>User {selectedResult?.userId}</DrawerTitle>
+						<DrawerDescription>
+							Score: {selectedResult?.score} pts — {selectedResult?.exactMatches} exact matches
+						</DrawerDescription>
+					</DrawerHeader>
+					{selectedResult && <BreakdownView breakdown={selectedResult.breakdown} />}
+				</DrawerContent>
+			</Drawer>
+		</div>
+	);
+};
+
+const BreakdownView = ({ breakdown }: { breakdown: ScoreBreakdown }) => {
+	const bonusTotal = breakdown.bonuses.reduce((sum, b) => sum + b.points, 0);
+
+	return (
+		<div className="flex-1 overflow-y-auto px-4 pb-4">
+			<div className="space-y-6">
+				<Section
+					title="Qualifying"
+					items={Object.entries(breakdown.qualifying).map(([key, val]) => ({
+						key,
+						driver: val.driver,
+						predicted: `P${val.predicted}`,
+						actual: val.actual !== null ? `P${val.actual}` : "—",
+						accuracy: val.accuracy,
+						points: val.points,
+					}))}
+				/>
+				<Section
+					title="Race"
+					items={Object.entries(breakdown.race).map(([key, val]) => ({
+						key,
+						driver: val.driver,
+						predicted: `P${val.predicted}`,
+						actual: val.actual !== null ? `P${val.actual}` : "—",
+						accuracy: val.accuracy,
+						points: val.points,
+					}))}
+				/>
+				<Section
+					title="Gainers"
+					items={Object.entries(breakdown.gainers).map(([key, val]) => ({
+						key,
+						driver: val.driver,
+						predicted: `#${val.predictedRank}`,
+						actual: val.actualRank !== null ? `#${val.actualRank}` : "—",
+						accuracy: val.accuracy,
+						points: val.points,
+						extra: val.gainedLost > 0 ? `+${val.gainedLost}` : `${val.gainedLost}`,
+					}))}
+				/>
+				<Section
+					title="Losers"
+					items={Object.entries(breakdown.losers).map(([key, val]) => ({
+						key,
+						driver: val.driver,
+						predicted: `#${val.predictedRank}`,
+						actual: val.actualRank !== null ? `#${val.actualRank}` : "—",
+						accuracy: val.accuracy,
+						points: val.points,
+						extra: val.gainedLost < 0 ? `${val.gainedLost}` : `+${val.gainedLost}`,
+					}))}
+				/>
+				{breakdown.bonuses.length > 0 && (
+					<div className="space-y-2">
+						<h4 className="text-sm font-medium text-muted-foreground">Bonuses</h4>
+						{breakdown.bonuses.map((b) => (
+							<div key={b.type} className="flex justify-between text-sm">
+								<span className="capitalize">{b.type.replace(/_/g, " ")}</span>
+								<span className="text-green-400 font-medium">+{b.points}</span>
+							</div>
+						))}
+						<div className="flex justify-between text-sm font-medium pt-2 border-t">
+							<span>Bonus Total</span>
+							<span className="text-green-400">+{bonusTotal}</span>
+						</div>
+					</div>
+				)}
+			</div>
+		</div>
+	);
+};
+
+const Section = ({
+	title,
+	items,
+}: {
+	title: string;
+	items: {
+		key: string;
+		driver: string;
+		predicted: string;
+		actual: string;
+		accuracy: string;
+		points: number;
+		extra?: string;
+	}[];
+}) => {
+	const total = items.reduce((sum, i) => sum + i.points, 0);
+	return (
+		<div className="space-y-2">
+			<div className="flex justify-between items-center">
+				<h4 className="text-sm font-medium text-muted-foreground">{title}</h4>
+				<span className="text-sm font-medium">{total} pts</span>
+			</div>
+			<div className="space-y-1">
+				{items.map((item) => (
+					<div
+						key={item.key}
+						className="flex items-center justify-between text-sm py-1 px-2 rounded bg-muted/30"
+					>
+						<div className="flex items-center gap-2">
+							<span className="font-mono text-xs text-muted-foreground">{item.key}</span>
+							<span className="font-medium">{item.driver || "—"}</span>
+						</div>
+						<div className="flex items-center gap-3 text-xs">
+							<span className="text-muted-foreground">
+								{item.predicted} → {item.actual}
+							</span>
+							{item.extra && (
+								<span className={item.extra.startsWith("-") ? "text-red-400" : "text-green-400"}>
+									{item.extra}
+								</span>
+							)}
+							<span
+								className={`font-medium ${
+									item.accuracy === "bullseye" || item.accuracy === "perfect_match"
+										? "text-green-400"
+										: item.accuracy === "miss" || item.accuracy === "no_change"
+											? "text-red-400"
+											: "text-yellow-400"
+								}`}
+							>
+								{item.points > 0 ? `+${item.points}` : "0"}
+							</span>
+						</div>
+					</div>
+				))}
+			</div>
 		</div>
 	);
 };

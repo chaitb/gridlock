@@ -41,6 +41,7 @@ export async function adminScoreRace(c: Context<AppEnv>) {
 		userId: r.userId,
 		score: r.score,
 		exactMatches: r.exactMatches,
+		breakdown: r.breakdown,
 	}));
 
 	return c.json({ scored: result.scored, results: summary });

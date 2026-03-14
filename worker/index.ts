@@ -1,3 +1,4 @@
+import type { ExecutionContext, ScheduledEvent } from "@cloudflare/workers-types";
 import { Hono } from "hono";
 import { logger } from "hono/logger";
 import { requireAuth } from "./middleware/auth";
