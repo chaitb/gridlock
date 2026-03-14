@@ -9,24 +9,19 @@ import {
 	TrophyIcon,
 } from "lucide-react";
 import type React from "react";
+import { useState } from "react";
 import { Link, useLocation, useParams } from "wouter";
 import { EnterButton } from "@/components/EnterButton";
 import GlareHover from "@/components/GlareHover";
+import { Alert, AlertTitle } from "@/components/ui/alert";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
-import { Skeleton } from "@/components/ui/skeleton";
 import { RACES_2026 } from "@/data";
 import { useApi } from "@/helpers/useApi";
-import { useMediaQuery } from "@/helpers/useMediaQuery";
 import { cn } from "@/lib/utils";
-import type { Prediction, Race, Session, SessionResult } from "@/shared/model";
-import { DriverCardCompact, DriverCardFull } from "./Drivers";
-import { DRIVERS } from "./driver";
+import type { Prediction, Race, Session } from "@/shared/model";
 import { AppLayout } from "./Layout";
 import { RaceHeader } from "./RaceHeader";
-
-const SKELETON_KEYS = Array.from({ length: 22 }, (_, i) => `skeleton-${i}`);
-
-import { Alert, AlertTitle } from "@/components/ui/alert";
+import { SessionResults } from "./SessionResults";
 import { H2 } from "./Text";
 
 export function RaceComponent() {
@@ -185,8 +180,9 @@ const SessionRow: React.FC<{ session: Session }> = ({ session }) => {
 	const start = new Date(session.date_start);
 	const isPast = new Date(session.date_end) < new Date();
 	const isOngoing = start < new Date() && new Date(session.date_end) > new Date();
+	const [open, setOpen] = useState(false);
 	return (
-		<Dialog>
+		<Dialog open={open} onOpenChange={setOpen}>
 			<DialogTrigger asChild>
 				<div
 					className={cn("px-4 py-1 border border-border my-2 rounded-md cursor-pointer", {
@@ -197,8 +193,8 @@ const SessionRow: React.FC<{ session: Session }> = ({ session }) => {
 					<div className="flex flex-row items-center gap-4">
 						<SessionIcon className="size-4" session_type={session.session_type} />
 						<div className="grow text-2xl">{session.session_name}</div>
-						{isPast && !isOngoing && <FlagIcon className="size-6 text-orange-400" />}
-						<div className="text-right font-kh text-sm">
+						{isPast && !isOngoing && <FlagIcon className="m-2 size-7 text-orange-400" />}
+						<div className="text-right min-w-22 font-kh text-sm">
 							<p>
 								{dayOfWeek(start)}{" "}
 								{start.toLocaleDateString("en-US", {
@@ -212,117 +208,8 @@ const SessionRow: React.FC<{ session: Session }> = ({ session }) => {
 				</div>
 			</DialogTrigger>
 			<DialogContent className="md:max-w-[calc(100%-6rem)] xl:max-w-7xl">
-				<SessionResults session={session} />
+				<SessionResults session={session} onDriverClick={() => setOpen(false)} />
 			</DialogContent>
 		</Dialog>
 	);
 };
-
-function formatGap(position: number | null, gap: number | string | null): string {
-	if (position === 1) return "Leader";
-	if (typeof gap === "string") return gap;
-	if (gap === null) return "";
-	const minutes = Math.floor(gap / 60);
-	const seconds = gap % 60;
-	if (minutes > 0) return `+${minutes}:${seconds.toFixed(3).padStart(6, "0")}`;
-	return `+${seconds.toFixed(3)}s`;
-}
-
-export function SessionResults({ session }: { session: Session }) {
-	const isLg = useMediaQuery("(min-width: 1024px)");
-	const cols = isLg ? 3 : 2;
-	const {
-		data: results,
-		error,
-		isLoading,
-	} = useApi<SessionResult[]>("https://api.openf1.org/v1/session_result", {
-		params: {
-			session_key: session.session_key,
-		},
-	});
-
-	const isPast = new Date(session.date_end) < new Date();
-
-	if (!isPast) {
-		return (
-			<article className="p-4 text-muted-foreground text-sm">
-				Results will be available after the session ends.
-			</article>
-		);
-	}
-
-	if (isLoading || !results) {
-		return (
-			<div className="grid grid-cols-2 lg:grid-cols-3 gap-4 p-4 overflow-y-auto max-h-[calc(100vh-10rem)]">
-				{SKELETON_KEYS.map((key) => (
-					<Skeleton key={key} className="w-30 h-40 lg:w-40 lg:h-48" />
-				))}
-			</div>
-		);
-	}
-	if (error) {
-		return <div className="text-red-500">{error.message}</div>;
-	}
-
-	const sorted = [...results].sort((a, b) => {
-		if (!a.position || !b.position) return a.points - b.points;
-		return a.position - b.position;
-	});
-
-	return (
-		<div className="overflow-y-auto no-scrollbar max-h-[calc(100vh-10rem)]">
-			<h2 className="text-3xl font-semibold mb-3 font-audiowide px-4 text-center uppercase">
-				{session.circuit_code} {session.session_name} Results
-			</h2>
-			<div className="sm:px-12 pt-8 grid grid-cols-2 lg:grid-cols-3 gap-x-2 gap-y-12 mx-auto max-w-5xl">
-				{sorted.map((result, i) => {
-					const driver = DRIVERS.find((d) => d.number === result.driver_number);
-					const status = result.dnf ? "DNF" : result.dns ? "DNS" : result.dsq ? "DSQ" : null;
-					return (
-						<motion.div
-							initial={{ opacity: 0, x: -5, y: 10 * (i % cols) }}
-							animate={{ opacity: 1, x: 0, y: 14 * (i % cols) }}
-							transition={{
-								delay: 0.03 * (i + (i % cols)),
-								duration: 0.2,
-								type: "spring",
-								stiffness: 200,
-								damping: 25,
-							}}
-							key={result.driver_number}
-							className={`flex flex-row items-center gap-3`}
-						>
-							{driver ? (
-								<>
-									<DriverCardCompact
-										driver={driver}
-										className="block md:hidden w-20 h-30 rounded-lg shrink-0"
-									/>
-									<DriverCardFull
-										driver={driver}
-										className="hidden md:block w-48 h-36 rounded-md shrink-0"
-									/>
-								</>
-							) : (
-								<div className="h-28 rounded-md shrink-0 bg-secondary/40 flex items-center justify-center text-xs text-muted-foreground">
-									#{result.driver_number}
-								</div>
-							)}
-							<div className="flex flex-col gap-0.5">
-								<span className="font-kh text-xl lg:text-3xl font-bold">
-									{status ?? (result.position ? `P${result.position}` : "—")}
-								</span>
-								<span className="text-sm text-muted-foreground font-kh">
-									{formatGap(result.position, result.gap_to_leader)}
-								</span>
-								{result.points > 0 && (
-									<span className="text-sm font-kh text-amber-400">{result.points} pts</span>
-								)}
-							</div>
-						</motion.div>
-					);
-				})}
-			</div>
-		</div>
-	);
-}

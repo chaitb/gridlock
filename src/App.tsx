@@ -1,6 +1,8 @@
 import { Route, Switch } from "wouter";
 import { Admin } from "./App/Admin";
 import { RaceWeekend } from "./App/Calendar";
+import { DriverResults } from "./App/DriverResults";
+import { DriversStandings } from "./App/DriversStandings";
 import { UserHome } from "./App/Home";
 import { Leaderboard } from "./App/Leaderboard";
 import { LeaguePredictions } from "./App/LeaguePredictions";
@@ -53,6 +55,12 @@ const App = () => (
 					</Route>
 					<Route path="/season">
 						<Season />
+					</Route>
+					<Route path="/season/2026">
+						<DriversStandings />
+					</Route>
+					<Route path="/season/2026/:driver">
+						<DriverResults />
 					</Route>
 					<Route path="/season/wdc">
 						<Wdc />
