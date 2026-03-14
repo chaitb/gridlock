@@ -44,6 +44,7 @@ function RaceRow({ race, isNext }: { race: Race; isNext: boolean }) {
 	const [isDialogOpen, setIsDialogOpen] = useState(false);
 	const isUpcoming = race.isUpcoming();
 	const race_session = race.getSession("Race");
+	const isOngoing = race.isOngoing();
 
 	if (!race_session) return null;
 
@@ -60,7 +61,12 @@ function RaceRow({ race, isNext }: { race: Race; isNext: boolean }) {
 					to={`/race/${race.circuit_code}`}
 					className="flex py-3 items-baseline gap-2 md:gap-4 shrink truncate"
 				>
-					<span className="w-6 shrink-0 text-xl md:text-4xl font-thin text-muted-foreground tabular-nums md:mr-4">
+					<span
+						className={cn(`w-6 shrink-0 text-xl md:text-4xl font-thin tabular-nums md:mr-4`, {
+							"text-accent-foreground/70": isNext,
+							"text-accent-foreground": isOngoing,
+						})}
+					>
 						{race.round.toString().padStart(2, "0")}
 					</span>
 					<Flag
@@ -70,7 +76,8 @@ function RaceRow({ race, isNext }: { race: Race; isNext: boolean }) {
 					<div
 						className={cn("font-medium text-xl md:text-4xl", {
 							"text-accent-foreground": isNext,
-							"text-muted-foreground": !isUpcoming,
+							"text-accent-foreground animate-pulse": isOngoing,
+							"text-muted-foreground": !isUpcoming && !isOngoing,
 						})}
 					>
 						{race.name}

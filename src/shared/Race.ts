@@ -83,7 +83,13 @@ export class Race {
 	}
 
 	getRaceStartDate(): Date {
-		return new Date(this.getSessions().find((s) => s.session_type === "Race")?.date_start ?? "");
+		return this.getSessionStartDate("Race");
+	}
+
+	getSessionStartDate(sessionType: string): Date {
+		return new Date(
+			this.getSessions().find((s) => s.session_type === sessionType)?.date_start ?? ""
+		);
 	}
 
 	getStartDateString(): string {
@@ -98,6 +104,13 @@ export class Race {
 	isUpcoming(): boolean {
 		const today = new Date();
 		return this.getRaceStartDate() >= today;
+	}
+
+	isOngoing(): boolean {
+		const today = new Date();
+		const s_first = new Date(this.getSessions().at(0)?.date_start ?? "");
+		const s_last = new Date(this.getSessions().at(-1)?.date_end ?? "");
+		return s_first <= today && today <= s_last;
 	}
 
 	isOpenForPredictions(): boolean {

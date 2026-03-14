@@ -96,6 +96,18 @@ export function RacePrediction() {
 		);
 	}, [predictions]);
 
+	const completionPercent = useMemo(() => {
+		const total = Object.values(predictions).reduce(
+			(sum, section) => sum + Object.values(section).length,
+			0
+		);
+		const filled = Object.values(predictions).reduce(
+			(sum, section) => sum + Object.values(section).filter((d) => d !== null).length,
+			0
+		);
+		return Math.round((filled / total) * 100);
+	}, [predictions]);
+
 	const savePredictions = useCallback(async () => {
 		if (!circuitCode) {
 			navigate("/");
@@ -143,6 +155,7 @@ export function RacePrediction() {
 		refetch();
 	}, [circuitCode, refetch]);
 
+	const Icon = useMemo(() => (locked ? LockIcon : CheckCircle2Icon), [locked]);
 	if (!race) return <div>Race not found</div>;
 	if (error) return <div>Error: {JSON.stringify(error)}</div>;
 
@@ -153,7 +166,6 @@ export function RacePrediction() {
 				countdown={race.isOpenForPredictions() && race.getPredictionLockDate()}
 				isPrediction={true}
 			/>
-
 			<div className="mt-8 px-4 md:px-10 max-w-4xl mx-auto">
 				<motion.div
 					initial={{ opacity: 0, y: 14 }}
@@ -162,22 +174,41 @@ export function RacePrediction() {
 					className="mt-4"
 				>
 					{saved_at ? (
-						<Alert variant="default" className="max-w-md mb-12">
-							{locked ? <LockIcon className="size-4" /> : <CheckCircle2Icon className="size-4" />}
-							<AlertTitle>
-								{saved_at === "delta"
-									? "Unsaved changes..."
-									: locked
-										? `Locked at ${saved_at.toLocaleTimeString()}`
-										: `Saved ${getRelativeTime(saved_at)} (${saved_at.toLocaleTimeString()})`}
+						<Alert variant="destructive" className="w-full mb-12">
+							<AlertTitle className="flex items-center gap-2">
+								<Icon className="size-5" />
+								<p className="text-xl">
+									{saved_at === "delta"
+										? "Unsaved changes..."
+										: locked
+											? `Locked at ${saved_at.toLocaleTimeString()}`
+											: `Saved ${getRelativeTime(saved_at)} (${saved_at.toLocaleTimeString()})`}
+								</p>
 							</AlertTitle>
-							<AlertDescription>
+							<AlertDescription className="ml-7">
 								{locked
 									? "Your predictions are locked in. Good luck!"
 									: "You can update your predictions until you lock them."}
 							</AlertDescription>
 						</Alert>
 					) : null}
+
+					{/* Progress Bar */}
+					{!locked && (
+						<div className="mb-6">
+							<div className="h-4 relative bg-secondary rounded-full overflow-hidden">
+								<div className="w-full text-right px-4 font-orbiton uppercase absolute top-0 left-0 text-xs text-black">
+									{" "}
+								</div>
+								<motion.div
+									className="h-full bg-accent-foreground rounded-full"
+									initial={{ width: 0 }}
+									animate={{ width: `${completionPercent}%` }}
+									transition={{ duration: 0.3, ease: "easeOut" }}
+								/>
+							</div>
+						</div>
+					)}
 
 					<PredictionForm
 						predictions={predictions}

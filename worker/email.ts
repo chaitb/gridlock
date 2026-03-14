@@ -1,4 +1,7 @@
+import type { CreateBatchSuccessResponse, CreateEmailResponseSuccess } from "resend";
 import { Resend } from "resend";
+import type { AsyncResult } from "@/shared/Result";
+import { ok } from "@/shared/Result";
 import { withRetry } from "./retry";
 
 export interface EmailPayload {
@@ -16,7 +19,7 @@ export async function sendEmail(
 		subject: string;
 		html: string;
 	}
-) {
+): AsyncResult<CreateEmailResponseSuccess> {
 	return withRetry(async () => {
 		const resend = new Resend(apiKey);
 
@@ -27,17 +30,17 @@ export async function sendEmail(
 			html: options.html,
 		});
 
-		if (error) {
-			console.error("[email] failed to send", error);
-			throw error;
-		}
-
-		return { success: true, data };
+		if (error) throw error;
+		// biome-ignore lint/style/noNonNullAssertion: data is non-null when error is null (Resend SDK design)
+		return data!;
 	});
 }
 
-export async function sendBatchEmails(apiKey: string, emails: EmailPayload[]) {
-	if (emails.length === 0) return { success: true, data: null };
+export async function sendBatchEmails(
+	apiKey: string,
+	emails: EmailPayload[]
+): AsyncResult<CreateBatchSuccessResponse | null> {
+	if (emails.length === 0) return ok(null);
 
 	return withRetry(async () => {
 		const resend = new Resend(apiKey);
@@ -51,12 +54,9 @@ export async function sendBatchEmails(apiKey: string, emails: EmailPayload[]) {
 
 		const { data, error } = await resend.batch.send(batch);
 
-		if (error) {
-			console.error("[email] batch send failed", error);
-			throw error;
-		}
-
-		return { success: true, data };
+		if (error) throw error;
+		// biome-ignore lint/style/noNonNullAssertion: data is non-null when error is null (Resend SDK design)
+		return data!;
 	});
 }
 

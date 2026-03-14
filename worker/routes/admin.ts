@@ -1,7 +1,7 @@
 import type { Context } from "hono";
 import { z } from "zod";
 import { sendEmail, sendMagicLinkEmail } from "../email";
-import { findUserById } from "../queries/userQueries";
+import { findUserById, getAllUsers } from "../queries/userQueries";
 import { buildReminderEmail } from "../scheduled_events/lockReminder";
 import type { AppEnv } from "../types";
 
@@ -10,6 +10,24 @@ const ADMIN_EMAILS = [
 	"chaitwheels@gmail.com",
 	"chai.bhagwat@gmail.com",
 ];
+
+function isAdmin(email: string): boolean {
+	return ADMIN_EMAILS.includes(email);
+}
+
+export async function adminGetUsers(c: Context<AppEnv>) {
+	const userId = c.get("userId");
+	console.log(c.get("userId"));
+	if (!userId) return c.json({ message: "Unauthorized" }, 403);
+	const user = await findUserById(c.env.F1_PREDICTIONS, userId);
+
+	if (!user || !isAdmin(user.email)) {
+		return c.json({ message: "Unauthorized" }, 403);
+	}
+
+	const users = await getAllUsers(c.env.F1_PREDICTIONS);
+	return c.json(users);
+}
 
 const adminActionSchema = z.discriminatedUnion("action", [
 	z.object({
@@ -41,7 +59,9 @@ export async function adminAction(c: Context<AppEnv>) {
 
 		if (args.template === "magic_link") {
 			const testLink = `${c.env.APP_URL}/verify?token=test_token_preview`;
-			await sendMagicLinkEmail(c.env.RESEND_API_KEY, to, testLink);
+			const result = await sendMagicLinkEmail(c.env.RESEND_API_KEY, to, testLink);
+			if (!result.ok)
+				return c.json({ message: `Failed to send email: ${result.error.message}` }, 500);
 			return c.json({ message: `Sent magic_link preview to ${to}` });
 		}
 
@@ -54,7 +74,9 @@ export async function adminAction(c: Context<AppEnv>) {
 				lockDate,
 				24
 			);
-			await sendEmail(c.env.RESEND_API_KEY, { to, ...email });
+			const result = await sendEmail(c.env.RESEND_API_KEY, { to, ...email });
+			if (!result.ok)
+				return c.json({ message: `Failed to send email: ${result.error.message}` }, 500);
 			return c.json({ message: `Sent lock_reminder preview to ${to}` });
 		}
 	}

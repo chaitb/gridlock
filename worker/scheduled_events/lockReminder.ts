@@ -178,12 +178,10 @@ export async function lockPredictionReminder(env: Bindings) {
 		html,
 	}));
 
-	try {
-		await sendBatchEmails(env.RESEND_API_KEY, emails);
-		console.log(`[lockReminder] batch sent to ${users.length} users for ${race.name}`);
-		await markEventEmailSent(env.F1_PREDICTIONS, window.event, "reminder", race.circuit_code, true);
-	} catch (error) {
-		console.error(`[lockReminder] batch send failed for ${race.name}:`, error);
+	const result = await sendBatchEmails(env.RESEND_API_KEY, emails);
+
+	if (!result.ok) {
+		console.error(`[lockReminder] batch send failed for ${race.name}:`, result.error);
 		await markEventEmailSent(
 			env.F1_PREDICTIONS,
 			window.event,
@@ -191,7 +189,11 @@ export async function lockPredictionReminder(env: Bindings) {
 			race.circuit_code,
 			false
 		);
+		return;
 	}
+
+	console.log(`[lockReminder] batch sent to ${users.length} users for ${race.name}`);
+	await markEventEmailSent(env.F1_PREDICTIONS, window.event, "reminder", race.circuit_code, true);
 
 	console.log("[lockReminder] finished");
 }

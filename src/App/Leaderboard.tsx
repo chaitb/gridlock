@@ -36,36 +36,41 @@ export function Leaderboard() {
 	}, []);
 
 	return (
-		<AppLayout>
-			<h1 className="mt-8 mb-6 text-3xl font-medium tracking-tight">Leaderboard</h1>
-
-			{status === "loading" && <p className="text-muted-foreground text-sm">Loading…</p>}
-			{status === "error" && (
-				<p className="text-destructive text-sm">Could not load leaderboard.</p>
-			)}
-			{status === "ok" && rows.length === 0 && (
-				<p className="text-muted-foreground text-sm">No players yet.</p>
-			)}
-			{status === "ok" && rows.length > 0 && (
-				<motion.ul
-					variants={container}
-					initial="hidden"
-					animate="show"
-					className="flex flex-col divide-y divide-border"
-				>
-					{rows.map((row) => (
-						<motion.li key={row.username} variants={item} className="flex items-center gap-4 py-3">
-							<span className="w-6 shrink-0 text-xs text-muted-foreground tabular-nums">
-								{row.rank}
-							</span>
-							<span className="flex-1 font-medium">{row.username}</span>
-							<span className="shrink-0 tabular-nums text-sm">
-								{row.points} <span className="text-muted-foreground">pts</span>
-							</span>
-						</motion.li>
-					))}
-				</motion.ul>
-			)}
+		<AppLayout headline="Leaderboard">
+			<div className="mx-3">
+				{status === "loading" && <p className="text-muted-foreground text-sm">Loading…</p>}
+				{status === "error" && (
+					<p>Coming Soon!</p>
+					// <p className="text-destructive text-sm">Could not load leaderboard.</p>
+				)}
+				{status === "ok" && rows.length === 0 && (
+					<p className="text-muted-foreground text-sm">No players yet.</p>
+				)}
+				{status === "ok" && rows.length > 0 && (
+					<motion.ul
+						variants={container}
+						initial="hidden"
+						animate="show"
+						className="flex flex-col divide-y divide-border"
+					>
+						{rows.map((row) => (
+							<motion.li
+								key={row.username}
+								variants={item}
+								className="flex items-center gap-4 py-3"
+							>
+								<span className="w-6 shrink-0 text-xs text-muted-foreground tabular-nums">
+									{row.rank}
+								</span>
+								<span className="flex-1 font-medium">{row.username}</span>
+								<span className="shrink-0 tabular-nums text-sm">
+									{row.points} <span className="text-muted-foreground">pts</span>
+								</span>
+							</motion.li>
+						))}
+					</motion.ul>
+				)}
+			</div>
 		</AppLayout>
 	);
 }

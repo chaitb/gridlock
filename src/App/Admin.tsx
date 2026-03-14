@@ -1,6 +1,17 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import {
+	Table,
+	TableBody,
+	TableCell,
+	TableHead,
+	TableHeader,
+	TableRow,
+} from "@/components/ui/table";
+import { useApi } from "@/helpers/useApi";
+import type { User } from "@/shared/model";
 import { AppLayout } from "./Layout";
+import { H2 } from "./Text";
 
 type Template = {
 	id: string;
@@ -51,6 +62,9 @@ export function Admin() {
 	return (
 		<AppLayout headline="Admin">
 			<div className="px-3 mt-4 space-y-4">
+				<H2>Users</H2>
+				<AllUsersTable />
+				<H2>Send Test Emails</H2>
 				<p className="text-sm text-muted-foreground">
 					Send test emails to your account to preview templates.
 				</p>
@@ -86,3 +100,42 @@ export function Admin() {
 		</AppLayout>
 	);
 }
+
+const AllUsersTable = () => {
+	const { data: users, isLoading, error } = useApi<User[]>("/api/admin/users");
+
+	if (isLoading) return <p className="text-muted-foreground">Loading...</p>;
+	if (error) return <p className="text-red-500">Error loading users</p>;
+	if (!users || users.length === 0) return <p className="text-muted-foreground">No users found.</p>;
+
+	return (
+		<Table>
+			<TableHeader>
+				<TableRow>
+					<TableHead>ID</TableHead>
+					<TableHead>Username</TableHead>
+					<TableHead>Email</TableHead>
+					<TableHead>Verified</TableHead>
+					<TableHead>Created</TableHead>
+				</TableRow>
+			</TableHeader>
+			<TableBody>
+				{users.map((user) => (
+					<TableRow key={user.id}>
+						<TableCell>{user.id}</TableCell>
+						<TableCell>{user.username ?? "—"}</TableCell>
+						<TableCell>{user.email}</TableCell>
+						<TableCell>
+							{user.verified_at ? (
+								<span className="text-green-400">Yes</span>
+							) : (
+								<span className="text-red-400">No</span>
+							)}
+						</TableCell>
+						<TableCell>{new Date(user.created_at).toLocaleDateString()}</TableCell>
+					</TableRow>
+				))}
+			</TableBody>
+		</Table>
+	);
+};

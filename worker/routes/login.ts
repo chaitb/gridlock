@@ -34,10 +34,9 @@ export async function login(c: Context<AppEnv>) {
 		const magicToken = await signMagicToken(user.id as number, env.JWT_SECRET);
 		const magicLink = `${env.APP_URL}/verify?token=${magicToken}`;
 
-		try {
-			await sendMagicLinkEmail(env.RESEND_API_KEY, email, magicLink);
-		} catch (error) {
-			console.error("[login] email send failed", error);
+		const emailResult = await sendMagicLinkEmail(env.RESEND_API_KEY, email, magicLink);
+		if (!emailResult.ok) {
+			console.error("[login] email send failed", emailResult.error);
 			return c.json({ message: "Failed to send login email. Please try again." }, 500);
 		}
 

@@ -46,14 +46,11 @@ export async function createAccount(c: Context<AppEnv>) {
 		const magicToken = await signMagicToken(newUserId, env.JWT_SECRET);
 		const magicLink = `${env.APP_URL}/verify?token=${magicToken}`;
 
-		try {
-			await sendMagicLinkEmail(env.RESEND_API_KEY, email, magicLink);
-		} catch (error) {
-			console.error("[create-account] email send failed", error);
+		const emailResult = await sendMagicLinkEmail(env.RESEND_API_KEY, email, magicLink);
+		if (!emailResult.ok) {
+			console.error("[create-account] email send failed", emailResult.error);
 			return c.json(
-				{
-					message: "Account created but failed to send login email. Contact support.",
-				},
+				{ message: "Account created but failed to send login email. Contact support." },
 				500
 			);
 		}

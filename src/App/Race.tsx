@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import {
 	ClockIcon,
 	DumbbellIcon,
+	FlagIcon,
 	ListIcon,
 	LockIcon,
 	PencilLineIcon,
@@ -185,17 +186,16 @@ const SessionRow: React.FC<{ session: Session }> = ({ session }) => {
 		<Dialog>
 			<DialogTrigger asChild>
 				<div
-					className={cn("px-4 py-1 border border-border my-2 rounded-md", {
+					className={cn("px-4 py-1 border border-border my-2 rounded-md cursor-pointer", {
 						"text-muted-foreground": isPast && !isOngoing,
 						"text-accent-foreground animate-pulse": isOngoing,
 					})}
 				>
-					<div className="flex flex-row items-center">
-						<p className="flex items-center gap-2 flex-grow text-2xl">
-							<SessionIcon className="size-5" session_type={session.session_type} />
-							{session.session_name}
-						</p>
-						<div className="text-right font-kh">
+					<div className="flex flex-row items-center gap-4">
+						<SessionIcon className="size-4" session_type={session.session_type} />
+						<div className="flex-grow text-2xl">{session.session_name}</div>
+						{isPast && !isOngoing && <FlagIcon className="size-6 text-orange-400" />}
+						<div className="text-right font-kh text-sm">
 							<p>
 								{dayOfWeek(start)}{" "}
 								{start.toLocaleDateString("en-US", {
@@ -271,7 +271,7 @@ export function SessionResults({ session }: { session: Session }) {
 			<h2 className="text-3xl font-semibold mb-3 font-audiowide px-4 text-center uppercase">
 				{session.circuit_code} {session.session_name} Results
 			</h2>
-			<div className="px-4 pt-8 grid grid-cols-2 lg:grid-cols-3 gap-x-2 gap-y-12 mx-auto max-w-5xl">
+			<div className="sm:px-12 pt-8 grid grid-cols-2 lg:grid-cols-3 gap-x-2 gap-y-12 mx-auto max-w-5xl">
 				{sorted.map((result, i) => {
 					const driver = DRIVERS.find((d) => d.number === result.driver_number);
 					const status = result.dnf ? "DNF" : result.dns ? "DNS" : result.dsq ? "DSQ" : null;
@@ -293,7 +293,7 @@ export function SessionResults({ session }: { session: Session }) {
 								<>
 									<DriverCardCompact
 										driver={driver}
-										className="block md:hidden w-30 h-40 rounded-lg shrink-0"
+										className="block md:hidden w-20 h-30 rounded-lg shrink-0"
 									/>
 									<DriverCardFull
 										driver={driver}

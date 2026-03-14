@@ -97,3 +97,8 @@ export async function getVerifiedUsersWithoutLockedPrediction(
 		.all<{ id: number; email: string; username: string | null }>()
 		.then((result) => result.results);
 }
+
+export async function getAllUsers(db: D1Database): Promise<User[]> {
+	const result = await db.prepare("SELECT * FROM players ORDER BY created_at DESC").all<User>();
+	return result.results ?? [];
+}

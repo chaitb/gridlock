@@ -14,6 +14,10 @@
 	font-family: "Audiowide";
 	src: url("../src/assets/fonts/Audiowide-Regular.ttf");
 }
+@font-face {
+	font-family: "Orbiton";
+	src: url("../src/assets/fonts/Orbitron-Medium.ttf");
+}
 
 @custom-variant dark (&:is(.dark *));
 
@@ -21,6 +25,7 @@
 	--font-round: "Round8", sans-serif;
 	--font-kh: "KH", sans-serif;
 	--font-audiowide: "Audiowide", sans-serif;
+	--font-orbiton: "Orbiton", sans-serif;
 	--background: oklch(0.9886 0.0017 67.8028);
 	--foreground: oklch(0.2182 0.0019 286.2389);
 	--card: oklch(1 0 0);
@@ -110,7 +115,7 @@
 	--sidebar-ring: oklch(0.4386 0 0);
 	--font-sans: Amiko, ui-sans-serif, sans-serif, system-ui;
 	--font-serif: Adamina, ui-serif, serif;
-	--font-mono: B612 Mono, ui-monospace, monospace;
+	--font-mono: KH, ui-monospace, monospace;
 	--radius: 0.375rem;
 	--shadow-x: 0;
 	--shadow-y: 1px;
@@ -169,6 +174,7 @@
 	--font-kh: var(--font-kh);
 	--font-round: var(--font-round);
 	--font-audiowide: var(--font-audiowide);
+	--font-orbiton: var(--font-orbiton);
 
 	--radius-sm: calc(var(--radius) - 4px);
 	--radius-md: calc(var(--radius) - 2px);
