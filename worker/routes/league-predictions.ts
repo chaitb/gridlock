@@ -1,4 +1,5 @@
 import type { Context } from "hono";
+import { RACES_2026 } from "../../src/data";
 import {
 	getAllLockedPredictionsByRace,
 	getPredictionsByUserAndRace,
@@ -7,7 +8,6 @@ import type { AppEnv } from "../types";
 
 export async function getLeaguePredictions(c: Context<AppEnv>) {
 	const { env } = c;
-	// Requesting user's identity comes from the verified session cookie
 	const userId = c.get("userId");
 
 	const circuitCode = c.req.query("circuitCode");
@@ -15,7 +15,15 @@ export async function getLeaguePredictions(c: Context<AppEnv>) {
 		return c.json({ message: "Missing circuitCode" }, 400);
 	}
 
-	try {
+	const race = RACES_2026.find((r) => r.circuit_code === circuitCode);
+	if (!race) {
+		return c.json({ message: "Race not found" }, 404);
+	}
+
+	const lockDate = race.getPredictionLockDate();
+	const isLocked = lockDate < new Date();
+
+	if (!isLocked) {
 		const userPrediction = await getPredictionsByUserAndRace(
 			env.F1_PREDICTIONS,
 			userId,
@@ -41,12 +49,9 @@ export async function getLeaguePredictions(c: Context<AppEnv>) {
 				403
 			);
 		}
-
-		const result = await getAllLockedPredictionsByRace(env.F1_PREDICTIONS, circuitCode);
-
-		return c.json({ predictions: result.results });
-	} catch (error) {
-		console.error("[league-predictions] unexpected error", error);
-		return c.json({ message: "Database error" }, 500);
 	}
+
+	const result = await getAllLockedPredictionsByRace(env.F1_PREDICTIONS, circuitCode);
+
+	return c.json({ predictions: result.results });
 }

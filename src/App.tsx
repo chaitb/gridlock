@@ -6,7 +6,7 @@ import { Leaderboard } from "./App/Leaderboard";
 import { LeaguePredictions } from "./App/LeaguePredictions";
 import { UserPredictions } from "./App/MyPredictions";
 import { Profile } from "./App/Profile";
-import { Race } from "./App/Race";
+import { RaceComponent } from "./App/Race";
 import { RacePrediction } from "./App/RacePrediction";
 import { Rules } from "./App/Rules";
 import { Season } from "./App/Season";
@@ -49,7 +49,7 @@ const App = () => (
 						<LeaguePredictions />
 					</Route>
 					<Route path="/race/:circuit_code">
-						<Race />
+						<RaceComponent />
 					</Route>
 					<Route path="/season">
 						<Season />

@@ -18,13 +18,7 @@ import { RACES_2026 } from "@/data";
 import { useApi } from "@/helpers/useApi";
 import { useMediaQuery } from "@/helpers/useMediaQuery";
 import { cn } from "@/lib/utils";
-import type {
-	CircuitCode,
-	Prediction,
-	Race as RaceModel,
-	Session,
-	SessionResult,
-} from "@/shared/model";
+import type { Prediction, Race, Session, SessionResult } from "@/shared/model";
 import { DriverCardCompact, DriverCardFull } from "./Drivers";
 import { DRIVERS } from "./driver";
 import { AppLayout } from "./Layout";
@@ -32,9 +26,10 @@ import { RaceHeader } from "./RaceHeader";
 
 const SKELETON_KEYS = Array.from({ length: 22 }, (_, i) => `skeleton-${i}`);
 
+import { Alert, AlertTitle } from "@/components/ui/alert";
 import { H2 } from "./Text";
 
-export function Race() {
+export function RaceComponent() {
 	const params = useParams();
 	const circuitCode = params.circuit_code;
 	const race = RACES_2026.find((r) => r.circuit_code === circuitCode);
@@ -57,7 +52,7 @@ export function Race() {
 		<>
 			<RaceHeader race={race} countdown={race.isUpcoming() && race.getRaceStartDate()} />
 			<div className="mt-8 px-4 md:px-10">
-				<Predictions circuitCode={race.circuit_code} />
+				<Predictions race={race} />
 			</div>
 			<div className="mt-8 px-4 md:px-10 mb-20">
 				<Schedule race={race} />
@@ -79,11 +74,13 @@ const glareButtonProps = {
 	playOnce: false,
 };
 
-const Predictions: React.FC<{ circuitCode: CircuitCode }> = ({ circuitCode }) => {
+const Predictions: React.FC<{ race: Race }> = ({ race }) => {
 	const [, _navigate] = useLocation();
 	const { data: pred, error } = useApi<Prediction>(`/api/predictions`, {
-		params: { circuitCode },
+		params: { circuitCode: race.circuit_code },
 	});
+
+	const isClosed = !race.isOpenForPredictions();
 
 	const hasPrediction = !!pred?.prediction;
 	const isLocked = pred?.locked === 1;
@@ -98,7 +95,7 @@ const Predictions: React.FC<{ circuitCode: CircuitCode }> = ({ circuitCode }) =>
 			<H2>Predictions</H2>
 			{error ? JSON.stringify(error) : null}
 			{hasPrediction ? (
-				<Link type="button" className="w-full block" to={`/race/${circuitCode}/prediction`}>
+				<Link type="button" className="w-full block" to={`/race/${race.circuit_code}/prediction`}>
 					<GlareHover glareColor="#d71414" className="bg-secondary/20" {...glareButtonProps}>
 						<span className="flex items-center gap-2 font-kh">
 							<PencilLineIcon className="w-4 h-4" />
@@ -106,6 +103,10 @@ const Predictions: React.FC<{ circuitCode: CircuitCode }> = ({ circuitCode }) =>
 						</span>
 					</GlareHover>
 				</Link>
+			) : isClosed ? (
+				<Alert>
+					<AlertTitle>Sorry, predictions are closed!</AlertTitle>
+				</Alert>
 			) : (
 				<EnterButton />
 			)}
@@ -113,7 +114,9 @@ const Predictions: React.FC<{ circuitCode: CircuitCode }> = ({ circuitCode }) =>
 				<Link
 					type="button"
 					className="w-full mt-3 block"
-					to={isLocked ? `/race/${circuitCode}/league` : `/race/${circuitCode}/prediction`}
+					to={
+						isLocked ? `/race/${race.circuit_code}/league` : `/race/${race.circuit_code}/prediction`
+					}
 				>
 					<GlareHover
 						glareColor={isLocked ? "#6366f1" : "#f43f5e"}
@@ -138,7 +141,7 @@ const Predictions: React.FC<{ circuitCode: CircuitCode }> = ({ circuitCode }) =>
 	);
 };
 
-function Schedule({ race }: { race: RaceModel }) {
+function Schedule({ race }: { race: Race }) {
 	const sessions = race.getSessions();
 
 	return (
@@ -193,7 +196,7 @@ const SessionRow: React.FC<{ session: Session }> = ({ session }) => {
 				>
 					<div className="flex flex-row items-center gap-4">
 						<SessionIcon className="size-4" session_type={session.session_type} />
-						<div className="flex-grow text-2xl">{session.session_name}</div>
+						<div className="grow text-2xl">{session.session_name}</div>
 						{isPast && !isOngoing && <FlagIcon className="size-6 text-orange-400" />}
 						<div className="text-right font-kh text-sm">
 							<p>
@@ -301,7 +304,7 @@ export function SessionResults({ session }: { session: Session }) {
 									/>
 								</>
 							) : (
-								<div className="h-28 rounded-md flex-shrink-0 bg-secondary/40 flex items-center justify-center text-xs text-muted-foreground">
+								<div className="h-28 rounded-md shrink-0 bg-secondary/40 flex items-center justify-center text-xs text-muted-foreground">
 									#{result.driver_number}
 								</div>
 							)}

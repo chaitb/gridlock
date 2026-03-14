@@ -53,6 +53,8 @@ export function RacePrediction() {
 
 	const [predictions, setPredictions] = useState<PredictionContent>(initialPredictions);
 
+	const isClosed = !race?.isOpenForPredictions();
+
 	const onChangePredictions = (newPredictions: PredictionContent) => {
 		setSaved_at("delta");
 		setPredictions(newPredictions);
@@ -193,8 +195,14 @@ export function RacePrediction() {
 						</Alert>
 					) : null}
 
+					{isClosed && (
+						<Alert className="mb-12">
+							<AlertTitle>Sorry, predictions are closed!</AlertTitle>
+						</Alert>
+					)}
+
 					{/* Progress Bar */}
-					{!locked && (
+					{!locked && !isClosed && (
 						<div className="mb-6">
 							<div className="h-4 relative bg-secondary rounded-full overflow-hidden">
 								<div className="w-full text-right px-4 font-orbiton uppercase absolute top-0 left-0 text-xs text-black">
@@ -213,11 +221,11 @@ export function RacePrediction() {
 					<PredictionForm
 						predictions={predictions}
 						onChange={onChangePredictions}
-						readOnly={locked}
+						readOnly={locked || isClosed}
 					/>
 
 					<div className="mt-8 flex flex-col sm:flex-row gap-3">
-						{!locked && (
+						{!locked && !isClosed && (
 							<>
 								{/* Save */}
 								<button
@@ -274,7 +282,7 @@ export function RacePrediction() {
 						<button
 							type="button"
 							className="flex-1"
-							onClick={() => locked && navigate(`/race/${circuitCode}/league`)}
+							onClick={() => (locked || isClosed) && navigate(`/race/${circuitCode}/league`)}
 						>
 							<GlareHover
 								glareColor={locked ? "#6366f1" : "#f43f5e"}
