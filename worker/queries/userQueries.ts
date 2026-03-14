@@ -68,10 +68,13 @@ export async function updateUserUsername(db: D1Database, username: string, id: n
 export async function getLeaderboard(db: D1Database) {
 	return db
 		.prepare(
-			`SELECT username, COALESCE(points, 0) AS points,
-			        ROW_NUMBER() OVER (ORDER BY COALESCE(points, 0) DESC) AS rank
-			 FROM players
-			 WHERE username IS NOT NULL
+			`SELECT p.username,
+			        COALESCE(ps.total_score, 0) AS points,
+			        ROW_NUMBER() OVER (ORDER BY COALESCE(ps.total_score, 0) DESC) AS rank
+			 FROM players p
+			 LEFT JOIN player_scores ps ON ps.user_id = p.id
+			   AND ps.season = 'f1_2026' AND ps.league = 'global'
+			 WHERE p.username IS NOT NULL
 			 ORDER BY points DESC`
 		)
 		.all();

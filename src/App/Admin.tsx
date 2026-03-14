@@ -1,6 +1,13 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import {
+	Select,
+	SelectContent,
+	SelectItem,
+	SelectTrigger,
+	SelectValue,
+} from "@/components/ui/select";
+import {
 	Table,
 	TableBody,
 	TableCell,
@@ -8,6 +15,7 @@ import {
 	TableHeader,
 	TableRow,
 } from "@/components/ui/table";
+import { RACES_2026 } from "@/data";
 import { useApi } from "@/helpers/useApi";
 import type { User } from "@/shared/model";
 import { AppLayout } from "./Layout";
@@ -64,6 +72,8 @@ export function Admin() {
 			<div className="px-3 mt-4 space-y-4">
 				<H2>Users</H2>
 				<AllUsersTable />
+				<H2>Score Race</H2>
+				<ScoreRace />
 				<H2>Send Test Emails</H2>
 				<p className="text-sm text-muted-foreground">
 					Send test emails to your account to preview templates.
@@ -100,6 +110,99 @@ export function Admin() {
 		</AppLayout>
 	);
 }
+
+type ScoreResult = { userId: number; score: number; exactMatches: number };
+type ScoreResponse = { scored: number; results: ScoreResult[] };
+
+const ScoreRace = () => {
+	const [circuitCode, setCircuitCode] = useState<string>("");
+	const [scoreLoading, setScoreLoading] = useState(false);
+	const [scoreStatus, setScoreStatus] = useState<Status>(null);
+	const [scoreResults, setScoreResults] = useState<ScoreResult[]>([]);
+
+	async function handleScore() {
+		if (!circuitCode) return;
+		setScoreLoading(true);
+		setScoreStatus(null);
+		setScoreResults([]);
+		try {
+			const res = await fetch("/api/admin/score", {
+				method: "POST",
+				headers: { "Content-Type": "application/json" },
+				body: JSON.stringify({ circuitCode }),
+			});
+			const body = (await res.json()) as ScoreResponse & { message?: string };
+			if (!res.ok) {
+				setScoreStatus({ ok: false, message: body.message ?? "Failed to score race" });
+				return;
+			}
+			setScoreStatus({ ok: true, message: `Scored ${body.scored} predictions` });
+			setScoreResults(body.results ?? []);
+		} catch (err) {
+			setScoreStatus({
+				ok: false,
+				message: err instanceof Error ? err.message : "Unknown error",
+			});
+		} finally {
+			setScoreLoading(false);
+		}
+	}
+
+	return (
+		<div className="space-y-3">
+			<p className="text-sm text-muted-foreground">
+				Select a race and run scoring against locked predictions.
+			</p>
+			<div className="flex items-center gap-3">
+				<Select value={circuitCode} onValueChange={setCircuitCode}>
+					<SelectTrigger className="w-64">
+						<SelectValue placeholder="Select a race" />
+					</SelectTrigger>
+					<SelectContent>
+						{RACES_2026.map((race) => (
+							<SelectItem key={race.circuit_code} value={race.circuit_code}>
+								R{race.round} — {race.name}
+							</SelectItem>
+						))}
+					</SelectContent>
+				</Select>
+				<Button
+					variant="outline"
+					size="sm"
+					disabled={!circuitCode || scoreLoading}
+					onClick={handleScore}
+				>
+					{scoreLoading ? "Scoring..." : "Score"}
+				</Button>
+			</div>
+			{scoreStatus && (
+				<p className={`text-xs ${scoreStatus.ok ? "text-green-400" : "text-red-400"}`}>
+					{scoreStatus.message}
+				</p>
+			)}
+			{scoreResults.length > 0 && (
+				<Table>
+					<TableHeader>
+						<TableRow>
+							<TableHead>User ID</TableHead>
+							<TableHead className="text-right">Score</TableHead>
+							<TableHead className="text-right">Exact Matches</TableHead>
+						</TableRow>
+					</TableHeader>
+					<TableBody>
+						{scoreResults.map((r) => (
+							<TableRow key={r.userId}>
+								<TableCell>{r.userId}</TableCell>
+								<TableCell className="text-right font-medium">{r.score}</TableCell>
+								<TableCell className="text-right">{r.exactMatches}</TableCell>
+							</TableRow>
+						))}
+					</TableBody>
+				</Table>
+			)}
+		</div>
+	);
+};
 
 const AllUsersTable = () => {
 	const { data: users, isLoading, error } = useApi<User[]>("/api/admin/users");
