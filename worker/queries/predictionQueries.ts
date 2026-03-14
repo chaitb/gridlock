@@ -59,3 +59,49 @@ export async function upsertPrediction(
 		.bind(userId, circuitCode, prediction)
 		.run();
 }
+
+export async function getUnlockedPredictionsByRace(
+	db: D1Database,
+	circuitCode: string
+): Promise<
+	{
+		id: number;
+		user_id: number;
+		prediction: string | null;
+		email: string;
+		username: string | null;
+	}[]
+> {
+	return db
+		.prepare(
+			`SELECT p.id, p.user_id, p.prediction, u.email, u.username
+			 FROM predictions p
+			 JOIN players u ON p.user_id = u.id
+			 WHERE p.circuit_code = ?
+			 AND p.locked = 0`
+		)
+		.bind(circuitCode)
+		.all<{
+			id: number;
+			user_id: number;
+			prediction: string | null;
+			email: string;
+			username: string | null;
+		}>()
+		.then((result) => result.results);
+}
+
+export async function updatePredictionAndLock(
+	db: D1Database,
+	userId: number,
+	circuitCode: string,
+	prediction: string
+) {
+	return db
+		.prepare(
+			`UPDATE predictions SET prediction = ?, locked = 1, updated_at = CURRENT_TIMESTAMP
+			 WHERE user_id = ? AND circuit_code = ?`
+		)
+		.bind(prediction, userId, circuitCode)
+		.run();
+}
