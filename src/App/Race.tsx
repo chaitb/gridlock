@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import {
+	AlertCircle,
 	ClockIcon,
 	DumbbellIcon,
 	FlagIcon,
@@ -15,6 +16,7 @@ import { EnterButton } from "@/components/EnterButton";
 import GlareHover from "@/components/GlareHover";
 import { Alert, AlertTitle } from "@/components/ui/alert";
 import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { useUser } from "@/context/useUser";
 import { RACES_2026 } from "@/data";
 import { useApi } from "@/helpers/useApi";
 import { cn } from "@/lib/utils";
@@ -70,6 +72,7 @@ const glareButtonProps = {
 };
 
 const Predictions: React.FC<{ race: Race }> = ({ race }) => {
+	const user = useUser();
 	const [, _navigate] = useLocation();
 	const { data: pred, error } = useApi<Prediction>(`/api/predictions`, {
 		params: { circuitCode: race.circuit_code },
@@ -90,47 +93,63 @@ const Predictions: React.FC<{ race: Race }> = ({ race }) => {
 			<H2>Predictions</H2>
 			{error ? JSON.stringify(error) : null}
 			{hasPrediction ? (
-				<Link type="button" className="w-full block" to={`/race/${race.circuit_code}/prediction`}>
+				<Link
+					type="button"
+					className="w-full block"
+					to={
+						isClosed && isLocked
+							? `/race/${race.circuit_code}/league/${user.user?.username}`
+							: `/race/${race.circuit_code}/prediction`
+					}
+				>
 					<GlareHover glareColor="#d71414" className="bg-secondary/20" {...glareButtonProps}>
 						<span className="flex items-center gap-2 font-kh">
 							<PencilLineIcon className="w-4 h-4" />
-							{isLocked ? "View Prediction" : "Edit Prediction"}
+							{isLocked ? (isClosed ? "View Scorecard" : "View Prediction") : "Edit Prediction"}
 						</span>
 					</GlareHover>
 				</Link>
 			) : isClosed ? (
-				<Alert>
-					<AlertTitle>Sorry, predictions are closed!</AlertTitle>
+				<Alert variant={"destructive"}>
+					<AlertTitle className="flex gap-2 items-center">
+						<AlertCircle className="size-5" />
+						Sorry, predictions for this race are closed!
+					</AlertTitle>
 				</Alert>
 			) : (
 				<EnterButton />
 			)}
-			{hasPrediction && (
-				<Link
-					type="button"
-					className="w-full mt-3 block"
-					to={
-						isLocked ? `/race/${race.circuit_code}/league` : `/race/${race.circuit_code}/prediction`
-					}
+			{(hasPrediction || isClosed) && (
+				<GlareHover
+					glareColor={isLocked ? "#6366f1" : "#f43f5e"}
+					className="bg-secondary/20 mt-3"
+					asChild
+					{...glareButtonProps}
 				>
-					<GlareHover
-						glareColor={isLocked ? "#6366f1" : "#f43f5e"}
-						className="bg-secondary/20"
-						{...glareButtonProps}
-					>
-						{isLocked ? (
-							<span className="flex items-center gap-2 font-kh">
+					{isLocked || isClosed ? (
+						<Link
+							type="button"
+							to={`/race/${race.circuit_code}/league`}
+							className="bg-red-300 block w-full font-kh"
+						>
+							<span className="flex justify-center items-center gap-2">
 								<ListIcon className="w-4 h-4" />
 								View League Predictions
 							</span>
-						) : (
-							<span className="flex items-center gap-2 text-rose-400">
+						</Link>
+					) : (
+						<Link
+							type="button"
+							to={`/race/${race.circuit_code}/prediction`}
+							className="block w-full text-rose-400"
+						>
+							<span className="flex justify-center items-center gap-2">
 								<LockIcon className="w-3 h-3" />
 								Lock prediction to view league
 							</span>
-						)}
-					</GlareHover>
-				</Link>
+						</Link>
+					)}
+				</GlareHover>
 			)}
 		</motion.div>
 	);

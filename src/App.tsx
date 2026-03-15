@@ -10,6 +10,7 @@ import { UserPredictions } from "./App/MyPredictions";
 import { Profile } from "./App/Profile";
 import { RaceComponent } from "./App/Race";
 import { RacePrediction } from "./App/RacePrediction";
+import { RacePredictionScorecard } from "./App/RacePredictionScorecard";
 import { Rules } from "./App/Rules";
 import { Season } from "./App/Season";
 import { MidSeason } from "./App/Season/MidSeason";
@@ -49,6 +50,9 @@ const App = () => (
 					</Route>
 					<Route path="race/:circuit_code/league">
 						<LeaguePredictions />
+					</Route>
+					<Route path="race/:circuit_code/league/:username">
+						<RacePredictionScorecard />
 					</Route>
 					<Route path="/race/:circuit_code">
 						<RaceComponent />

@@ -4,6 +4,7 @@ import {
 	getAllLockedPredictionsByRace,
 	getPredictionsByUserAndRace,
 } from "../queries/predictionQueries";
+import { findUserByUsernameOrEmail } from "../queries/userQueries";
 import type { AppEnv } from "../types";
 
 export async function getLeaguePredictions(c: Context<AppEnv>) {
@@ -11,6 +12,8 @@ export async function getLeaguePredictions(c: Context<AppEnv>) {
 	const userId = c.get("userId");
 
 	const circuitCode = c.req.query("circuitCode");
+	const username = c.req.query("username");
+
 	if (!circuitCode) {
 		return c.json({ message: "Missing circuitCode" }, 400);
 	}
@@ -49,6 +52,32 @@ export async function getLeaguePredictions(c: Context<AppEnv>) {
 				403
 			);
 		}
+	}
+
+	if (username) {
+		const targetUser = await findUserByUsernameOrEmail(env.F1_PREDICTIONS, username);
+		if (!targetUser) {
+			return c.json({ message: "User not found" }, 404);
+		}
+
+		const userPrediction = await getPredictionsByUserAndRace(
+			env.F1_PREDICTIONS,
+			targetUser.id,
+			circuitCode
+		);
+
+		if (!userPrediction || !userPrediction.locked) {
+			return c.json({ predictions: [] });
+		}
+
+		return c.json({
+			predictions: [
+				{
+					...userPrediction,
+					username: targetUser.username,
+				},
+			],
+		});
 	}
 
 	const result = await getAllLockedPredictionsByRace(env.F1_PREDICTIONS, circuitCode);

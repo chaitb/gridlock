@@ -1,0 +1,45 @@
+{
+	"qualifying": {
+		"positions": 5,
+		"tiers": [
+			{ "label": "bullseye", "maxOffset": 0, "points": 10 },
+			{ "label": "near_miss", "maxOffset": 1, "points": 5 },
+			{ "label": "close", "maxOffset": 2, "points": 2 }
+		]
+	},
+	"race": {
+		"positions": 5,
+		"tiers": [
+			{ "label": "bullseye", "maxOffset": 0, "points": 10 },
+			{ "label": "near_miss", "maxOffset": 1, "points": 5 },
+			{ "label": "close", "maxOffset": 2, "points": 2 }
+		]
+	},
+	"gainers": {
+		"picks": 3,
+		"tiers": [
+			{ "label": "perfect_match", "rule": "exact_rank", "points": 15 },
+			{ "label": "top_3", "rule": "in_top_3", "points": 7 },
+			{ "label": "trend_bonus", "rule": "any_gain", "points": 3 }
+		]
+	},
+	"losers": {
+		"picks": 3,
+		"tiers": [
+			{ "label": "perfect_match", "rule": "exact_rank", "points": 15 },
+			{ "label": "top_3", "rule": "in_top_3", "points": 7 },
+			{ "label": "trend_bonus", "rule": "any_loss", "points": 3 }
+		]
+	},
+	"bonuses": {
+		"hot_streak": {
+			"consecutiveRaces": 3,
+			"requires": "at_least_one_exact",
+			"points": 5
+		}
+	},
+	"rules": {
+		"dnf": "last_position",
+		"tiebreaker": ["exact_matches_desc", "submission_time_asc"]
+	}
+}

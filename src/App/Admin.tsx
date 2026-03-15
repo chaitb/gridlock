@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/table";
 import { useApi } from "@/helpers/useApi";
 import type { User } from "@/shared/model";
+import { ScoreRace } from "./Admin/AdminScoresTable";
 import { AppLayout } from "./Layout";
 import { H2 } from "./Text";
 
@@ -64,6 +65,8 @@ export function Admin() {
 			<div className="px-3 mt-4 space-y-4">
 				<H2>Users</H2>
 				<AllUsersTable />
+				<H2>Score Race</H2>
+				<ScoreRace />
 				<H2>Send Test Emails</H2>
 				<p className="text-sm text-muted-foreground">
 					Send test emails to your account to preview templates.
