@@ -70,6 +70,8 @@ export async function getLeaderboard(db: D1Database) {
 		.prepare(
 			`SELECT p.username,
 			        COALESCE(ps.total_score, 0) AS points,
+			        COALESCE(ps.total_exact_matches, 0) AS exact_matches,
+			        COALESCE(ps.races_scored, 0) AS races_scored,
 			        ROW_NUMBER() OVER (ORDER BY COALESCE(ps.total_score, 0) DESC) AS rank
 			 FROM players p
 			 LEFT JOIN player_scores ps ON ps.user_id = p.id
