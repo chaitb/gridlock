@@ -48,7 +48,7 @@ export class Race {
 	}
 
 	getSession(sessionType: string): Session | undefined {
-		return this.getSessions().find((s) => s.session_type === sessionType);
+		return this.getSessions().findLast((s) => s.session_type === sessionType);
 	}
 
 	getDateRange(): string {
@@ -88,7 +88,7 @@ export class Race {
 
 	getSessionStartDate(sessionType: string): Date {
 		return new Date(
-			this.getSessions().find((s) => s.session_type === sessionType)?.date_start ?? ""
+			this.getSessions().findLast((s) => s.session_type === sessionType)?.date_start ?? ""
 		);
 	}
 

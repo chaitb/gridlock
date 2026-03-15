@@ -1,4 +1,5 @@
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
+import { cn } from "@/lib/utils";
 import { DriverCardFull } from "./Drivers";
 import { DRIVERS } from "./driver";
 
@@ -17,16 +18,34 @@ export function getDriverByAcronym(acronym: string | null) {
 	return DRIVERS.find((d) => d.acronym === acronym);
 }
 
-export function DriverPill({ acronym }: { acronym: string | null }) {
+export function DriverPill({
+	acronym,
+	size = "sm",
+}: {
+	acronym: string | null;
+	size?: "sm" | "md";
+}) {
 	const driver = getDriverByAcronym(acronym);
 	if (!driver) {
-		return <span className="px-2 py-0.5 rounded text-xs bg-muted text-muted-foreground">—</span>;
+		return (
+			<span
+				className={cn("rounded bg-muted text-muted-foreground", {
+					"px-2 py-0.5 text-xs ": size === "sm",
+					"px-3 py-1 text-base": size === "md",
+				})}
+			>
+				—
+			</span>
+		);
 	}
 	return (
 		<HoverCard openDelay={100} closeDelay={300}>
 			<HoverCardTrigger asChild>
 				<span
-					className="px-2 py-0.5 rounded text-xs font-medium text-white cursor-pointer"
+					className={cn("rounded text-xs font-medium text-white cursor-pointer", {
+						"px-2 py-0.5 text-xs": size === "sm",
+						"px-3 py-1 text-sm": size === "md",
+					})}
 					style={{ backgroundColor: `#${driver.colour}` }}
 				>
 					{driver.acronym}

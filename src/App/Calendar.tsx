@@ -22,7 +22,8 @@ const item = {
 };
 
 export function RaceWeekend() {
-	const nextRace = RACES_2026.find((race) => race.date && new Date(race.date) >= new Date());
+	const ongoing = RACES_2026.find((race) => race.isOngoing()) !== undefined;
+	const nextRace = RACES_2026.find((race) => race.date && new Date(race.date) >= new Date())?.round;
 	return (
 		<AppLayout headline="Race Calendar">
 			<motion.ul
@@ -32,7 +33,7 @@ export function RaceWeekend() {
 				className="flex flex-col divide-y divide-border"
 			>
 				{RACES_2026.map((race) => (
-					<RaceRow key={race.round} race={race} isNext={race.round === nextRace?.round} />
+					<RaceRow key={race.round} race={race} isNext={!ongoing && race.round === nextRace} />
 				))}
 			</motion.ul>
 		</AppLayout>

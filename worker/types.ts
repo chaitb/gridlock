@@ -2,7 +2,9 @@ import type { D1Database } from "@cloudflare/workers-types";
 
 export type Bindings = {
 	F1_PREDICTIONS: D1Database;
+	GRIDLOCK_SCORE_MAP: R2Bucket;
 	RESEND_API_KEY: string;
+	NOTION_API_KEY: string;
 	/** HS256 signing secret — set via `wrangler secret put JWT_SECRET` in production */
 	JWT_SECRET: string;
 	/** Public base URL of the app, e.g. https://gridlock.chaitanyabhagwat.com */

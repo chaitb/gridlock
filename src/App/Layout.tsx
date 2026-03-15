@@ -11,9 +11,11 @@ import { Link } from "wouter";
 export const AppLayout = ({
 	headline,
 	children,
+	wide = false,
 }: {
 	headline?: string;
 	children: React.ReactNode;
+	wide?: boolean;
 }) => {
 	useEffect(() => {
 		if (headline && headline !== "GridLock 2026") {
@@ -23,7 +25,7 @@ export const AppLayout = ({
 		}
 	}, [headline]);
 	return (
-		<div className="container mx-auto mt-20 mb-20">
+		<div className={`mx-auto mt-20 mb-20 ${wide ? "max-w-screen-3xl px-12" : "container"}`}>
 			{/*<RacingStripe />*/}
 			{headline && (
 				<div className="flex justify-between items-center mx-3 mb-4 font-audiowide uppercase">

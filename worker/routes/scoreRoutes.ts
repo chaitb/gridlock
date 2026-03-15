@@ -2,6 +2,7 @@ import type { Context } from "hono";
 import { z } from "zod";
 import {
 	getScoreByUserAndCircuit,
+	getScoreByUsernameAndCircuit,
 	getScoresByCircuit,
 	getSeasonScores,
 } from "../queries/scoreQueries";
@@ -35,16 +36,34 @@ export async function adminScoreRace(c: Context<AppEnv>) {
 
 	const { circuitCode } = parsed.data;
 
-	const result = await scoreRace(c.env.F1_PREDICTIONS, circuitCode);
+	const result = await scoreRace(
+		c.env.F1_PREDICTIONS,
+		c.env.GRIDLOCK_SCORE_MAP,
+		c.env.NOTION_API_KEY,
+		circuitCode
+	);
 
-	const summary = result.results.map((r) => ({
-		userId: r.userId,
-		score: r.score,
-		exactMatches: r.exactMatches,
-		breakdown: r.breakdown,
-	}));
+	return c.json({ scored: result.scored, results: result.results });
+}
 
-	return c.json({ scored: result.scored, results: summary });
+export async function adminGetScoredResults(c: Context<AppEnv>) {
+	const circuitCode = c.req.query("circuitCode");
+	if (!circuitCode) {
+		return c.json({ message: "circuitCode is required" }, 400);
+	}
+
+	const scores = await getScoresByCircuit(c.env.F1_PREDICTIONS, circuitCode);
+
+	return c.json(
+		scores.map((s) => ({
+			userId: s.user_id,
+			username: s.username,
+			circuitCode: s.circuit_code,
+			score: s.score,
+			exactMatches: s.exact_matches,
+			breakdown: s.breakdown ? JSON.parse(s.breakdown) : null,
+		}))
+	);
 }
 
 export async function getRaceScores(c: Context<AppEnv>) {
@@ -82,6 +101,30 @@ export async function getMyRaceScore(c: Context<AppEnv>) {
 
 	return c.json({
 		userId: score.user_id,
+		circuitCode: score.circuit_code,
+		score: score.score,
+		exactMatches: score.exact_matches,
+		breakdown: score.breakdown ? JSON.parse(score.breakdown) : null,
+	});
+}
+
+export async function getUserRaceScore(c: Context<AppEnv>) {
+	const username = c.req.query("username");
+	const circuitCode = c.req.query("circuitCode");
+
+	if (!username || !circuitCode) {
+		return c.json({ message: "username and circuitCode are required" }, 400);
+	}
+
+	const score = await getScoreByUsernameAndCircuit(c.env.F1_PREDICTIONS, username, circuitCode);
+
+	if (!score) {
+		return c.json({ message: "No score found" }, 404);
+	}
+
+	return c.json({
+		userId: score.user_id,
+		username: score.username,
 		circuitCode: score.circuit_code,
 		score: score.score,
 		exactMatches: score.exact_matches,

@@ -1,6 +1,6 @@
 import { Client, isFullPage } from "@notionhq/client";
 
-const notion_key = "redacted";
+const notion_key = "redacted"; // env.NOTION_API_KEY
 const SESSION_DRIVER_RESULTS_DB = "31f5efd6-33b8-8045-83ae-000be242952d";
 // const SESSIONS_DB = "31f5efd6-33b8-80b6-9279-000bea1c498f";
 

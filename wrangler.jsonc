@@ -23,5 +23,11 @@
 	"compatibility_flags": ["nodejs_compat"],
 	"vars": {
 		"APP_URL": "https://gridlock.chaitanyabhagwat.com"
-	}
+	},
+	"r2_buckets": [
+		{
+			"bucket_name": "gridlock-score-map",
+			"binding": "GRIDLOCK_SCORE_MAP"
+		}
+	]
 }

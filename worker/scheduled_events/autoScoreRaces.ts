@@ -38,7 +38,7 @@ export async function autoScoreRaces(env: Bindings): Promise<void> {
 
 		console.log(`[autoScoreRaces] scoring race for circuit: ${circuitCode}`);
 
-		const result = await scoreRace(db, circuitCode);
+		const result = await scoreRace(db, env.GRIDLOCK_SCORE_MAP, env.NOTION_API_KEY, circuitCode);
 
 		console.log(`[autoScoreRaces] scored ${result.scored} predictions for ${circuitCode}`);
 	}

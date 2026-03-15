@@ -20,7 +20,10 @@ export class ApiError extends Error {
 	}
 }
 
-export function useApi<T>(url: string, options?: { params?: Record<string, string | number> }) {
+export function useApi<T>(
+	url: string,
+	options?: { params?: Record<string, string | number>; enabled?: boolean }
+) {
 	const [data, setData] = useState<T | null>(null);
 	const [error, setError] = useState<ApiError | null>(null);
 	const [isLoading, setIsLoading] = useState(true);
@@ -37,6 +40,7 @@ export function useApi<T>(url: string, options?: { params?: Record<string, strin
 	}, [url, options]);
 
 	const fetchData = useCallback(async () => {
+		if (options?.enabled === false) return;
 		setIsLoading(true);
 		setError(null);
 		try {
@@ -62,7 +66,7 @@ export function useApi<T>(url: string, options?: { params?: Record<string, strin
 		} finally {
 			setIsLoading(false);
 		}
-	}, [fullUrl]);
+	}, [fullUrl, options?.enabled]);
 
 	useEffect(() => {
 		fetchData();

@@ -1,4 +1,4 @@
-import type { PropsWithChildren } from "react";
+import { Children, cloneElement, isValidElement, type PropsWithChildren } from "react";
 import "./GlareHover.css";
 import type React from "react";
 
@@ -17,8 +17,10 @@ interface GlareHoverProps {
 	playOnce?: boolean;
 	className?: string;
 	style?: React.CSSProperties;
+	asChild?: boolean;
 }
 const GlareHover: React.FC<PropsWithChildren<GlareHoverProps>> = ({
+	asChild = false,
 	width = "500px",
 	height = "500px",
 	background = "#000",
@@ -62,11 +64,24 @@ const GlareHover: React.FC<PropsWithChildren<GlareHoverProps>> = ({
 		"--gh-border": borderColor,
 	};
 
+	const mergedClassName = `glare-hover ${playOnce ? "glare-hover--play-once" : ""} ${className}`;
+	const mergedStyle = { ...vars, ...style } as React.CSSProperties;
+
+	if (asChild) {
+		const child = Children.only(children);
+
+		if (!isValidElement<{ className?: string; style?: React.CSSProperties }>(child)) {
+			return null;
+		}
+
+		return cloneElement(child, {
+			className: [mergedClassName, child.props.className].filter(Boolean).join(" "),
+			style: { ...mergedStyle, ...child.props.style },
+		});
+	}
+
 	return (
-		<div
-			className={`glare-hover ${playOnce ? "glare-hover--play-once" : ""} ${className}`}
-			style={{ ...vars, ...style } as React.CSSProperties}
-		>
+		<div className={mergedClassName} style={mergedStyle}>
 			{children}
 		</div>
 	);

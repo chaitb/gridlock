@@ -58,6 +58,22 @@ export async function getScoreByUserAndCircuit(
 		.first<RaceScoreRow>();
 }
 
+export async function getScoreByUsernameAndCircuit(
+	db: D1Database,
+	username: string,
+	circuitCode: string
+): Promise<RaceScoreRow | null> {
+	return db
+		.prepare(
+			`SELECT p.user_id, u.username, p.circuit_code, p.score, p.exact_matches, p.breakdown, p.updated_at
+			 FROM predictions p
+			 JOIN players u ON p.user_id = u.id
+			 WHERE u.username = ? AND p.circuit_code = ? AND p.score IS NOT NULL`
+		)
+		.bind(username, circuitCode)
+		.first<RaceScoreRow>();
+}
+
 export async function getSeasonScores(
 	db: D1Database,
 	season: string = "f1_2026",

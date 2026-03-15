@@ -15,10 +15,12 @@ import { getUserPredictions } from "./routes/my-predictions";
 import { getPredictions, savePredictions } from "./routes/predictions";
 import { updateProfile } from "./routes/profile";
 import {
+	adminGetScoredResults,
 	adminScoreRace,
 	getMyRaceScore,
 	getRaceScores,
 	getSeasonScoresRoute,
+	getUserRaceScore,
 } from "./routes/scoreRoutes";
 import { getSessionResults } from "./routes/session-results";
 import { verifyMagicLink } from "./routes/verify";
@@ -38,6 +40,7 @@ app.get("/api/session-results", getSessionResults);
 app.get("/api/driver-results", getDriverResults);
 app.get("/api/scores", getRaceScores);
 app.get("/api/scores/season", getSeasonScoresRoute);
+app.get("/api/scores/user", getUserRaceScore);
 
 // ── Protected routes (session cookie required) ───────────────────────────────
 app.use("/api/me", requireAuth);
@@ -47,7 +50,6 @@ app.use("/api/user-predictions", requireAuth);
 app.use("/api/league-predictions", requireAuth);
 app.use("/api/profile", requireAuth);
 app.use("/api/scores/me", requireAuth);
-app.use("/api/admin/*", requireAuth);
 
 app.get("/api/me", getMe);
 app.patch("/api/profile", updateProfile);
@@ -57,8 +59,12 @@ app.post("/api/predictions/lock", lockPredictionRoute);
 app.get("/api/user-predictions", getUserPredictions);
 app.get("/api/league-predictions", getLeaguePredictions);
 app.get("/api/scores/me", getMyRaceScore);
+
+// ── Amin routes (session cookie + admin email) ───────────────────────────────
+app.use("/api/admin/*", requireAuth);
 app.post("/api/admin", adminAction);
 app.get("/api/admin/users", adminGetUsers);
+app.get("/api/admin/scored-results", adminGetScoredResults);
 app.post("/api/admin/score", adminScoreRace);
 
 export default {

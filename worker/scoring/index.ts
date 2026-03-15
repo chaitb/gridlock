@@ -1,10 +1,19 @@
 import type { D1Database } from "@cloudflare/workers-types";
+import { DRIVERS } from "@/App/driver";
 import { SESSIONS } from "@/data/index";
-import type { DriverTag, PredictionContent } from "@/shared/model";
+import type { CircuitCode, DriverTag, PredictionContent, Session } from "@/shared/model";
+import {
+	getSessionResultCompleteness,
+	getStoredSessionResultsBySessionKey,
+	type SessionResultCompleteness,
+	type StoredSessionResultRow,
+	upsertScoringSessionResults,
+} from "../queries/sessionResultQueries";
 import { computeBonuses } from "./bonus";
 import { SCORING_CONFIG } from "./config";
 import { scoreGainersCategory, scoreLosersCategory } from "./gainersLosers";
 import { driverNumberToTag } from "./helpers";
+import { fetchNotionSessionResults } from "./notion";
 import { scorePositionCategory } from "./position";
 import type { ScoreBreakdown, UserRaceScore } from "./types";
 
@@ -18,32 +27,51 @@ type LockedPrediction = {
 	username: string | null;
 };
 
-type StoredSessionResult = {
-	driver_number: number;
-	position: number | null;
-	dnf: number;
-	dns: number;
-	dsq: number;
-	starting_position: number | null;
-	gained_lost: number | null;
+type ScoreMapCache = {
+	qualifyingResults: StoredSessionResultRow[];
+	raceResults: StoredSessionResultRow[];
+	updated_at: string;
 };
+
+type GainLossRankings = {
+	gainersRanking: { driver: DriverTag; gainedLost: number }[];
+	losersRanking: { driver: DriverTag; gainedLost: number }[];
+	allDriverGains: Map<DriverTag, number>;
+};
+
+const forceRefetch = true;
 
 export async function scoreRace(
 	db: D1Database,
+	scoreMap: R2Bucket,
+	notionApiKey: string,
 	circuitCode: string
 ): Promise<{ scored: number; results: UserRaceScore[] }> {
-	const qualifyingSessionKey = findSessionKey(circuitCode, "Qualifying");
-	const raceSessionKey = findSessionKey(circuitCode, "Race");
+	const qualifyingSession = findSession(circuitCode, "Qualifying");
+	const raceSession = findSession(circuitCode, "Race");
 
-	if (!qualifyingSessionKey || !raceSessionKey) {
+	if (!qualifyingSession || !raceSession) {
 		throw new Error(`Could not find session keys for circuit: ${circuitCode}`);
 	}
 
-	const [qualifyingResults, raceResults, lockedPredictions] = await Promise.all([
-		getSessionResults(db, qualifyingSessionKey),
-		getSessionResults(db, raceSessionKey),
-		getLockedPredictions(db, circuitCode),
-	]);
+	const lockedPredictionsPromise = getLockedPredictions(db, circuitCode);
+	const key = `${circuitCode}/${raceSession.session_key}`;
+	const cachedScoreMap = await getCachedScoreMap(scoreMap, key);
+
+	const { qualifyingResults, raceResults } =
+		cachedScoreMap && !forceRefetch
+			? cachedScoreMap
+			: await regenerateScoreMap({
+					db,
+					scoreMap,
+					notionApiKey,
+					key,
+					qualifyingSession,
+					raceSession,
+					forceRefetch,
+				});
+
+	const lockedPredictions = await lockedPredictionsPromise;
 
 	if (qualifyingResults.length === 0 || raceResults.length === 0) {
 		throw new Error(`Session results not available for circuit: ${circuitCode}`);
@@ -114,10 +142,12 @@ export async function scoreRace(
 
 		const userScore: UserRaceScore = {
 			userId: prediction.user_id,
-			circuitCode,
+			username: prediction.username ?? "",
+			circuitCode: circuitCode as CircuitCode,
 			score: totalScore,
 			exactMatches: totalExactMatches,
 			breakdown,
+			session_key: raceSession.session_key,
 		};
 
 		results.push(userScore);
@@ -128,31 +158,112 @@ export async function scoreRace(
 	return { scored: results.length, results };
 }
 
-function findSessionKey(circuitCode: string, sessionType: string): number | undefined {
-	const session = SESSIONS.find(
+function findSession(circuitCode: string, sessionType: string): Session | undefined {
+	return SESSIONS.find(
 		(s) =>
 			s.circuit_code === circuitCode &&
 			s.session_type === sessionType &&
 			!s.session_name.toLowerCase().includes("sprint")
 	);
-	return session?.session_key;
 }
 
-async function getSessionResults(
-	db: D1Database,
-	sessionKey: number
-): Promise<StoredSessionResult[]> {
-	const results = await db
-		.prepare(
-			`SELECT driver_number, position, dnf, dns, dsq, starting_position, gained_lost
-			 FROM session_results
-			 WHERE session_key = ?
-			 ORDER BY position ASC`
-		)
-		.bind(sessionKey)
-		.all<StoredSessionResult>();
+async function regenerateScoreMap({
+	db,
+	scoreMap,
+	notionApiKey,
+	key,
+	qualifyingSession,
+	raceSession,
+	forceRefetch = false,
+}: {
+	db: D1Database;
+	scoreMap: R2Bucket;
+	notionApiKey: string;
+	key: string;
+	qualifyingSession: Session;
+	raceSession: Session;
+	forceRefetch?: boolean;
+}): Promise<ScoreMapCache> {
+	const [qualifyingResults, raceResults] = await Promise.all([
+		getSessionResultsWithBackfill(db, notionApiKey, qualifyingSession, forceRefetch),
+		getSessionResultsWithBackfill(db, notionApiKey, raceSession, forceRefetch),
+	]);
 
-	return results.results;
+	const cache: ScoreMapCache = {
+		qualifyingResults,
+		raceResults,
+		updated_at: new Date().toISOString(),
+	};
+
+	await scoreMap.put(key, JSON.stringify(cache));
+
+	return cache;
+}
+
+async function getCachedScoreMap(scoreMap: R2Bucket, key: string): Promise<ScoreMapCache | null> {
+	try {
+		const cached = await scoreMap.get(key);
+		if (!cached) return null;
+
+		const value = await cached.json<ScoreMapCache>();
+		const updatedAt = Date.parse(value.updated_at);
+		if (Number.isNaN(updatedAt)) return null;
+
+		if (Date.now() - updatedAt > 60 * 60 * 1000) {
+			return null;
+		}
+
+		return value;
+	} catch {
+		return null;
+	}
+}
+
+async function getSessionResultsWithBackfill(
+	db: D1Database,
+	notionApiKey: string,
+	session: Session,
+	forceRefetch = false
+): Promise<StoredSessionResultRow[]> {
+	const expectedCount = DRIVERS.length;
+
+	const isComplete = (res: SessionResultCompleteness) => {
+		if (res?.missing_position_count > 0) {
+			return false;
+		} else if (session.session_type !== "Race") {
+			if (res.total_count !== expectedCount) {
+				console.log(
+					`[WARN] Qualifying session: ${session.circuit_code} missing results (${res.total_count}/${expectedCount})`
+				);
+			}
+			return true;
+		} else {
+			return (
+				res.total_count === expectedCount &&
+				res.missing_starting_position_count === 0 &&
+				res.missing_gained_lost_count === 0
+			);
+		}
+	};
+
+	const res = await getSessionResultCompleteness(db, session.session_key);
+
+	if (isComplete(res) && !forceRefetch) {
+		return getStoredSessionResultsBySessionKey(db, session.session_key);
+	}
+
+	const notionResults = await fetchNotionSessionResults(notionApiKey, session);
+	await upsertScoringSessionResults(db, notionResults);
+
+	const refreshedResults = await getStoredSessionResultsBySessionKey(db, session.session_key);
+	const res2 = await getSessionResultCompleteness(db, session.session_key);
+	if (!isComplete(res2)) {
+		throw new Error(
+			`Session results incomplete after Notion backfill for session ${session.session_key}`
+		);
+	}
+
+	return refreshedResults;
 }
 
 async function getLockedPredictions(
@@ -174,7 +285,7 @@ async function getLockedPredictions(
 }
 
 function buildPositionMap(
-	results: StoredSessionResult[],
+	results: StoredSessionResultRow[],
 	totalDrivers: number
 ): Map<DriverTag, { position: number; dnf: boolean }> {
 	const map = new Map<DriverTag, { position: number; dnf: boolean }>();
@@ -192,11 +303,7 @@ function buildPositionMap(
 	return map;
 }
 
-function buildGainerLoserRankings(results: StoredSessionResult[]): {
-	gainersRanking: { driver: DriverTag; gainedLost: number }[];
-	losersRanking: { driver: DriverTag; gainedLost: number }[];
-	allDriverGains: Map<DriverTag, number>;
-} {
+function buildGainerLoserRankings(results: StoredSessionResultRow[]): GainLossRankings {
 	const allDriverGains = new Map<DriverTag, number>();
 	const driverGainList: { driver: DriverTag; gainedLost: number }[] = [];
 
@@ -210,7 +317,6 @@ function buildGainerLoserRankings(results: StoredSessionResult[]): {
 	}
 
 	const gainersRanking = [...driverGainList].sort((a, b) => b.gainedLost - a.gainedLost);
-
 	const losersRanking = [...driverGainList].sort((a, b) => a.gainedLost - b.gainedLost);
 
 	return { gainersRanking, losersRanking, allDriverGains };
