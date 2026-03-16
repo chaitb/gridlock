@@ -1,5 +1,4 @@
 import { motion } from "framer-motion";
-import { ClipboardCheck } from "lucide-react";
 import { Link } from "wouter";
 import { useUser } from "@/context/useUser";
 import { useApi } from "@/helpers/useApi";
@@ -36,7 +35,6 @@ export function Leaderboard() {
 
 	const rows = data?.players ?? [];
 	const scored = rows.filter((r) => r.points > 0);
-	const unscored = rows.filter((r) => r.points === 0);
 
 	return (
 		<AppLayout headline="Leaderboard">
@@ -50,7 +48,7 @@ export function Leaderboard() {
 
 				{!isLoading && !error && scored.length > 0 && (
 					<div>
-						<div className="grid grid-cols-[2rem_1fr_auto_2rem] gap-x-4 px-2 pb-1 text-xs text-muted-foreground uppercase tracking-wider">
+						<div className="grid grid-cols-[2rem_1fr_auto] gap-x-4 px-2 pb-1 text-xs text-muted-foreground uppercase tracking-wider">
 							<span>#</span>
 							<span>Player</span>
 							<span className="text-right">Score</span>
@@ -66,87 +64,43 @@ export function Leaderboard() {
 								const isMe = user?.username === row.username;
 								const rankStyle = RANK_STYLES[row.rank];
 								return (
-									<motion.li
-										key={row.username}
-										variants={item}
-										className={cn(
-											"grid grid-cols-[2rem_1fr_auto_2rem] gap-x-4 items-center py-3 px-2 rounded",
-											isMe && "bg-muted/40"
-										)}
-									>
-										<span
+									<Link key={row.username} to={`/${row.username}/predictions`}>
+										<motion.li
+											key={row.username}
+											variants={item}
 											className={cn(
-												"text-sm tabular-nums text-muted-foreground",
-												rankStyle?.className
+												"grid grid-cols-[2rem_1fr_auto] gap-x-4 items-center py-3 px-2 rounded",
+												isMe && "bg-muted/40"
 											)}
 										>
-											{row.rank}
-										</span>
-										<div className="min-w-0">
-											<Link
-												to={`/${row.username}/predictions`}
-												className="font-medium hover:underline underline-offset-2 truncate block"
-											>
-												{row.username}
-												{isMe && (
-													<span className="ml-2 text-xs text-muted-foreground font-normal">
-														you
-													</span>
+											<span
+												className={cn(
+													"text-sm tabular-nums text-muted-foreground",
+													rankStyle?.className
 												)}
-											</Link>
-											<p className="text-xs text-muted-foreground">
-												{row.races_scored} {row.races_scored === 1 ? "race" : "races"} &middot;{" "}
-												{row.exact_matches} exact
-											</p>
-										</div>
-										<div className="text-right shrink-0">
-											<span className="tabular-nums font-medium text-sm">{row.points}</span>
-											<span className="text-muted-foreground text-xs"> pts</span>
-										</div>
-										<Link
-											to={`/${row.username}/predictions`}
-											className="flex items-center justify-center text-muted-foreground hover:text-primary transition-colors"
-										>
-											<ClipboardCheck className="size-4" />
-										</Link>
-									</motion.li>
-								);
-							})}
-						</motion.ul>
-					</div>
-				)}
-
-				{!isLoading && !error && unscored.length > 0 && (
-					<div>
-						<p className="text-xs text-muted-foreground uppercase tracking-wider px-2 pb-1">
-							Not yet scored
-						</p>
-						<motion.ul
-							variants={container}
-							initial="hidden"
-							animate="show"
-							className="flex flex-col divide-y divide-border"
-						>
-							{unscored.map((row) => {
-								const isMe = user?.username === row.username;
-								return (
-									<motion.li
-										key={row.username}
-										variants={item}
-										className={cn(
-											"flex items-center gap-4 py-2 px-2 rounded",
-											isMe && "bg-muted/40"
-										)}
-									>
-										<span className="w-6 shrink-0 text-xs text-muted-foreground">—</span>
-										<Link
-											to={`/${row.username}/predictions`}
-											className="flex-1 text-sm text-muted-foreground hover:underline underline-offset-2 truncate"
-										>
-											{row.username}
-											{isMe && <span className="ml-2 text-xs">(you)</span>}
-										</Link>
-									</motion.li>
+											>
+												P{row.rank}
+											</span>
+											<div className="min-w-0">
+												<div className="font-medium truncate block">
+													{row.username}
+													{isMe && (
+														<span className="ml-2 text-xs text-muted-foreground font-normal">
+															you
+														</span>
+													)}
+												</div>
+												<p className="text-xs text-muted-foreground">
+													{row.races_scored} {row.races_scored === 1 ? "race" : "races"} &middot;{" "}
+													{row.exact_matches} exact
+												</p>
+											</div>
+											<div className="text-right shrink-0">
+												<span className="tabular-nums font-medium text-sm">{row.points}</span>
+												<span className="text-muted-foreground text-xs"> pts</span>
+											</div>
+										</motion.li>
+									</Link>
 								);
 							})}
 						</motion.ul>

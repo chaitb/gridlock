@@ -31,7 +31,7 @@ export function RacePredictionScorecard() {
 	const circuitCode = params.circuit_code;
 	const username = params.username;
 	const race = RACES_2026.find((r) => r.circuit_code === circuitCode);
-	const isLarge = useMediaQuery("(min-width: 1024px)");
+	const isLarge = useMediaQuery(1024);
 
 	const {
 		data: predResult,
@@ -108,7 +108,7 @@ export function RacePredictionScorecard() {
 	}
 
 	return (
-		<AppLayout headline="Scorecard" wide>
+		<AppLayout headline="Scorecard" wide={isLarge}>
 			<div className="mb-6 mx-3">
 				<h2 className="text-xl font-medium">{race.name}</h2>
 				<p className="text-sm text-muted-foreground">

@@ -1,7 +1,9 @@
 import { motion } from "framer-motion";
+import { useMemo, useRef } from "react";
 import { Link } from "wouter";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useApi } from "@/helpers/useApi";
+import { useMediaQuery } from "@/helpers/useMediaQuery";
 import type { Session, SessionResult } from "@/shared/model";
 import { DriverCardCompact, DriverCardFull } from "./Drivers";
 import { DRIVERS } from "./driver";
@@ -33,7 +35,9 @@ export function SessionResults({
 	session: Session;
 	onDriverClick?: () => void;
 }) {
-	const cols = 2;
+	const containerRef = useRef<HTMLDivElement>(null);
+	const isLarge = useMediaQuery(1024, containerRef);
+	const cols = useMemo(() => (isLarge ? 3 : 2), [isLarge]);
 	const {
 		data: results,
 		error,
@@ -74,14 +78,25 @@ export function SessionResults({
 		: null;
 
 	return (
-		<div className="overflow-y-auto no-scrollbar max-h-[calc(100vh-10rem)]">
-			<h2 className="text-3xl font-semibold mb-3 font-audiowide px-4 text-center uppercase">
+		<div
+			ref={containerRef}
+			className="@container overflow-y-auto no-scrollbar max-h-[calc(100vh-10rem)] w-full"
+		>
+			{/*<p className="@min-xs:block hidden">@xs</p>
+			<p className="@min-sm:block hidden">@sm</p>
+			<p className="@min-md:block hidden">@md</p>
+			<p className="@min-lg:block hidden">@lg</p>
+			<p className="@min-3xl:block hidden">@xl</p>*/}
+			<h2 className="@min-3xl:text-3xl font-semibold mb-3 font-audiowide px-4 text-center uppercase">
 				{session.circuit_code} {session.session_name} Results
 			</h2>
-			<div className="@sm:px-12 pt-8 grid grid-cols-2 @lg:grid-cols-3 gap-x-2 gap-y-12 mx-auto max-w-5xl">
+			<div className="@min-md:px-12 @min-3xl:pt-8 grid grid-cols-2 @min-4xl:grid-cols-3 gap-x-2 gap-y-12 mx-auto">
 				{isLoading || !sorted
 					? SKELETON_KEYS.map((key) => (
-							<Skeleton key={key} className="rounded-md shrink-0 w-20 h-30 @md:w-48 @md:h-36" />
+							<Skeleton
+								key={key}
+								className="rounded-md shrink-0 w-20 h-30 @min-xl:w-48 @min-xl:h-36"
+							/>
 						))
 					: sorted.map((result, i) => {
 							const driver = DRIVERS.find((d) => d.number === result.driver_number);
@@ -108,11 +123,11 @@ export function SessionResults({
 										>
 											<DriverCardCompact
 												driver={driver}
-												className="block @md:hidden w-20 h-30 rounded-lg shrink-0"
+												className="@max-xl:block hidden w-20 h-30 rounded-lg shrink-0"
 											/>
 											<DriverCardFull
 												driver={driver}
-												className="hidden @md:block w-48 h-36 rounded-md shrink-0"
+												className="hidden @min-xl:block w-48 h-36 rounded-md shrink-0"
 											/>
 										</Link>
 									) : (

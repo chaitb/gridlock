@@ -1,79 +1,28 @@
 import { motion } from "framer-motion";
-import { ClipboardCheck } from "lucide-react";
 import { useState } from "react";
 import { Link, useParams } from "wouter";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { RACES_2026 } from "@/data";
 import type { ApiError } from "@/helpers/useApi";
 import { useApi } from "@/helpers/useApi";
-import type { PredictionContent } from "@/shared/model";
+import { safeJsonParse } from "@/lib/utils";
+import type { Prediction, PredictionContent } from "@/shared/model";
 import { AppLayout } from "./Layout";
-import { container, item, PredictionCardContent } from "./PredictionCard";
+import { container, PredictionCard } from "./PredictionCard";
 import { PredictionForm } from "./PredictionForm";
 
-type LeaguePrediction = {
-	id: number;
-	user_id: number;
-	circuit_code: string;
-	prediction: string;
-	score: number | null;
-	created_at: string;
-	updated_at: string;
-	username: string;
+type PredictionsResponse = {
+	predictions: Prediction[];
 };
-
-type LeaguePredictionsResponse = {
-	predictions: LeaguePrediction[];
-};
-
-function LeaguePredictionCard({
-	pred,
-	content,
-	onClick,
-	circuitCode,
-}: {
-	pred: LeaguePrediction;
-	content: PredictionContent;
-	onClick: () => void;
-	circuitCode: string;
-}) {
-	return (
-		<motion.li variants={item}>
-			<div className="flex items-center gap-3 p-4 hover:bg-secondary transition-colors">
-				<button type="button" className="flex-1 text-left" onClick={onClick}>
-					<div className="flex items-center gap-3 mb-3">
-						<span className="font-medium">@{pred.username}</span>
-						<span className="text-xs text-muted-foreground ml-auto">
-							{new Date(`${pred.updated_at.replace(" ", "T")}Z`).toLocaleDateString()}
-						</span>
-					</div>
-					<PredictionCardContent content={content} />
-				</button>
-				<div className="flex items-center gap-3 shrink-0">
-					{pred.score !== null && (
-						<span className="text-sm font-medium tabular-nums">{pred.score} pts</span>
-					)}
-					<Link
-						to={`/race/${circuitCode}/league/${pred.username}`}
-						className="flex items-center justify-center text-muted-foreground hover:text-primary transition-colors"
-						onClick={(e) => e.stopPropagation()}
-					>
-						<ClipboardCheck className="size-5" />
-					</Link>
-				</div>
-			</div>
-		</motion.li>
-	);
-}
 
 export function LeaguePredictions() {
 	const params = useParams();
 	const circuitCode = params.circuit_code;
 	const race = RACES_2026.find((r) => r.circuit_code === circuitCode);
-	const [selectedPrediction, setSelectedPrediction] = useState<LeaguePrediction | null>(null);
+	const [selectedPrediction, setSelectedPrediction] = useState<Prediction | null>(null);
 	const [dialogOpen, setDialogOpen] = useState(false);
 
-	const { data, isLoading, error } = useApi<LeaguePredictionsResponse>("/api/league-predictions", {
+	const { data, isLoading, error } = useApi<PredictionsResponse>("/api/league-predictions", {
 		params: { circuitCode: circuitCode ?? "" },
 	});
 
@@ -146,7 +95,7 @@ export function LeaguePredictions() {
 
 	const predictions = data?.predictions ?? [];
 
-	const handleCardClick = (pred: LeaguePrediction) => {
+	const handleCardClick = (pred: Prediction) => {
 		setSelectedPrediction(pred);
 		setDialogOpen(true);
 	};
@@ -171,20 +120,28 @@ export function LeaguePredictions() {
 					className="flex flex-col divide-y divide-border"
 				>
 					{predictions.map((pred) => {
-						let content: PredictionContent | null = null;
-						try {
-							content = JSON.parse(pred.prediction ?? "{}") as PredictionContent;
-						} catch {
-							return null;
-						}
+						if (!pred.prediction) return null;
+						const content = safeJsonParse<PredictionContent>(pred.prediction);
+						if (!content) return null;
+
+						const header = (
+							<div className="flex items-center gap-3 mb-3">
+								<span className="font-medium">@{pred.username}</span>
+								<span className="text-xs text-muted-foreground ml-auto">
+									{new Date(`${pred.updated_at.replace(" ", "T")}Z`).toLocaleDateString()}
+								</span>
+							</div>
+						);
 
 						return (
-							<LeaguePredictionCard
+							<PredictionCard
 								key={pred.id}
-								pred={pred}
+								header={header}
 								content={content}
-								onClick={() => handleCardClick(pred)}
+								score={pred.score}
+								username={pred.username ?? "unknown"}
 								circuitCode={circuitCode ?? ""}
+								onClick={() => handleCardClick(pred)}
 							/>
 						);
 					})}
@@ -206,15 +163,18 @@ export function LeaguePredictions() {
 									Prediction
 								</DialogTitle>
 							</DialogHeader>
-							<div className="mt-4 w-full">
-								<PredictionForm
-									predictions={
-										JSON.parse(selectedPrediction.prediction ?? "{}") as PredictionContent
-									}
-									onChange={() => {}}
-									readOnly
-								/>
-							</div>
+							{selectedPrediction.prediction && (
+								<div className="mt-4 w-full">
+									<PredictionForm
+										predictions={
+											safeJsonParse<PredictionContent>(selectedPrediction.prediction) ??
+											({} as PredictionContent)
+										}
+										onChange={() => {}}
+										readOnly
+									/>
+								</div>
+							)}
 						</>
 					)}
 				</DialogContent>

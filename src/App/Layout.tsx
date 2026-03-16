@@ -31,7 +31,7 @@ export const AppLayout = ({
 				<div className="flex justify-between items-center mx-3 mb-4 font-audiowide uppercase">
 					<Link
 						href="/home"
-						className="text-5xl text-primary hover:text-muted-foreground transition-colors duration-300"
+						className="text-3xl md:text-5xl text-primary hover:text-muted-foreground transition-colors duration-300"
 					>
 						<motion.h1
 							key="headline"
