@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { useMemo } from "react";
 import { Link } from "wouter";
 import { Flag } from "@/components/flags";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useUser } from "@/context/useUser";
 import { RACES_2026 } from "@/data";
 import { useApi } from "@/helpers/useApi";
@@ -14,19 +15,39 @@ type UserPredictionsResponse = {
 	isOwner: boolean;
 };
 
-function RaceCard({
-	className,
-	race,
-	label,
-	subtitle,
-	to,
-}: {
-	className?: string;
-	race: Race;
-	label: string;
-	subtitle?: string;
-	to: string;
-}) {
+export type RaceCardProps =
+	| {
+			className?: string;
+			race: Race;
+			label: string;
+			subtitle?: string;
+			to: string;
+			loading?: false;
+	  }
+	| {
+			className?: string;
+			race?: undefined;
+			label?: undefined;
+			subtitle?: undefined;
+			to?: undefined;
+			loading: true;
+	  };
+
+function RaceCard({ className, race, label, subtitle, to, loading }: RaceCardProps) {
+	if (loading) {
+		return (
+			<div className={cn("p-4 rounded-lg border border-border bg-card", className)}>
+				<Skeleton className="h-4 w-1/4 mb-2" />
+				<div className="flex items-center gap-3">
+					<Skeleton className="h-6 w-8 rounded" />
+					<div className="flex-1">
+						<Skeleton className="h-4 w-2/3 mb-2" />
+						<Skeleton className="h-2 w-1/3" />
+					</div>
+				</div>
+			</div>
+		);
+	}
 	return (
 		<Link
 			to={to}
@@ -50,12 +71,15 @@ function RaceCard({
 export function UserHome() {
 	const { user } = useUser();
 
-	const { data: predictionsData } = useApi<UserPredictionsResponse>("/api/user-predictions", {
-		params: {
-			username: user?.username ?? "",
-			requestingUser: user?.username ?? "",
-		},
-	});
+	const { data: predictionsData, isLoading } = useApi<UserPredictionsResponse>(
+		"/api/user-predictions",
+		{
+			params: {
+				username: user?.username ?? "",
+				requestingUser: user?.username ?? "",
+			},
+		}
+	);
 
 	const { now, sixDaysFromNow } = useMemo(() => {
 		const now = new Date();
@@ -128,6 +152,16 @@ export function UserHome() {
 
 	return (
 		<AppLayout headline="GridLock">
+			{isLoading && (
+				<motion.div
+					initial={{ opacity: 0, y: 10 }}
+					animate={{ opacity: 1, y: 0 }}
+					transition={{ duration: 0.4 }}
+					className="mb-6 px-3 w-full"
+				>
+					<RaceCard loading className="w-full" />
+				</motion.div>
+			)}
 			{showCards && (
 				<motion.div
 					initial={{ opacity: 0, y: 10 }}
