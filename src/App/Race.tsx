@@ -11,7 +11,7 @@ import {
 } from "lucide-react";
 import type React from "react";
 import { useState } from "react";
-import { Link, useLocation, useParams } from "wouter";
+import { Link, useParams } from "wouter";
 import { EnterButton } from "@/components/EnterButton";
 import GlareHover from "@/components/GlareHover";
 import { Alert, AlertTitle } from "@/components/ui/alert";
@@ -25,6 +25,38 @@ import { AppLayout } from "./Layout";
 import { RaceHeader } from "./RaceHeader";
 import { SessionResults } from "./SessionResults";
 import { H2 } from "./Text";
+
+/**
+ * CTA Logic Tables
+ *
+ * Primary CTA (Main Button):
+ * ┌───────────────┬──────────┬──────────┬────────────────────────────────────────────────────────┐
+ * │ hasPrediction │ isLocked │ isClosed │ Render                                                  │
+ * ├───────────────┼──────────┼──────────┼────────────────────────────────────────────────────────┤
+ * │ false         │ -        │ false    │ EnterButton → "Enter"                                  │
+ * │ false         │ -        │ true     │ Alert → "Predictions closed"                           │
+ * │ true          │ false    │ false    │ Link to /prediction → "Edit Prediction"                │
+ * │ true          │ true     │ false    │ Link to /prediction → "View Prediction"                │
+ * │ true          │ false    │ true     │ Link to /prediction → "View Prediction" (can't edit)   │
+ * │ true          │ true     │ true     │ Link to /league/${username} → "View Scorecard"         │
+ * └───────────────┴──────────┴──────────┴────────────────────────────────────────────────────────┘
+ *
+ * Secondary CTA (League Button) — shown when hasPrediction OR isClosed:
+ * ┌───────────────┬──────────┬──────────┬────────────────────────────────────────────────────────┐
+ * │ hasPrediction │ isLocked │ isClosed │ Render                                                  │
+ * ├───────────────┼──────────┼──────────┼────────────────────────────────────────────────────────┤
+ * │ false         │ -        │ false    │ Hidden                                                  │
+ * │ false         │ -        │ true     │ Link to /league → "View League Predictions"            │
+ * │ true          │ false    │ false    │ Link to /prediction → "Lock prediction to view league" │
+ * │ true          │ false    │ true     │ Link to /league → "View League Predictions"            │
+ * │ true          │ true     │ *        │ Link to /league → "View League Predictions"             │
+ * └───────────────┴──────────┴──────────┴────────────────────────────────────────────────────────┘
+ *
+ * Variables:
+ * - hasPrediction: user has submitted a prediction (pred?.prediction exists)
+ * - isLocked: prediction is locked (pred?.locked === 1)
+ * - isClosed: prediction window has closed (!race.isOpenForPredictions())
+ */
 
 export function RaceComponent() {
 	const params = useParams();
@@ -72,16 +104,22 @@ const glareButtonProps = {
 };
 
 const Predictions: React.FC<{ race: Race }> = ({ race }) => {
-	const user = useUser();
-	const [, _navigate] = useLocation();
+	const { user } = useUser();
 	const { data: pred, error } = useApi<Prediction>(`/api/predictions`, {
 		params: { circuitCode: race.circuit_code },
 	});
 
 	const isClosed = !race.isOpenForPredictions();
-
 	const hasPrediction = !!pred?.prediction;
 	const isLocked = pred?.locked === 1;
+
+	const canEdit = hasPrediction && !isClosed && !isLocked;
+	const canViewPrediction = hasPrediction && (isLocked || isClosed);
+	const canViewScorecard = hasPrediction && isLocked && isClosed;
+
+	const predictionPath = `/race/${race.circuit_code}/prediction`;
+	const scorecardPath = `/race/${race.circuit_code}/league/${user?.username}`;
+	const leaguePath = `/race/${race.circuit_code}/league`;
 
 	return (
 		<motion.div
@@ -91,58 +129,69 @@ const Predictions: React.FC<{ race: Race }> = ({ race }) => {
 			className="mt-4"
 		>
 			<H2>Predictions</H2>
-			{error ? JSON.stringify(error) : null}
-			{hasPrediction ? (
-				<Link
-					type="button"
-					className="w-full block"
-					to={
-						isClosed && isLocked
-							? `/race/${race.circuit_code}/league/${user.user?.username}`
-							: `/race/${race.circuit_code}/prediction`
-					}
-				>
-					<GlareHover glareColor="#d71414" className="bg-secondary/20" {...glareButtonProps}>
-						<span className="flex items-center gap-2 font-kh">
-							<PencilLineIcon className="w-4 h-4" />
-							{isLocked ? (isClosed ? "View Scorecard" : "View Prediction") : "Edit Prediction"}
-						</span>
-					</GlareHover>
-				</Link>
-			) : isClosed ? (
-				<Alert variant={"destructive"}>
+
+			{error && <p className="text-destructive text-sm">{error.message}</p>}
+
+			{!hasPrediction && !isClosed && <EnterButton />}
+
+			{!hasPrediction && isClosed && (
+				<Alert variant="destructive">
 					<AlertTitle className="flex gap-2 items-center">
 						<AlertCircle className="size-5" />
-						Sorry, predictions for this race are closed!
+						Predictions for this race are closed
 					</AlertTitle>
 				</Alert>
-			) : (
-				<EnterButton />
 			)}
+
+			{canEdit && (
+				<GlareHover glareColor="#d71414" className="bg-secondary/20" {...glareButtonProps}>
+					<Link to={predictionPath} className="block w-full">
+						<span className="flex items-center gap-2 font-kh">
+							<PencilLineIcon className="w-4 h-4" />
+							Edit Prediction
+						</span>
+					</Link>
+				</GlareHover>
+			)}
+
+			{canViewPrediction && !canViewScorecard && (
+				<GlareHover glareColor="#d71414" className="bg-secondary/20" {...glareButtonProps}>
+					<Link to={predictionPath} className="block w-full">
+						<span className="flex items-center gap-2 font-kh">
+							<PencilLineIcon className="w-4 h-4" />
+							View Prediction
+						</span>
+					</Link>
+				</GlareHover>
+			)}
+
+			{canViewScorecard && (
+				<GlareHover glareColor="#d71414" className="bg-secondary/20" {...glareButtonProps}>
+					<Link to={scorecardPath} className="block w-full">
+						<span className="flex items-center gap-2 font-kh">
+							<PencilLineIcon className="w-4 h-4" />
+							View Scorecard
+						</span>
+					</Link>
+				</GlareHover>
+			)}
+
 			{(hasPrediction || isClosed) && (
 				<GlareHover
-					glareColor={isLocked ? "#6366f1" : "#f43f5e"}
+					glareColor={isLocked || isClosed ? "#6366f1" : "#f43f5e"}
 					className="bg-secondary/20 mt-3"
 					asChild
 					{...glareButtonProps}
 				>
 					{isLocked || isClosed ? (
-						<Link
-							type="button"
-							to={`/race/${race.circuit_code}/league`}
-							className="bg-red-300 block w-full font-kh"
-						>
+						<Link to={leaguePath} className="block w-full font-kh">
 							<span className="flex justify-center items-center gap-2">
 								<ListIcon className="w-4 h-4" />
 								View League Predictions
 							</span>
 						</Link>
 					) : (
-						<Link
-							type="button"
-							to={`/race/${race.circuit_code}/prediction`}
-							className="block w-full text-rose-400"
-						>
+						<Link to={predictionPath} className="block w-full text-rose-400">
 							<span className="flex justify-center items-center gap-2">
 								<LockIcon className="w-3 h-3" />
 								Lock prediction to view league
@@ -166,7 +215,7 @@ function Schedule({ race }: { race: Race }) {
 			className="mt-4"
 		>
 			<H2>Schedule</H2>
-			{sessions.length &&
+			{sessions.length > 0 &&
 				sessions.map((session) => <SessionRow session={session} key={session.session_key} />)}
 		</motion.div>
 	);
@@ -200,6 +249,7 @@ const SessionRow: React.FC<{ session: Session }> = ({ session }) => {
 	const isPast = new Date(session.date_end) < new Date();
 	const isOngoing = start < new Date() && new Date(session.date_end) > new Date();
 	const [open, setOpen] = useState(false);
+
 	return (
 		<Dialog open={open} onOpenChange={setOpen}>
 			<DialogTrigger asChild>

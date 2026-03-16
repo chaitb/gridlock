@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { ClipboardCheck } from "lucide-react";
 import { useState } from "react";
 import { Link, useParams } from "wouter";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -15,6 +16,7 @@ type LeaguePrediction = {
 	user_id: number;
 	circuit_code: string;
 	prediction: string;
+	score: number | null;
 	created_at: string;
 	updated_at: string;
 	username: string;
@@ -28,26 +30,38 @@ function LeaguePredictionCard({
 	pred,
 	content,
 	onClick,
+	circuitCode,
 }: {
 	pred: LeaguePrediction;
 	content: PredictionContent;
 	onClick: () => void;
+	circuitCode: string;
 }) {
 	return (
 		<motion.li variants={item}>
-			<button
-				type="button"
-				className="block w-full text-left p-4 hover:bg-secondary transition-colors"
-				onClick={onClick}
-			>
-				<div className="flex items-center gap-3 mb-3">
-					<span className="font-medium">@{pred.username}</span>
-					<span className="text-xs text-muted-foreground ml-auto">
-						{new Date(`${pred.updated_at.replace(" ", "T")}Z`).toLocaleDateString()}
-					</span>
+			<div className="flex items-center gap-3 p-4 hover:bg-secondary transition-colors">
+				<button type="button" className="flex-1 text-left" onClick={onClick}>
+					<div className="flex items-center gap-3 mb-3">
+						<span className="font-medium">@{pred.username}</span>
+						<span className="text-xs text-muted-foreground ml-auto">
+							{new Date(`${pred.updated_at.replace(" ", "T")}Z`).toLocaleDateString()}
+						</span>
+					</div>
+					<PredictionCardContent content={content} />
+				</button>
+				<div className="flex items-center gap-3 shrink-0">
+					{pred.score !== null && (
+						<span className="text-sm font-medium tabular-nums">{pred.score} pts</span>
+					)}
+					<Link
+						to={`/race/${circuitCode}/league/${pred.username}`}
+						className="flex items-center justify-center text-muted-foreground hover:text-primary transition-colors"
+						onClick={(e) => e.stopPropagation()}
+					>
+						<ClipboardCheck className="size-5" />
+					</Link>
 				</div>
-				<PredictionCardContent content={content} />
-			</button>
+			</div>
 		</motion.li>
 	);
 }
@@ -170,6 +184,7 @@ export function LeaguePredictions() {
 								pred={pred}
 								content={content}
 								onClick={() => handleCardClick(pred)}
+								circuitCode={circuitCode ?? ""}
 							/>
 						);
 					})}
