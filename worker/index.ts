@@ -16,6 +16,7 @@ import { getPredictions, savePredictions } from "./routes/predictions";
 import { updateProfile } from "./routes/profile";
 import {
 	adminGetScoredResults,
+	adminRecalculateLeaderboard,
 	adminScoreRace,
 	getMyRaceScore,
 	getRaceScores,
@@ -66,6 +67,7 @@ app.post("/api/admin", adminAction);
 app.get("/api/admin/users", adminGetUsers);
 app.get("/api/admin/scored-results", adminGetScoredResults);
 app.post("/api/admin/score", adminScoreRace);
+app.post("/api/admin/recalculate-leaderboard", adminRecalculateLeaderboard);
 
 export default {
 	fetch: app.fetch,

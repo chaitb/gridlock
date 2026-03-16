@@ -5,6 +5,7 @@ import {
 	getScoreByUsernameAndCircuit,
 	getScoresByCircuit,
 	getSeasonScores,
+	recalculateAllPlayerScores,
 } from "../queries/scoreQueries";
 import { findUserById } from "../queries/userQueries";
 import { scoreRace } from "../scoring/index";
@@ -143,4 +144,20 @@ export async function getSeasonScoresRoute(c: Context<AppEnv>) {
 			racesScored: s.races_scored,
 		}))
 	);
+}
+
+export async function adminRecalculateLeaderboard(c: Context<AppEnv>) {
+	const userId = c.get("userId");
+	const user = await findUserById(c.env.F1_PREDICTIONS, userId);
+
+	if (!user || !ADMIN_EMAILS.includes(user.email)) {
+		return c.json({ message: "Unauthorized" }, 403);
+	}
+
+	const count = await recalculateAllPlayerScores(c.env.F1_PREDICTIONS);
+
+	return c.json({
+		updated: count,
+		message: `Recalculated scores for ${count} players (Melbourne excluded)`,
+	});
 }

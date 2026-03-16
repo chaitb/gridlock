@@ -361,7 +361,7 @@ async function recalculatePlayerScores(db: D1Database, results: UserRaceScore[])
 			COALESCE(SUM(exact_matches), 0),
 			COUNT(score)
 		 FROM predictions
-		 WHERE user_id = ? AND score IS NOT NULL
+		 WHERE user_id = ? AND score IS NOT NULL AND circuit_code != 'melbourne'
 		 ON CONFLICT(user_id, season, league) DO UPDATE SET
 			total_score = excluded.total_score,
 			total_exact_matches = excluded.total_exact_matches,
