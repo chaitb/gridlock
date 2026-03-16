@@ -4,6 +4,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { RACES_2026 } from "@/data";
 import type { ApiError } from "@/helpers/useApi";
 import { useApi } from "@/helpers/useApi";
+import { useMediaQuery } from "@/helpers/useMediaQuery";
 import { safeJsonParse } from "@/lib/utils";
 import type { PredictionContent, UserRaceScore } from "@/shared/model";
 import { AppLayout } from "./Layout";
@@ -30,6 +31,7 @@ export function RacePredictionScorecard() {
 	const circuitCode = params.circuit_code;
 	const username = params.username;
 	const race = RACES_2026.find((r) => r.circuit_code === circuitCode);
+	const isLarge = useMediaQuery("(min-width: 1024px)");
 
 	const {
 		data: predResult,
@@ -126,7 +128,11 @@ export function RacePredictionScorecard() {
 				transition={{ duration: 0.3 }}
 				className="mx-3"
 			>
-				<Scorecard variant="split" userRaceScore={scoreData} prediction={prediction} />
+				<Scorecard
+					variant={isLarge ? "split" : "default"}
+					userRaceScore={scoreData}
+					prediction={prediction}
+				/>
 			</motion.div>
 		</AppLayout>
 	);
