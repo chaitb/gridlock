@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { ClipboardCheck } from "lucide-react";
 import { Link } from "wouter";
 import { useUser } from "@/context/useUser";
 import { useApi } from "@/helpers/useApi";
@@ -49,10 +50,11 @@ export function Leaderboard() {
 
 				{!isLoading && !error && scored.length > 0 && (
 					<div>
-						<div className="grid grid-cols-[2rem_1fr_auto] gap-x-4 px-2 pb-1 text-xs text-muted-foreground uppercase tracking-wider">
+						<div className="grid grid-cols-[2rem_1fr_auto_2rem] gap-x-4 px-2 pb-1 text-xs text-muted-foreground uppercase tracking-wider">
 							<span>#</span>
 							<span>Player</span>
 							<span className="text-right">Score</span>
+							<span />
 						</div>
 						<motion.ul
 							variants={container}
@@ -68,7 +70,7 @@ export function Leaderboard() {
 										key={row.username}
 										variants={item}
 										className={cn(
-											"grid grid-cols-[2rem_1fr_auto] gap-x-4 items-center py-3 px-2 rounded",
+											"grid grid-cols-[2rem_1fr_auto_2rem] gap-x-4 items-center py-3 px-2 rounded",
 											isMe && "bg-muted/40"
 										)}
 									>
@@ -101,6 +103,12 @@ export function Leaderboard() {
 											<span className="tabular-nums font-medium text-sm">{row.points}</span>
 											<span className="text-muted-foreground text-xs"> pts</span>
 										</div>
+										<Link
+											to={`/${row.username}/predictions`}
+											className="flex items-center justify-center text-muted-foreground hover:text-primary transition-colors"
+										>
+											<ClipboardCheck className="size-4" />
+										</Link>
 									</motion.li>
 								);
 							})}
