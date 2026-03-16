@@ -38,6 +38,8 @@ type Status = { ok: boolean; message: string } | null;
 export function Admin() {
 	const [statuses, setStatuses] = useState<Record<string, Status>>({});
 	const [loading, setLoading] = useState<Record<string, boolean>>({});
+	const [leaderboardStatus, setLeaderboardStatus] = useState<Status>(null);
+	const [leaderboardLoading, setLeaderboardLoading] = useState(false);
 
 	async function sendTest(template: string) {
 		setLoading((l) => ({ ...l, [template]: true }));
@@ -60,6 +62,23 @@ export function Admin() {
 		}
 	}
 
+	async function recalculateLeaderboard() {
+		setLeaderboardLoading(true);
+		setLeaderboardStatus(null);
+		try {
+			const res = await fetch("/api/admin/recalculate-leaderboard", { method: "POST" });
+			const body = (await res.json()) as { message: string; updated?: number };
+			setLeaderboardStatus({ ok: res.ok, message: body.message });
+		} catch (err) {
+			setLeaderboardStatus({
+				ok: false,
+				message: err instanceof Error ? err.message : "Unknown error",
+			});
+		} finally {
+			setLeaderboardLoading(false);
+		}
+	}
+
 	return (
 		<AppLayout headline="Admin">
 			<div className="px-3 mt-4 space-y-4">
@@ -67,6 +86,30 @@ export function Admin() {
 				<AllUsersTable />
 				<H2>Score Race</H2>
 				<ScoreRace />
+				<H2>Leaderboard</H2>
+				<div className="flex items-center justify-between gap-4 p-4 rounded-lg border border-border bg-card">
+					<div>
+						<p className="font-medium">Recalculate Leaderboard</p>
+						<p className="text-sm text-muted-foreground">
+							Sum all prediction scores per user (Melbourne excluded). Updates player_scores table.
+						</p>
+						{leaderboardStatus && (
+							<p
+								className={`text-xs mt-1 ${leaderboardStatus.ok ? "text-green-400" : "text-red-400"}`}
+							>
+								{leaderboardStatus.message}
+							</p>
+						)}
+					</div>
+					<Button
+						variant="outline"
+						size="sm"
+						disabled={leaderboardLoading}
+						onClick={recalculateLeaderboard}
+					>
+						{leaderboardLoading ? "Recalculating..." : "Recalculate"}
+					</Button>
+				</div>
 				<H2>Send Test Emails</H2>
 				<p className="text-sm text-muted-foreground">
 					Send test emails to your account to preview templates.

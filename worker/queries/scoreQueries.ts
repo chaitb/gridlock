@@ -100,3 +100,35 @@ export async function hasScoresForCircuit(db: D1Database, circuitCode: string): 
 
 	return result !== null;
 }
+
+export async function recalculateAllPlayerScores(db: D1Database): Promise<number> {
+	await db
+		.prepare(
+			`INSERT INTO player_scores (user_id, season, league, total_score, total_exact_matches, races_scored)
+			 SELECT
+				p.user_id,
+				'f1_2026',
+				'global',
+				COALESCE(SUM(p.score), 0),
+				COALESCE(SUM(p.exact_matches), 0),
+				COUNT(p.score)
+			 FROM predictions p
+			 WHERE p.score IS NOT NULL AND p.circuit_code != 'melbourne'
+			 GROUP BY p.user_id
+			 ON CONFLICT(user_id, season, league) DO UPDATE SET
+				total_score = excluded.total_score,
+				total_exact_matches = excluded.total_exact_matches,
+				races_scored = excluded.races_scored,
+				updated_at = CURRENT_TIMESTAMP`
+		)
+		.run();
+
+	const result = await db
+		.prepare(
+			`SELECT COUNT(DISTINCT user_id) as count FROM predictions
+			 WHERE score IS NOT NULL AND circuit_code != 'melbourne'`
+		)
+		.first<{ count: number }>();
+
+	return result?.count ?? 0;
+}
