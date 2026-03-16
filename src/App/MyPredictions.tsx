@@ -7,9 +7,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { useUser } from "@/context/useUser";
 import { RACES_2026 } from "@/data";
 import { useApi } from "@/helpers/useApi";
+import { safeJsonParse } from "@/lib/utils";
 import type { CountryCode, Prediction, PredictionContent } from "@/shared/model";
 import { AppLayout } from "./Layout";
-import { container, item, PredictionCardContent } from "./PredictionCard";
+import { container, PredictionCard } from "./PredictionCard";
 import { PredictionForm } from "./PredictionForm";
 
 type UserPredictionsResponse = {
@@ -19,77 +20,6 @@ type UserPredictionsResponse = {
 	code?: string;
 	message?: string;
 };
-
-function PredictionCardHeader({
-	race,
-	updated,
-}: {
-	race: (typeof RACES_2026)[number];
-	updated: Date | null;
-}) {
-	return (
-		<div className="flex items-center gap-3 mb-3">
-			<Flag
-				className="size-4 object-cover rounded-full shadow-sm"
-				countryCode={race.country as CountryCode}
-			/>
-			<span className="font-medium">{race.name}</span>
-			{updated && (
-				<span className="text-xs text-muted-foreground ml-auto">
-					{updated.toLocaleDateString()}
-				</span>
-			)}
-		</div>
-	);
-}
-
-function PredictionCard({
-	race,
-	content,
-	updated,
-	isOwner,
-	onViewClick,
-	children,
-}: {
-	race: (typeof RACES_2026)[number];
-	content: PredictionContent | null;
-	updated: Date | null;
-	isOwner: boolean;
-	onViewClick: () => void;
-	children?: React.ReactNode;
-}) {
-	const [, navigate] = useLocation();
-
-	if (isOwner) {
-		return (
-			<motion.li key={race.circuit_code} variants={item}>
-				<button
-					type="button"
-					className="block w-full text-left p-4 hover:bg-secondary transition-colors"
-					onClick={() => navigate(`/race/${race.circuit_code}/prediction`)}
-				>
-					<PredictionCardHeader race={race} updated={updated} />
-					{content && <PredictionCardContent content={content} />}
-					{children}
-				</button>
-			</motion.li>
-		);
-	}
-
-	return (
-		<motion.li key={race.circuit_code} variants={item}>
-			<button
-				type="button"
-				className="block w-full text-left p-4 hover:bg-secondary transition-colors"
-				onClick={onViewClick}
-			>
-				<PredictionCardHeader race={race} updated={updated} />
-				{content && <PredictionCardContent content={content} />}
-				{children}
-			</button>
-		</motion.li>
-	);
-}
 
 function UserPredictionsInner({ username }: { username: string }) {
 	const [, navigate] = useLocation();
@@ -154,14 +84,23 @@ function UserPredictionsInner({ username }: { username: string }) {
 					const pred = theirPredsByRace.get(race.circuit_code);
 
 					if (unavailableRaces.includes(race.circuit_code)) {
+						const header = (
+							<div className="flex items-center gap-3 mb-3">
+								<Flag
+									className="size-4 object-cover rounded-full shadow-sm"
+									countryCode={race.country as CountryCode}
+								/>
+								<span className="font-medium">{race.name}</span>
+							</div>
+						);
+
 						return (
 							<PredictionCard
-								content={null}
-								updated={null}
 								key={race.circuit_code}
-								race={race}
-								isOwner={isOwner}
-								onViewClick={() => navigate(`/race/${race.circuit_code}/prediction`)}
+								header={header}
+								content={null}
+								username={username}
+								circuitCode={race.circuit_code}
 							>
 								<div className="border-2 border-dashed border-destructive/30 rounded-md p-4 flex justify-center text-center items-center gap-2 mx-auto text-sm text-muted-foreground">
 									<LockIcon className="w-4 h-4 inline-block" />
@@ -171,27 +110,39 @@ function UserPredictionsInner({ username }: { username: string }) {
 						);
 					}
 
-					if (!pred) return null;
+					if (!pred?.prediction) return null;
 
-					let content: PredictionContent | null = null;
-					try {
-						content = JSON.parse(pred.prediction ?? "{}") as PredictionContent;
-					} catch {
-						return null;
-					}
+					const content = safeJsonParse<PredictionContent>(pred.prediction);
+					if (!content) return null;
 
-					const updated = pred.updated_at
-						? new Date(`${pred.updated_at.replace(" ", "T")}Z`)
-						: null;
+					const header = (
+						<div className="flex items-center gap-3 mb-3">
+							<Flag
+								className="size-4 object-cover rounded-full shadow-sm"
+								countryCode={race.country as CountryCode}
+							/>
+							<span className="font-medium grow">{race.name}</span>
+							{pred.updated_at && (
+								<span className="text-xs text-muted-foreground text-right">
+									{new Date(`${pred.updated_at.replace(" ", "T")}Z`).toLocaleDateString()}
+								</span>
+							)}
+						</div>
+					);
 
 					return (
 						<PredictionCard
 							key={race.circuit_code}
-							race={race}
+							header={header}
 							content={content}
-							updated={updated}
-							isOwner={isOwner}
-							onViewClick={() => handleViewClick(pred)}
+							score={pred.score}
+							username={username}
+							circuitCode={race.circuit_code}
+							onClick={
+								isOwner
+									? () => navigate(`/race/${race.circuit_code}/prediction`)
+									: () => handleViewClick(pred)
+							}
 						/>
 					);
 				})}
@@ -199,7 +150,7 @@ function UserPredictionsInner({ username }: { username: string }) {
 
 			<Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
 				<DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto [&::-webkit-scrollbar]:hidden [scrollbar-width:none]">
-					{selectedPrediction && (
+					{selectedPrediction?.prediction && (
 						<>
 							<DialogHeader>
 								<DialogTitle>{username}'s Prediction</DialogTitle>
@@ -207,7 +158,8 @@ function UserPredictionsInner({ username }: { username: string }) {
 							<div className="mt-4">
 								<PredictionForm
 									predictions={
-										JSON.parse(selectedPrediction.prediction ?? "{}") as PredictionContent
+										safeJsonParse<PredictionContent>(selectedPrediction.prediction) ??
+										({} as PredictionContent)
 									}
 									onChange={() => {}}
 									readOnly

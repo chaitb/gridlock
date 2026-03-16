@@ -91,6 +91,7 @@ export function RaceComponent() {
 }
 
 const glareButtonProps = {
+	asChild: true,
 	height: "80px",
 	width: "100%",
 	background: "transparent",
@@ -180,7 +181,6 @@ const Predictions: React.FC<{ race: Race }> = ({ race }) => {
 				<GlareHover
 					glareColor={isLocked || isClosed ? "#6366f1" : "#f43f5e"}
 					className="bg-secondary/20 mt-3"
-					asChild
 					{...glareButtonProps}
 				>
 					{isLocked || isClosed ? (

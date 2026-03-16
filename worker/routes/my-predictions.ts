@@ -41,7 +41,8 @@ export async function getUserPredictions(c: Context<AppEnv>) {
 				pred.circuit_code
 			);
 
-			if (!requestingPred?.prediction || !requestingPred.locked) {
+			const isPredictionOpen = pred.score === null;
+			if (isPredictionOpen && (!requestingPred?.prediction || !requestingPred.locked)) {
 				unavailableRaces.push(pred.circuit_code);
 				continue;
 			}

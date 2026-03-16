@@ -49,7 +49,9 @@ export const predictionSchema = z.object({
 	created_at: z.string(),
 	updated_at: z.string(),
 	prediction: z.string().nullable(),
+	username: z.string(),
 	locked: z.number().default(0),
+	score: z.number().nullable(),
 });
 
 export type PredictionContent = z.infer<typeof predictionContentSchema>;

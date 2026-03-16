@@ -8,6 +8,7 @@ import { getScoreOutOf } from "@/shared/scoringConfig";
 import { DriverPill } from "./PredictionCard";
 import { PredictionForm } from "./PredictionForm";
 import { SessionResults } from "./SessionResults";
+import { H2 } from "./Text";
 
 type ScorecardProps = {
 	variant?: "default" | "split";
@@ -58,14 +59,24 @@ export function Scorecard({ variant = "default", userRaceScore, prediction }: Sc
 			)}
 			<Tabs
 				defaultValue={variant === "split" ? "prediction" : "scores"}
-				className={`${variant === "split" ? "w-1/2 mx-auto max-w-5xl @container" : "w-full"}`}
+				className={`${variant === "split" ? "w-1/2 mx-auto" : "w-full"}`}
 			>
 				<div className="overflow-x-scroll no-scrollbar w-full max-w-screen-xs sm:max-w-content">
 					<TabsList variant="line" className="mb-4">
-						{variant === "default" && <TabsTrigger value="scores">Scores</TabsTrigger>}
-						<TabsTrigger value="prediction">My Prediction</TabsTrigger>
-						<TabsTrigger value="qualifying_results">Qualifying</TabsTrigger>
-						<TabsTrigger value="race_results">Race</TabsTrigger>
+						{variant === "default" && (
+							<TabsTrigger variant="line" value="scores">
+								Scores
+							</TabsTrigger>
+						)}
+						<TabsTrigger variant="line" value="prediction">
+							My Prediction
+						</TabsTrigger>
+						<TabsTrigger variant="line" value="qualifying_results">
+							Qualifying
+						</TabsTrigger>
+						<TabsTrigger variant="line" value="race_results">
+							Race
+						</TabsTrigger>
 					</TabsList>
 				</div>
 
@@ -75,8 +86,8 @@ export function Scorecard({ variant = "default", userRaceScore, prediction }: Sc
 					</TabsContent>
 				)}
 
-				<TabsContent value="prediction">
-					<PredictionForm predictions={prediction} onChange={() => {}} readOnly />
+				<TabsContent value="prediction" className="pl-3">
+					<PredictionForm helpText={false} predictions={prediction} onChange={() => {}} readOnly />
 				</TabsContent>
 
 				<TabsContent value="qualifying_results">
@@ -86,6 +97,7 @@ export function Scorecard({ variant = "default", userRaceScore, prediction }: Sc
 							animate={{ opacity: 1, y: 0 }}
 							transition={{ delay: 0.15, duration: 0.45 }}
 							exit={{ opacity: 0 }}
+							className="w-full"
 						>
 							<SessionResults session={qualifying_session} />
 						</motion.div>
@@ -103,6 +115,7 @@ export function Scorecard({ variant = "default", userRaceScore, prediction }: Sc
 							animate={{ opacity: 1, y: 0 }}
 							transition={{ delay: 0.15, duration: 0.45 }}
 							exit={{ opacity: 0 }}
+							className="w-full"
 						>
 							<SessionResults session={race_session} />
 						</motion.div>
@@ -121,8 +134,8 @@ export const BreakdownView = ({ breakdown }: { breakdown: ScoreBreakdown }) => {
 	const bonusTotal = breakdown.bonuses.reduce((sum, b) => sum + b.points, 0);
 
 	return (
-		<div className="flex-1 overflow-y-auto pb-4">
-			<motion.div variants={sectionContainer} initial="hidden" animate="show" className="space-y-6">
+		<div className="flex-1 overflow-y-auto pb-4 w-full">
+			<motion.div variants={sectionContainer} initial="hidden" animate="show" className="space-y-8">
 				<motion.div variants={sectionItem}>
 					<Section
 						title="Qualifying"
@@ -164,13 +177,13 @@ export const BreakdownView = ({ breakdown }: { breakdown: ScoreBreakdown }) => {
 							points: val.points,
 							extra:
 								val.gainedLost < 0 ? (
-									<span className="text-xl text-red-400">
-										<ArrowDown className="size-5 inline-flex" />
+									<span className="text-xl text-red-400 whitespace-nowrap">
+										<ArrowDown className="size-5 inline-flex mb-1" />
 										{val.gainedLost}
 									</span>
 								) : (
-									<span className="text-xl text-green-400">
-										<ArrowUp className="size-5 inline-flex" />
+									<span className="text-xl text-green-400 whitespace-nowrap">
+										<ArrowUp className="size-5 inline-flex mb-1" />
 										{val.gainedLost}
 									</span>
 								),
@@ -190,12 +203,12 @@ export const BreakdownView = ({ breakdown }: { breakdown: ScoreBreakdown }) => {
 							points: val.points,
 							extra:
 								val.gainedLost < 0 ? (
-									<span className="text-xl text-red-400">
+									<span className="text-xl text-red-400 whitespace-nowrap">
 										<ArrowDown className="size-5 inline-flex" />
 										{val.gainedLost}
 									</span>
 								) : (
-									<span className="text-xl text-green-400">
+									<span className="text-xl text-green-400 whitespace-nowrap">
 										<ArrowUp className="size-5 inline-flex" />
 										{val.gainedLost}
 									</span>
@@ -244,7 +257,7 @@ const Section = ({
 	return (
 		<div className="space-y-2">
 			<div className="flex justify-between items-center">
-				<h4 className="text-2xl flex-grow font-medium text-muted-foreground">{title}</h4>
+				<H2 className="grow">{title}</H2>
 				<span className="text-2xl font-medium">{total} </span>
 				<span className="text-2xl text-muted-foreground font-medium">&nbsp;/ {maxTotal}</span>
 			</div>
@@ -252,25 +265,26 @@ const Section = ({
 				variants={cardContainer}
 				initial="hidden"
 				animate="show"
-				className="flex flex-wrap md:flex-nowrap gap-4"
+				// md:flex-nowrapno-scrollbar overflow-x-scroll
+				className="flex flex-wrap gap-2"
 			>
 				{items.map((item) => (
 					<motion.div
 						key={item.key}
 						variants={cardItem}
-						className="min-w-20 max-w-3/8 w-full min-h-36 h-full space-y-4 border border-border p-2.5 flex flex-col justify-between text-sm rounded bg-muted/30"
+						className="flex-1 w-full min-w-24 h-36 space-y-4 p-1.5 md:p-2.5 flex flex-col justify-between text-sm rounded-lg bg-muted"
 					>
-						<div className="flex justify-between items-center">
-							<span className="font-mono text-3xl text-muted-foreground">{item.key}</span>
+						<div className="flex flex-wrap gap-2 justify-between items-center">
+							<span className="font-mono text-3xl uppercase text-muted-foreground">{item.key}</span>
 							<span className="font-medium">
-								{item.driver ? <DriverPill size="md" acronym={item.driver} /> : "—"}
+								{item.driver ? <DriverPill link size="md" acronym={item.driver} /> : "—"}
 							</span>
 						</div>
-						<Separator className="my-auto" />
-						<div className="flex justify-between items-end gap-3 text-xs">
-							<div className="text-base text-muted-foreground">
-								<p>P: {item.predicted}</p>
-								<p>A: {item.actual}</p>
+						<Separator className="my-auto bg-muted-foreground/10" />
+						<div className="tracking-tight leading-tight flex justify-between items-end gap-3 text-xs">
+							<div className="text-muted-foreground mb-1">
+								<p className="whitespace-nowrap">P: {item.predicted}</p>
+								<p className="whitespace-nowrap">A: {item.actual}</p>
 							</div>
 							{item.extra}
 							<span
@@ -283,10 +297,10 @@ const Section = ({
 								}`}
 							>
 								{item.score_out_of ? (
-									<>
-										<span className="text-3xl">{item.points}</span>
+									<span className="text-nowrap">
+										<span className="text-2xl md:text-3xl">{item.points}</span>
 										<span className="text-muted-foreground text-xs"> / {item.score_out_of}</span>
-									</>
+									</span>
 								) : item.points > 0 ? (
 									`+${item.points}`
 								) : (

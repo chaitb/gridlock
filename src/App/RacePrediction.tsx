@@ -176,7 +176,7 @@ export function RacePrediction() {
 					className="mt-4"
 				>
 					{saved_at ? (
-						<Alert variant="destructive" className="w-full mb-12">
+						<Alert variant="destructive" className="w-full mb-6">
 							<AlertTitle className="flex items-center gap-2">
 								<Icon className="size-5" />
 								<p className="text-xl">
@@ -196,7 +196,7 @@ export function RacePrediction() {
 					) : null}
 
 					{isClosed && (
-						<Alert className="mb-12">
+						<Alert className="mb-6">
 							<AlertTitle>Sorry, predictions are closed!</AlertTitle>
 						</Alert>
 					)}
@@ -205,8 +205,8 @@ export function RacePrediction() {
 					{!locked && !isClosed && (
 						<div className="mb-6">
 							<div className="h-4 relative bg-secondary rounded-full overflow-hidden">
-								<div className="w-full text-right px-4 font-orbiton uppercase absolute top-0 left-0 text-xs text-black">
-									{" "}
+								<div className="w-full text-center px-4 font-orbiton uppercase absolute top-0 left-0 text-xs text-muted-foreground">
+									{completionPercent === 0 ? "0%" : ` `}
 								</div>
 								<motion.div
 									className="h-full bg-accent-foreground rounded-full"
