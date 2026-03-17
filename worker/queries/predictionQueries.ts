@@ -14,7 +14,13 @@ export async function getPredictionsByUserAndRace(
 
 export async function getAllPredictionsByUser(db: D1Database, userId: number) {
 	return db
-		.prepare("SELECT * FROM predictions WHERE user_id = ? ORDER BY updated_at DESC")
+		.prepare(
+			`SELECT p.id, p.user_id, p.circuit_code, p.prediction, p.score, p.locked, p.created_at, p.updated_at, u.username
+			 FROM predictions p
+			 JOIN players u ON p.user_id = u.id
+			 WHERE p.user_id = ?
+			 ORDER BY p.updated_at DESC`
+		)
 		.bind(userId)
 		.all<Prediction>();
 }

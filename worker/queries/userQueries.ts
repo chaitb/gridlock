@@ -58,10 +58,49 @@ export async function findUsernameConflict(db: D1Database, username: string, exc
 		.first();
 }
 
+export async function findEmailConflict(db: D1Database, email: string, excludeId: number) {
+	return db
+		.prepare("SELECT id FROM players WHERE email = ? AND id != ? LIMIT 1")
+		.bind(email, excludeId)
+		.first();
+}
+
 export async function updateUserUsername(db: D1Database, username: string, id: number) {
 	return db
 		.prepare("UPDATE players SET username = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?")
 		.bind(username, id)
+		.run();
+}
+
+type ProfileUpdate = {
+	username: string;
+	email?: string;
+	full_name?: string | null;
+	flair?: string | null;
+};
+
+export async function updateUserProfile(db: D1Database, id: number, updates: ProfileUpdate) {
+	const setClause: string[] = ["username = ?", "updated_at = CURRENT_TIMESTAMP"];
+	const values: (string | null)[] = [updates.username];
+
+	if (updates.email) {
+		setClause.push("email = ?");
+		values.push(updates.email);
+	}
+
+	if (updates.full_name !== undefined) {
+		setClause.push("full_name = ?");
+		values.push(updates.full_name ?? null);
+	}
+
+	if (updates.flair !== undefined) {
+		setClause.push("flair = ?");
+		values.push(updates.flair ?? null);
+	}
+
+	return db
+		.prepare(`UPDATE players SET ${setClause.join(", ")} WHERE id = ?`)
+		.bind(...values, id)
 		.run();
 }
 
