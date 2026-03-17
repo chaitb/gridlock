@@ -83,7 +83,7 @@ export const AppLayout = ({
 					</NavigationMenuItem>
 				</NavigationMenuList>
 			</NavigationMenu>*/}
-			{children}
+			<div className="relative">{children}</div>
 		</div>
 	);
 };

@@ -13,12 +13,17 @@ export const createAccountSchema = z.object({
 
 export const updateProfileSchema = z.object({
 	username: z.string().trim().min(1),
+	email: z.string().email().trim().optional(),
+	full_name: z.string().trim().max(100).nullable().optional(),
+	flair: z.string().trim().max(20).nullable().optional(),
 });
 
 export const userSchema = z.object({
 	id: z.number(),
 	username: z.string().nullable(),
 	email: z.string(),
+	full_name: z.string().nullable(),
+	flair: z.string().nullable(),
 	created_at: z.string(),
 	verified_at: z.string().nullable(),
 	updated_at: z.string(),

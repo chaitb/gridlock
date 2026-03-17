@@ -15,34 +15,25 @@ type UserPredictionsResponse = {
 	isOwner: boolean;
 };
 
-export type RaceCardProps =
-	| {
-			className?: string;
-			race: Race;
-			label: string;
-			subtitle?: string;
-			to: string;
-			loading?: false;
-	  }
-	| {
-			className?: string;
-			race?: undefined;
-			label?: undefined;
-			subtitle?: undefined;
-			to?: undefined;
-			loading: true;
-	  };
+export type RaceCardProps = {
+	className?: string;
+	race: Race | undefined;
+	label: string;
+	subtitle?: string;
+	to: string | undefined;
+	loading?: boolean;
+};
 
 function RaceCard({ className, race, label, subtitle, to, loading }: RaceCardProps) {
 	if (loading) {
 		return (
 			<div className={cn("p-4 rounded-lg border border-border bg-card", className)}>
-				<Skeleton className="h-4 w-1/4 mb-2" />
-				<div className="flex items-center gap-3">
-					<Skeleton className="h-6 w-8 rounded" />
-					<div className="flex-1">
-						<Skeleton className="h-4 w-2/3 mb-2" />
-						<Skeleton className="h-2 w-1/3" />
+				<Skeleton className="h-4 w-1/2 mb-1.5" />
+				<div className="flex items-center gap-3 ">
+					<Skeleton className="size-8 rounded" />
+					<div className="flex-1 py-1">
+						<Skeleton className="h-5 w-2/3 mb-2" />
+						<Skeleton className="h-3 w-1/3" />
 					</div>
 				</div>
 			</div>
@@ -50,7 +41,7 @@ function RaceCard({ className, race, label, subtitle, to, loading }: RaceCardPro
 	}
 	return (
 		<Link
-			to={to}
+			to={to || "/"}
 			className={cn(
 				"p-4 rounded-lg border border-border bg-card hover:bg-secondary transition-colors",
 				className
@@ -58,9 +49,9 @@ function RaceCard({ className, race, label, subtitle, to, loading }: RaceCardPro
 		>
 			<p className="text-xs uppercase tracking-wider text-muted-foreground mb-2">{label}</p>
 			<div className="flex items-center gap-3">
-				<Flag className="size-8 rounded shadow-sm" countryCode={race.country as CountryCode} />
+				<Flag className="size-8 rounded shadow-sm" countryCode={race?.country as CountryCode} />
 				<div>
-					<p className="font-medium text-lg">{race.name}</p>
+					<p className="font-medium text-lg">{race?.name}</p>
 					{subtitle && <p className="text-sm text-muted-foreground">{subtitle}</p>}
 				</div>
 			</div>
@@ -148,11 +139,9 @@ export function UserHome() {
 		[user]
 	);
 
-	const showCards = upcomingRace || incompletePrediction;
-
 	return (
 		<AppLayout headline="GridLock">
-			{isLoading && (
+			{/*{isLoading && (
 				<motion.div
 					initial={{ opacity: 0, y: 10 }}
 					animate={{ opacity: 1, y: 0 }}
@@ -161,45 +150,51 @@ export function UserHome() {
 				>
 					<RaceCard loading className="w-full" />
 				</motion.div>
-			)}
-			{showCards && (
-				<motion.div
-					initial={{ opacity: 0, y: 10 }}
-					animate={{ opacity: 1, y: 0 }}
-					transition={{ duration: 0.4 }}
-					className="mb-6 px-3 flex flex-wrap gap-4 w-full"
-				>
-					{upcomingRace && (
-						<RaceCard
-							className="flex-1"
-							race={upcomingRace}
-							label="Upcoming Race"
-							subtitle={upcomingRace.date.toLocaleDateString("en-US", {
-								weekday: "short",
-								month: "short",
-								day: "numeric",
-							})}
-							to={`/race/${upcomingRace.circuit_code}`}
-						/>
-					)}
+			)}*/}
+			<motion.div
+				initial={{ opacity: 0 }}
+				animate={{ opacity: 1 }}
+				transition={{ duration: 0.2, ease: "easeOut" }}
+				className="mb-6 px-3 flex flex-wrap gap-4 w-full"
+			>
+				{upcomingRace && (
+					<RaceCard
+						className="flex-1"
+						race={upcomingRace}
+						label="Upcoming Race"
+						loading={isLoading}
+						subtitle={upcomingRace.date.toLocaleDateString("en-US", {
+							weekday: "short",
+							month: "short",
+							day: "numeric",
+						})}
+						to={`/race/${upcomingRace.circuit_code}`}
+					/>
+				)}
 
-					{incompletePrediction && (
-						<RaceCard
-							className="flex-1"
-							race={incompletePrediction.race}
-							label="Complete Your Prediction"
-							subtitle={
-								incompletePrediction.pred
+				{(isLoading || incompletePrediction) && (
+					<RaceCard
+						className="flex-1"
+						race={incompletePrediction?.race}
+						label="Complete Your Prediction"
+						loading={isLoading}
+						subtitle={
+							!isLoading && incompletePrediction
+								? incompletePrediction.pred
 									? incompletePrediction.pred.locked === 1
 										? "Locked"
 										: "In progress"
 									: "Not started"
-							}
-							to={`/race/${incompletePrediction.race.circuit_code}/prediction`}
-						/>
-					)}
-				</motion.div>
-			)}
+								: undefined
+						}
+						to={
+							incompletePrediction
+								? `/race/${incompletePrediction.race.circuit_code}/prediction`
+								: undefined
+						}
+					/>
+				)}
+			</motion.div>
 
 			{LINKS.map((l, i) => (
 				<motion.div
