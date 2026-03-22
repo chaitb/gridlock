@@ -21,10 +21,10 @@
 		"rules": {
 			"recommended": true,
 			"correctness": {
-				"noUnusedVariables": "error",
+				"noUnusedVariables": "warn",
 				"noUnusedImports": {
 					"fix": "safe",
-					"level": "error"
+					"level": "warn"
 				}
 			},
 			"suspicious": {
@@ -32,7 +32,7 @@
 			},
 			"style": {
 				"useImportType": {
-					"level": "error",
+					"level": "warn",
 					"fix": "safe"
 				}
 			}

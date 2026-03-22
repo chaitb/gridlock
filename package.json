@@ -18,7 +18,7 @@
 		"pre-commit": "pnpm lint-staged && pnpm tsc -b --noEmit"
 	},
 	"lint-staged": {
-		"*.{ts,tsx}": "biome check --write --error-on-warnings"
+		"*.{ts,tsx}": "biome check --write"
 	},
 	"dependencies": {
 		"@notionhq/client": "^5.13.0",

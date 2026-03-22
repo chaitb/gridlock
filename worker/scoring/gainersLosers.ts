@@ -45,6 +45,7 @@ function scoreGainerLoserCategory(
 				driver: "" as DriverTag,
 				predictedRank,
 				actualRank: null,
+				actualDriverAtRank: null,
 				gainedLost: 0,
 				accuracy: "empty",
 				points: 0,
@@ -55,6 +56,7 @@ function scoreGainerLoserCategory(
 		const gainedLost = allDriverGains.get(driver) ?? 0;
 		const actualRankIndex = ranking.findIndex((r) => r.driver === driver);
 		const actualRank = actualRankIndex === -1 ? null : actualRankIndex + 1;
+		const actualDriverAtRank = ranking[predictedRank - 1]?.driver ?? null;
 
 		const { accuracy, points } = computeGainerLoserAccuracy(
 			driver,
@@ -73,6 +75,7 @@ function scoreGainerLoserCategory(
 			driver,
 			predictedRank,
 			actualRank,
+			actualDriverAtRank,
 			gainedLost,
 			accuracy,
 			points,

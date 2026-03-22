@@ -5,6 +5,7 @@ export type PositionPredictionScore = {
 	driver: DriverTag;
 	predicted: number;
 	actual: number | null;
+	actualDriver: DriverTag | null;
 	accuracy: string;
 	points: number;
 };
@@ -13,6 +14,7 @@ export type GainerLoserPredictionScore = {
 	driver: DriverTag;
 	predictedRank: number;
 	actualRank: number | null;
+	actualDriverAtRank: DriverTag | null;
 	gainedLost: number;
 	accuracy: string;
 	points: number;
