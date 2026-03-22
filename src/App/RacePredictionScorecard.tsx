@@ -1,6 +1,9 @@
 import { motion } from "framer-motion";
+import { ListCheckIcon, SquareSplitHorizontal } from "lucide-react";
+import { useState } from "react";
 import { Link, useParams } from "wouter";
 import { Spinner } from "@/components/ui/spinner";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { RACES_2026 } from "@/data";
 import type { ApiError } from "@/helpers/useApi";
 import { useApi } from "@/helpers/useApi";
@@ -47,6 +50,8 @@ export function RacePredictionScorecard() {
 			params: { username: username ?? "", circuitCode: circuitCode ?? "" },
 		}
 	);
+
+	const [layout, setLayout] = useState("unified");
 
 	if (!race) {
 		return (
@@ -109,17 +114,33 @@ export function RacePredictionScorecard() {
 
 	return (
 		<AppLayout headline="Scorecard" wide={isLarge}>
-			<div className="mb-6 mx-3">
-				<h2 className="text-xl font-medium">{race.name}</h2>
-				<p className="text-sm text-muted-foreground">
-					<Link
-						to={`/${username}/predictions`}
-						className="text-primary underline-offset-2 hover:underline"
-					>
-						@{username}
-					</Link>{" "}
-					&middot; {scoreData.score} pts
-				</p>
+			<div className="mb-6 mx-3 flex">
+				<div className="grow">
+					<h2 className="text-xl font-medium">{race.name}</h2>
+					<p className="text-sm text-muted-foreground">
+						<Link
+							to={`/${username}/predictions`}
+							className="text-primary underline-offset-2 hover:underline"
+						>
+							@{username}
+						</Link>{" "}
+						&middot; {scoreData.score} pts
+					</p>
+				</div>
+				<ToggleGroup
+					value={layout}
+					onValueChange={(value) => setLayout(value)}
+					variant="outline"
+					type="single"
+					defaultValue="unified"
+				>
+					<ToggleGroupItem value="unified" aria-label="Toggle unified">
+						<ListCheckIcon className="size-6" />
+					</ToggleGroupItem>
+					<ToggleGroupItem value="split" aria-label="Toggle split">
+						<SquareSplitHorizontal className="size-6" />
+					</ToggleGroupItem>
+				</ToggleGroup>
 			</div>
 
 			<motion.div
@@ -129,7 +150,7 @@ export function RacePredictionScorecard() {
 				className="mx-3"
 			>
 				<Scorecard
-					variant={isLarge ? "split" : "default"}
+					variant={layout === "split" ? (isLarge ? "split" : "default") : "unified"}
 					userRaceScore={scoreData}
 					prediction={prediction}
 				/>

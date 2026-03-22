@@ -17,6 +17,7 @@ export function scorePositionCategory(
 	let exactMatches = 0;
 
 	const sortedTiers = [...tiers].sort((a, b) => a.maxOffset - b.maxOffset);
+	const positionToDriver = buildPositionToDriverMap(actualResults);
 
 	for (const [key, driver] of Object.entries(predictions)) {
 		const predictedPosition = positionKeyToNumber(key);
@@ -26,6 +27,7 @@ export function scorePositionCategory(
 				driver: "" as DriverTag,
 				predicted: predictedPosition,
 				actual: null,
+				actualDriver: null,
 				accuracy: "empty",
 				points: 0,
 			};
@@ -35,6 +37,8 @@ export function scorePositionCategory(
 		const result = actualResults.get(driver);
 		const actualPosition =
 			result === undefined ? null : result.dnf ? totalDrivers : result.position;
+
+		const actualDriverAtPosition = positionToDriver.get(predictedPosition) ?? null;
 
 		const { accuracy, points } = computePositionAccuracy(
 			predictedPosition,
@@ -49,12 +53,25 @@ export function scorePositionCategory(
 			driver,
 			predicted: predictedPosition,
 			actual: actualPosition,
+			actualDriver: actualDriverAtPosition,
 			accuracy,
 			points,
 		};
 	}
 
 	return { scores, total, exactMatches };
+}
+
+function buildPositionToDriverMap(
+	actualResults: Map<DriverTag, ActualResult>
+): Map<number, DriverTag> {
+	const map = new Map<number, DriverTag>();
+	for (const [driver, result] of actualResults) {
+		if (!result.dnf && result.position !== null) {
+			map.set(result.position, driver);
+		}
+	}
+	return map;
 }
 
 function computePositionAccuracy(

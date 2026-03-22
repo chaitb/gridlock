@@ -2,16 +2,24 @@ import { motion } from "framer-motion";
 import { ArrowDown, ArrowUp } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { getSessionByCircuitAndType } from "@/data/index";
-import type { PredictionContent, ScoreBreakdown, UserRaceScore } from "@/shared/model";
-import { getScoreOutOf } from "@/shared/scoringConfig";
+import { getSessionByCircuitAndType } from "@/data";
+import { cn } from "@/lib/utils";
+import type {
+	GainerLoserPredictionScore,
+	PositionPredictionScore,
+	PredictionContent,
+	ScoreBreakdown,
+	UserRaceScore,
+} from "@/shared/model";
+import { getScoreOutOf, type ScoringCategory } from "@/shared/scoringConfig";
+import { DriverCard } from "./Drivers";
 import { DriverPill } from "./PredictionCard";
 import { PredictionForm } from "./PredictionForm";
 import { SessionResults } from "./SessionResults";
 import { H2 } from "./Text";
 
 type ScorecardProps = {
-	variant?: "default" | "split";
+	variant?: "default" | "split" | "unified";
 	userRaceScore: UserRaceScore;
 	prediction: PredictionContent;
 };
@@ -42,7 +50,143 @@ const cardItem = {
 	show: { opacity: 1, scale: 1, transition: { duration: 0.1, ease: "easeOut" as const } },
 };
 
-export function Scorecard({ variant = "default", userRaceScore, prediction }: ScorecardProps) {
+export function Scorecard(props: ScorecardProps) {
+	if (props.variant === "unified") {
+		return <ScoreCardUnifiedLayout {...props} />;
+	}
+	return <ScoreCardSplitLayout {...props} />;
+}
+
+export const item = {
+	hidden: { opacity: 0, y: 8 },
+	show: { opacity: 1, y: 0, transition: { duration: 0.3 } },
+};
+
+export type BreakdownScoreDetails =
+	| { type: "gainer_loser"; details: GainerLoserPredictionScore }
+	| { type: "position"; details: PositionPredictionScore };
+
+export function UnifiedScoreItem({
+	position,
+	section,
+	score,
+}: {
+	position: string;
+	section: ScoringCategory;
+	score: BreakdownScoreDetails;
+}) {
+	const actualDriver =
+		score.type === "position" ? score.details.actualDriver : score.details.actualDriverAtRank;
+
+	return (
+		<motion.div
+			className="py-2 flex items-center gap-3 hover:bg-secondary/50 transition-colors rounded-lg px-2"
+			variants={item}
+		>
+			<p className="text-3xl font-kh text-muted-foreground w-10">{position}</p>
+			<DriverCard
+				driverTag={score.details.driver}
+				className="rounded-lg h-28 w-50"
+				variant="no-bg"
+			/>
+			<div className="flex-1 flex items-center justify-center">
+				<ScoreItem
+					item={{
+						accuracy: score.details.accuracy,
+						points: score.details.points,
+						score_out_of: getScoreOutOf(section, position),
+					}}
+					className="text-3xl"
+				/>
+			</div>
+			{actualDriver ? (
+				<DriverCard driverTag={actualDriver} className="rounded-lg h-28 w-36" variant="small" />
+			) : (
+				<div className="rounded-lg h-28 w-36 bg-muted/30 flex items-center justify-center text-muted-foreground text-sm">
+					—
+				</div>
+			)}
+		</motion.div>
+	);
+}
+
+export function ScoreCardUnifiedLayout({ userRaceScore }: ScorecardProps) {
+	// const race_session = getSessionByCircuitAndType(userRaceScore.circuitCode, "Race");
+	// const qualifying_session = getSessionByCircuitAndType(userRaceScore.circuitCode, "Qualifying");
+
+	// const {
+	// 	data: race_results,
+	// 	error: race_error,
+	// 	isLoading: race_isLoading,
+	// } = useApi<SessionResult[]>("/api/session-results", {
+	// 	params: {
+	// 		session_key: race_session!.session_key,
+	// 	},
+	// 	enabled: !!race_session,
+	// });
+
+	// const {
+	// 	data: qualifying_results,
+	// 	error: qualifying_error,
+	// 	isLoading: qualifying_isLoading,
+	// } = useApi<SessionResult[]>("/api/session-results", {
+	// 	params: {
+	// 		session_key: qualifying_session!.session_key,
+	// 	},
+	// 	enabled: !!qualifying_session,
+	// });
+
+	return (
+		<div>
+			<motion.div variants={sectionContainer} initial="hidden" animate="show" className="space-y-2">
+				<H2>Qualifying</H2>
+				{Object.entries(userRaceScore.breakdown.qualifying).map(([p, score]) => (
+					<UnifiedScoreItem
+						key={p}
+						position={p}
+						score={{ type: "position", details: score }}
+						section={"qualifying"}
+					/>
+				))}
+			</motion.div>
+			<motion.div variants={sectionContainer} initial="hidden" animate="show" className="space-y-2">
+				<H2>Race</H2>
+				{Object.entries(userRaceScore.breakdown.race).map(([p, score]) => (
+					<UnifiedScoreItem
+						key={p}
+						position={p}
+						score={{ type: "position", details: score }}
+						section={"race"}
+					/>
+				))}
+			</motion.div>
+			<motion.div variants={sectionContainer} initial="hidden" animate="show" className="space-y-2">
+				<H2>Gainers</H2>
+				{Object.entries(userRaceScore.breakdown.gainers).map(([p, score]) => (
+					<UnifiedScoreItem
+						key={p}
+						position={p}
+						score={{ type: "gainer_loser", details: score }}
+						section={"gainers"}
+					/>
+				))}
+			</motion.div>
+			<motion.div variants={sectionContainer} initial="hidden" animate="show" className="space-y-2">
+				<H2>Losers</H2>
+				{Object.entries(userRaceScore.breakdown.losers).map(([p, score]) => (
+					<UnifiedScoreItem
+						key={p}
+						position={p}
+						score={{ type: "gainer_loser", details: score }}
+						section={"losers"}
+					/>
+				))}
+			</motion.div>
+		</div>
+	);
+}
+
+export function ScoreCardSplitLayout({ variant, userRaceScore, prediction }: ScorecardProps) {
 	const race_session = getSessionByCircuitAndType(userRaceScore.circuitCode, "Race");
 	const qualifying_session = getSessionByCircuitAndType(userRaceScore.circuitCode, "Qualifying");
 	return (
@@ -236,22 +380,18 @@ export const BreakdownView = ({ breakdown }: { breakdown: ScoreBreakdown }) => {
 	);
 };
 
-const Section = ({
-	title,
-	items,
-}: {
-	title: React.ReactNode;
-	items: {
-		key: string;
-		driver: string;
-		predicted: number;
-		actual: React.ReactNode;
-		accuracy: React.ReactNode;
-		points: number;
-		score_out_of?: number;
-		extra?: React.ReactNode;
-	}[];
-}) => {
+type ScoreBreakdownItem = {
+	key: string;
+	driver: string;
+	predicted: number;
+	accuracy: string;
+	points: number;
+	score_out_of?: number;
+	actual: React.ReactNode;
+	extra?: React.ReactNode;
+};
+
+const Section = ({ title, items }: { title: React.ReactNode; items: ScoreBreakdownItem[] }) => {
 	const total = items.reduce((sum, i) => sum + i.points, 0);
 	const maxTotal = items.reduce((sum, i) => sum + (i.score_out_of || 0), 0);
 	return (
@@ -287,26 +427,7 @@ const Section = ({
 								<p className="whitespace-nowrap">A: {item.actual}</p>
 							</div>
 							{item.extra}
-							<span
-								className={`font-medium ${
-									item.accuracy === "bullseye" || item.accuracy === "perfect_match"
-										? "text-green-400"
-										: item.accuracy === "miss" || item.accuracy === "no_change"
-											? "text-red-400"
-											: "text-yellow-400"
-								}`}
-							>
-								{item.score_out_of ? (
-									<span className="text-nowrap">
-										<span className="text-2xl md:text-3xl">{item.points}</span>
-										<span className="text-muted-foreground text-xs"> / {item.score_out_of}</span>
-									</span>
-								) : item.points > 0 ? (
-									`+${item.points}`
-								) : (
-									"0"
-								)}
-							</span>
+							<ScoreItem item={item} />
 						</div>
 					</motion.div>
 				))}
@@ -314,3 +435,35 @@ const Section = ({
 		</div>
 	);
 };
+
+function ScoreItem({
+	item,
+	className,
+}: {
+	item: Pick<ScoreBreakdownItem, "score_out_of" | "accuracy" | "score_out_of" | "points">;
+	className?: string;
+}) {
+	return (
+		<span
+			className={cn(
+				"font-medium text-yellow-400",
+				{
+					"text-green-400": item.accuracy === "bullseye" || item.accuracy === "perfect_match",
+					"text-red-400": item.accuracy === "miss" || item.accuracy === "no_change",
+				},
+				className
+			)}
+		>
+			{item.score_out_of ? (
+				<span className="text-nowrap">
+					<span className="text-2xl md:text-3xl">{item.points}</span>
+					<span className="text-muted-foreground text-xs"> / {item.score_out_of}</span>
+				</span>
+			) : item.points > 0 ? (
+				`+${item.points}`
+			) : (
+				"0"
+			)}
+		</span>
+	);
+}

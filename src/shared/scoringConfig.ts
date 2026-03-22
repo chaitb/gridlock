@@ -32,16 +32,13 @@ export type ScoringConfig = {
 
 export const SCORING_CONFIG: ScoringConfig = scoringJson as ScoringConfig;
 
-export function getMaxPointsForCategory(
-	category: "qualifying" | "race" | "gainers" | "losers"
-): number {
+export type ScoringCategory = "qualifying" | "race" | "gainers" | "losers";
+
+export function getMaxPointsForCategory(category: ScoringCategory): number {
 	const config = SCORING_CONFIG[category];
 	return Math.max(...config.tiers.map((t) => t.points));
 }
 
-export function getScoreOutOf(
-	category: "qualifying" | "race" | "gainers" | "losers",
-	_key: string
-): number {
+export function getScoreOutOf(category: ScoringCategory, _key: string): number {
 	return getMaxPointsForCategory(category);
 }

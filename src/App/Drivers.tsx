@@ -36,6 +36,7 @@ import {
 import { cn } from "@/lib/utils";
 import type { Driver, DriverTag } from "@/shared/model";
 import { type Constructor, DRIVERS } from "./driver";
+import { DriverPill } from "./PredictionCard";
 
 const CONSTRUCTORS_RANKS_2025: Record<Constructor, number> = {
 	McLaren: 1,
@@ -83,15 +84,59 @@ const getDriverImage = (acronym: DriverTag) => {
 export const DriverCard: React.FC<{
 	driverTag: string;
 	className?: string;
-}> = ({ driverTag, className }) => {
+	variant?: "small" | "full" | "pill" | "no-bg";
+}> = ({ driverTag, className, variant = "full" }) => {
+	if (variant === "pill") {
+		return <DriverPill acronym={driverTag} />;
+	}
+
 	const driver = DRIVERS.find((dr) => dr.acronym === driverTag);
 	if (!driver) return null;
-
+	if (variant === "small") {
+		return <DriverCardCompact driver={driver} className={className} />;
+	}
+	if (variant === "no-bg") {
+		return <DriverCardNoBg driver={driver} className={className} />;
+	}
 	return <DriverCardFull driver={driver} className={className} />;
 };
+
 type DriverCardProps = {
 	driver: Driver;
 	className?: string;
+};
+
+export const DriverCardNoBg: React.FC<DriverCardProps> = ({ driver, className = "" }) => {
+	const color = `#${driver.colour}`;
+	return (
+		<div className={cn("relative overflow-hidden w-50 h-30", className)}>
+			{/* Driver Image - Moves more aggressively for parallax depth */}
+			<motion.img
+				src={getDriverImage(driver.acronym)}
+				alt={driver.full_name}
+				className="absolute top-4 right-0 w-50 max-w-[70%] object-contain z-10 pointer-events-none"
+			/>
+
+			{/* Content Layer */}
+			<motion.div
+				style={{ z: 30 }} // Sits between card and image
+				className="px-5 py-3 h-full flex flex-col relative z-20"
+			>
+				<p
+					className="flex-grow font-kh text-5xl mt-4 text-shadow-sm"
+					style={{
+						color,
+					}}
+				>
+					{driver.acronym}
+				</p>
+				<div className={`text-shadow-sm px-1 border-l-4 rounded-sm`} style={{ borderColor: color }}>
+					<p className="text-[10px] uppercase opacity-80">{driver.team_name}</p>
+					<p className="font-bold leading-tight">{driver.full_name}</p>
+				</div>
+			</motion.div>
+		</div>
+	);
 };
 
 export const DriverCardFull: React.FC<DriverCardProps> = ({ driver, className = "" }) => {
